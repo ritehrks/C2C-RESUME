@@ -1,0 +1,87 @@
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+@plugin "@tailwindcss/forms";
+@plugin "@tailwindcss/container-queries";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --color-navy-900: #0f172a;
+  --color-navy-800: #1e3a8a;
+  --color-navy-700: #1d4ed8;
+
+  --color-royal-600: #2563eb;
+  --color-royal-500: #3b82f6;
+
+  --color-primary: #1e3a8a;
+  --color-landing-primary: #1e3a8a;
+  --color-landing-primary-hover: #172554;
+  --color-app-primary: #1152d4;
+
+  --color-accent: #2563eb;
+  --color-background-light: #ffffff;
+  --color-background-dark: #020617;
+  --color-app-bg-light: #f6f6f8;
+  --color-app-bg-dark: #101622;
+
+  --color-text-main: #0f172a;
+  --color-text-sub: #475569;
+  --color-border-light: #e2e8f0;
+  --color-paper: #ffffff;
+
+  --font-display: var(--font-inter), sans-serif;
+  --font-body: var(--font-inter), sans-serif;
+  --font-serif: var(--font-merriweather), serif;
+
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+  --radius-2xl: 1rem;
+}
+
+/* Custom Utilities */
+.bg-tech-pattern {
+  background-color: #ffffff;
+  background-image:
+    linear-gradient(to right, #f1f5f9 1px, transparent 1px),
+    linear-gradient(to bottom, #f1f5f9 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+.dark .bg-tech-pattern {
+  background-color: #020617;
+  background-image:
+    linear-gradient(to right, #1e293b 1px, transparent 1px),
+    linear-gradient(to bottom, #1e293b 1px, transparent 1px);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #334155;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Details summary marker fix */
+details>summary {
+  list-style: none;
+}
+
+details>summary::-webkit-details-marker {
+  display: none;
+}
