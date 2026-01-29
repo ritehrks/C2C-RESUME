@@ -10,7 +10,7 @@ export default function AnalyzerPage() {
             <header className="sticky top-0 z-50 flex items-center justify-between whitespace-nowrap border-b border-solid border-[#e7ebf3] dark:border-gray-800 bg-white/95 dark:bg-[#101622]/95 px-6 py-3 backdrop-blur-sm">
                 <div className="flex items-center gap-4">
                     <Link href="/dashboard" title="Back to Dashboard">
-                        <Image src="/logo.png?v=2" alt="C2C Logo" width={140} height={50} className="h-12 w-auto" />
+                        <Image src="/logo-v2.png" alt="C2C Logo" width={140} height={50} className="h-12 w-auto" />
                     </Link>
                 </div>
                 <nav className="hidden md:flex flex-1 justify-center gap-8">

@@ -23,7 +23,7 @@ export default function DashboardLayout({
             <aside className="w-64 flex flex-col bg-white dark:bg-[#1a2235] border-r border-slate-200 dark:border-slate-800 flex-shrink-0 z-20">
                 <div className="h-16 flex items-center px-6 border-b border-slate-100 dark:border-slate-800">
                     <Link href="/" className="flex items-center gap-3 group">
-                        <Image src="/logo.png?v=2" alt="C2C Logo" width={140} height={50} className="h-12 w-auto" />
+                        <Image src="/logo-v2.png" alt="C2C Logo" width={140} height={50} className="h-12 w-auto" />
                     </Link>
                 </div>
 

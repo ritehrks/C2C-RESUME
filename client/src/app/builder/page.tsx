@@ -233,7 +233,7 @@ export default function BuilderPage() {
                     <Link href="/dashboard" className="flex items-center justify-center size-9 rounded-lg text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-app-primary transition-colors" title="Back to Dashboard">
                         <span className="material-symbols-outlined text-[22px]">arrow_back</span>
                     </Link>
-                    <Image src="/logo.png?v=2" alt="C2C Logo" width={140} height={50} className="h-12 w-auto" />
+                    <Image src="/logo-v2.png" alt="C2C Logo" width={140} height={50} className="h-12 w-auto" />
                     <div className="hidden sm:block">
                         <p className="text-sm font-semibold text-gray-900 dark:text-white">{resumeData.name || "Untitled Resume"}</p>
                         <p className="text-xs text-gray-500 dark:text-gray-400">MNIT Official Template</p>
