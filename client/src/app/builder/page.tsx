@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
+import { resumeApi } from '@/lib/api';
 
 // Types for resume data
 interface Experience {
@@ -124,8 +126,189 @@ const defaultResumeData: ResumeData = {
 };
 
 export default function BuilderPage() {
+    const searchParams = useSearchParams();
+    const router = useRouter();
+    const editId = searchParams.get('id');
+
     const [zoom, setZoom] = useState(85);
     const [resumeData, setResumeData] = useState<ResumeData>(defaultResumeData);
+    const [resumeId, setResumeId] = useState<string | null>(editId);
+    const [resumeName, setResumeName] = useState('Untitled Resume');
+    const [isLoading, setIsLoading] = useState(!!editId);
+    const [isSaving, setIsSaving] = useState(false);
+    const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+
+    // Load existing resume if ID is provided in URL
+    useEffect(() => {
+        if (editId) {
+            loadResume(editId);
+        }
+    }, [editId]);
+
+    const loadResume = async (id: string) => {
+        try {
+            setIsLoading(true);
+            const data = await resumeApi.getOne(id);
+            if (data.success && data.resume) {
+                setResumeId(id);
+                setResumeName(data.resume.name);
+
+                // Map database content to local format
+                const content = data.resume.content;
+                if (content) {
+                    setResumeData({
+                        // Personal Info
+                        name: content.personalInfo?.name || defaultResumeData.name,
+                        email: content.personalInfo?.email || defaultResumeData.email,
+                        phone: content.personalInfo?.phone || defaultResumeData.phone,
+                        githubUrl: content.personalInfo?.github || defaultResumeData.githubUrl,
+                        linkedinUrl: content.personalInfo?.linkedin || defaultResumeData.linkedinUrl,
+                        course: defaultResumeData.course, // Not stored in content
+                        roll: defaultResumeData.roll, // Not stored in content
+                        collegeEmail: defaultResumeData.collegeEmail, // Not stored in content
+                        degree: content.education?.[0]?.branch || defaultResumeData.degree,
+
+                        // Education
+                        cgpa: String(content.education?.[0]?.cgpa || defaultResumeData.cgpa),
+                        educationYear: content.education?.[0]
+                            ? `${content.education[0].startYear}-${content.education[0].endYear}`
+                            : defaultResumeData.educationYear,
+                        schoolName: defaultResumeData.schoolName, // Not in content model
+                        schoolPercentage: defaultResumeData.schoolPercentage,
+                        schoolBoard: defaultResumeData.schoolBoard,
+                        schoolYear: defaultResumeData.schoolYear,
+
+                        // Skills
+                        languages: content.skills?.languages?.join(', ') || defaultResumeData.languages,
+                        devTools: content.skills?.tools?.join(', ') || defaultResumeData.devTools,
+                        frameworks: content.skills?.frameworks?.join(', ') || defaultResumeData.frameworks,
+                        cloudDb: content.skills?.databases?.join(', ') || defaultResumeData.cloudDb,
+                        softSkills: defaultResumeData.softSkills,
+                        coursework: defaultResumeData.coursework,
+                        interests: defaultResumeData.interests,
+
+                        // Experience
+                        experiences: content.experience?.map((exp: any) => ({
+                            company: exp.company || '',
+                            location: '', // Not in content model
+                            role: exp.role || '',
+                            dates: `${exp.startDate || ''} - ${exp.endDate || ''}`,
+                            items: exp.bullets || [''],
+                        })) || defaultResumeData.experiences,
+
+                        // Projects
+                        projects: content.projects?.map((proj: any) => ({
+                            name: proj.title || '',
+                            description: proj.description || '',
+                            dates: '', // Not in content model
+                            technologies: proj.techStack?.join(', ') || '',
+                            items: proj.bullets || [''],
+                        })) || defaultResumeData.projects,
+
+                        // Positions of Responsibility
+                        positions: content.pors?.map((por: any) => ({
+                            title: por.position || '',
+                            organization: por.organization || '',
+                            tenure: por.duration || '',
+                        })) || defaultResumeData.positions,
+
+                        // Achievements
+                        achievements: content.achievements?.map((ach: any) => ({
+                            title: ach.title || '',
+                            description: ach.description || '',
+                            date: ach.date || '',
+                        })) || defaultResumeData.achievements,
+                    });
+                }
+            }
+        } catch (error) {
+            console.error('Failed to load resume:', error);
+            alert('Failed to load resume. Starting with a blank template.');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleSave = async () => {
+        try {
+            setIsSaving(true);
+            setSaveStatus('saving');
+
+            const saveData = {
+                name: resumeName || resumeData.name || 'Untitled Resume',
+                templateId: 'mnit_resume',
+                content: {
+                    personalInfo: {
+                        name: resumeData.name,
+                        email: resumeData.email,
+                        phone: resumeData.phone,
+                        linkedin: resumeData.linkedinUrl,
+                        github: resumeData.githubUrl,
+                    },
+                    education: [{
+                        institution: 'MNIT Jaipur',
+                        branch: resumeData.degree,
+                        cgpa: parseFloat(resumeData.cgpa) || 0,
+                        startYear: parseInt(resumeData.educationYear.split('-')[0]) || 2021,
+                        endYear: parseInt(resumeData.educationYear.split('-')[1]) || 2025,
+                    }],
+                    experience: resumeData.experiences.map(exp => ({
+                        company: exp.company,
+                        role: exp.role,
+                        startDate: exp.dates.split(' - ')[0] || '',
+                        endDate: exp.dates.split(' - ')[1] || '',
+                        bullets: exp.items,
+                    })),
+                    projects: resumeData.projects.map(proj => ({
+                        title: proj.name,
+                        techStack: proj.technologies.split(', '),
+                        description: proj.description,
+                        bullets: proj.items,
+                    })),
+                    skills: {
+                        languages: resumeData.languages.split(', '),
+                        frameworks: resumeData.frameworks.split(', '),
+                        tools: resumeData.devTools.split(', '),
+                        databases: resumeData.cloudDb.split(', '),
+                    },
+                    achievements: resumeData.achievements.map(ach => ({
+                        title: ach.title,
+                        description: ach.description,
+                        date: ach.date,
+                    })),
+                    certifications: [],
+                    pors: resumeData.positions.map(pos => ({
+                        position: pos.title,
+                        organization: pos.organization,
+                        duration: pos.tenure,
+                        description: '',
+                    })),
+                },
+            };
+
+            if (resumeId) {
+                // Update existing resume
+                await resumeApi.update(resumeId, saveData);
+            } else {
+                // Create new resume
+                const result = await resumeApi.create(saveData);
+                if (result.resume._id) {
+                    setResumeId(result.resume._id);
+                    // Update URL without full reload
+                    window.history.replaceState({}, '', `/builder?id=${result.resume._id}`);
+                }
+            }
+
+            setSaveStatus('saved');
+            setTimeout(() => setSaveStatus('idle'), 2000);
+        } catch (error: any) {
+            console.error('Save error:', error);
+            setSaveStatus('error');
+            alert(`Failed to save: ${error.message}`);
+        } finally {
+            setIsSaving(false);
+        }
+    };
 
     const updateField = (field: keyof ResumeData, value: string) => {
         setResumeData(prev => ({ ...prev, [field]: value }));
@@ -273,17 +456,62 @@ export default function BuilderPage() {
                     </div>
                 </div>
                 <div className="flex items-center gap-4">
-                    <div className="hidden sm:flex items-center text-sm font-medium text-green-600 dark:text-green-400 gap-1">
-                        <span className="material-symbols-outlined text-[18px]">check_circle</span>
-                        <span>Auto-saved</span>
+                    {/* Save Status Indicator */}
+                    <div className="hidden sm:flex items-center text-sm font-medium gap-1">
+                        {saveStatus === 'saving' && (
+                            <span className="flex items-center gap-1 text-yellow-600 dark:text-yellow-400">
+                                <span className="material-symbols-outlined text-[18px] animate-spin">progress_activity</span>
+                                <span>Saving...</span>
+                            </span>
+                        )}
+                        {saveStatus === 'saved' && (
+                            <span className="flex items-center gap-1 text-green-600 dark:text-green-400">
+                                <span className="material-symbols-outlined text-[18px]">check_circle</span>
+                                <span>Saved!</span>
+                            </span>
+                        )}
+                        {saveStatus === 'error' && (
+                            <span className="flex items-center gap-1 text-red-600 dark:text-red-400">
+                                <span className="material-symbols-outlined text-[18px]">error</span>
+                                <span>Error</span>
+                            </span>
+                        )}
+                        {saveStatus === 'idle' && resumeId && (
+                            <span className="flex items-center gap-1 text-slate-500 dark:text-slate-400">
+                                <span className="material-symbols-outlined text-[18px]">cloud_done</span>
+                                <span>Synced</span>
+                            </span>
+                        )}
                     </div>
                     <div className="h-6 w-px bg-gray-200 dark:bg-gray-700 mx-2 hidden sm:block"></div>
+                    {/* Save Button */}
+                    <button
+                        onClick={handleSave}
+                        disabled={isSaving}
+                        className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold shadow-sm transition-all ${isSaving
+                            ? 'bg-gray-400 cursor-not-allowed text-white'
+                            : 'bg-green-600 hover:bg-green-700 text-white'
+                            }`}
+                    >
+                        {isSaving ? (
+                            <>
+                                <span className="material-symbols-outlined text-[18px] animate-spin">progress_activity</span>
+                                <span className="hidden sm:inline">Saving...</span>
+                            </>
+                        ) : (
+                            <>
+                                <span className="material-symbols-outlined text-[18px]">save</span>
+                                <span className="hidden sm:inline">{resumeId ? 'Save' : 'Save New'}</span>
+                            </>
+                        )}
+                    </button>
+                    {/* Download PDF Button */}
                     <button
                         onClick={handleDownloadPDF}
                         disabled={isGenerating}
                         className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold shadow-sm transition-all ${isGenerating
-                                ? 'bg-gray-400 cursor-not-allowed'
-                                : 'bg-app-primary hover:bg-blue-700 text-white'
+                            ? 'bg-gray-400 cursor-not-allowed'
+                            : 'bg-app-primary hover:bg-blue-700 text-white'
                             }`}
                     >
                         {isGenerating ? (

@@ -7,6 +7,9 @@ import dotenv from 'dotenv';
 import resumeRoutes from './routes/resumes.js';
 import analyzerRoutes from './routes/analyzer.js';
 
+// Import database connection
+import { connectDB } from './config/database.js';
+
 dotenv.config();
 
 const app = express();
@@ -36,12 +39,18 @@ app.get('/health', (req, res) => {
     });
 });
 
-app.listen(PORT, () => {
-    console.log(`🚀 C2C Resume Server running on http://localhost:${PORT}`);
-    console.log(`📋 API Endpoints:`);
-    console.log(`   - GET  /health`);
-    console.log(`   - POST /api/resumes/generate-pdf`);
-    console.log(`   - POST /api/analyze/simple`);
-});
+if (require.main === module) {
+    // Connect to database, then start server
+    connectDB().then(() => {
+        app.listen(PORT, () => {
+            console.log(`🚀 C2C Resume Server running on http://localhost:${PORT}`);
+            console.log(`📋 API Endpoints:`);
+            console.log(`   - GET  /health`);
+            console.log(`   - GET/POST/PUT/DELETE /api/resumes`);
+            console.log(`   - POST /api/resumes/generate-pdf`);
+            console.log(`   - POST /api/analyze/simple`);
+        });
+    });
+}
 
 export default app;
