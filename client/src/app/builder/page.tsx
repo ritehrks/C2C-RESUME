@@ -219,10 +219,43 @@ export default function BuilderPage() {
         }));
     };
 
-    const handleDownloadPDF = () => {
-        // For now, show alert. Backend integration will handle actual PDF generation
-        alert("PDF Download will be available after backend integration. The LaTeX template is ready!");
-        console.log("Resume Data:", resumeData);
+    const [isGenerating, setIsGenerating] = useState(false);
+
+    const handleDownloadPDF = async () => {
+        setIsGenerating(true);
+        try {
+            const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+
+            const response = await fetch(`${API_URL}/api/resumes/generate-pdf`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(resumeData),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to generate PDF');
+            }
+
+            // Get the PDF blob and trigger download
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `${resumeData.name.replace(/\s+/g, '_')}_Resume.pdf`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(url);
+
+        } catch (error: any) {
+            console.error('PDF generation error:', error);
+            alert(`Failed to generate PDF: ${error.message}`);
+        } finally {
+            setIsGenerating(false);
+        }
     };
 
     return (
@@ -247,10 +280,23 @@ export default function BuilderPage() {
                     <div className="h-6 w-px bg-gray-200 dark:bg-gray-700 mx-2 hidden sm:block"></div>
                     <button
                         onClick={handleDownloadPDF}
-                        className="flex items-center gap-2 bg-app-primary hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-semibold shadow-sm transition-all"
+                        disabled={isGenerating}
+                        className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold shadow-sm transition-all ${isGenerating
+                                ? 'bg-gray-400 cursor-not-allowed'
+                                : 'bg-app-primary hover:bg-blue-700 text-white'
+                            }`}
                     >
-                        <span className="material-symbols-outlined text-[18px]">download</span>
-                        <span className="hidden sm:inline">Download PDF</span>
+                        {isGenerating ? (
+                            <>
+                                <span className="material-symbols-outlined text-[18px] animate-spin">progress_activity</span>
+                                <span className="hidden sm:inline">Generating...</span>
+                            </>
+                        ) : (
+                            <>
+                                <span className="material-symbols-outlined text-[18px]">download</span>
+                                <span className="hidden sm:inline">Download PDF</span>
+                            </>
+                        )}
                     </button>
                 </div>
             </header>
