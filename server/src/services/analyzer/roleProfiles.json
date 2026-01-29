@@ -1,0 +1,236 @@
+{
+    "sde": {
+        "name": "Software Development Engineer",
+        "keywords": [
+            "algorithms",
+            "data structures",
+            "system design",
+            "REST API",
+            "microservices",
+            "SQL",
+            "NoSQL",
+            "Git",
+            "CI/CD",
+            "testing",
+            "JavaScript",
+            "Python",
+            "Java",
+            "C++",
+            "problem solving"
+        ],
+        "mustHave": [
+            "programming language",
+            "problem solving",
+            "projects"
+        ],
+        "goodToHave": [
+            "open source",
+            "hackathons",
+            "competitive programming"
+        ],
+        "embedding": []
+    },
+    "data_scientist": {
+        "name": "Data Scientist",
+        "keywords": [
+            "Python",
+            "pandas",
+            "numpy",
+            "scikit-learn",
+            "TensorFlow",
+            "PyTorch",
+            "statistics",
+            "SQL",
+            "data visualization",
+            "Tableau",
+            "A/B testing",
+            "machine learning",
+            "deep learning",
+            "data analysis",
+            "Jupyter"
+        ],
+        "mustHave": [
+            "Python",
+            "machine learning",
+            "statistics"
+        ],
+        "goodToHave": [
+            "Kaggle",
+            "research papers",
+            "NLP"
+        ],
+        "embedding": []
+    },
+    "ml_engineer": {
+        "name": "Machine Learning Engineer",
+        "keywords": [
+            "Python",
+            "TensorFlow",
+            "PyTorch",
+            "Keras",
+            "MLOps",
+            "Docker",
+            "Kubernetes",
+            "model deployment",
+            "feature engineering",
+            "deep learning",
+            "computer vision",
+            "NLP",
+            "transformers",
+            "MLflow",
+            "AWS SageMaker"
+        ],
+        "mustHave": [
+            "deep learning",
+            "model deployment",
+            "Python"
+        ],
+        "goodToHave": [
+            "research",
+            "publications",
+            "Kaggle"
+        ],
+        "embedding": []
+    },
+    "frontend_developer": {
+        "name": "Frontend Developer",
+        "keywords": [
+            "React",
+            "Vue",
+            "Angular",
+            "JavaScript",
+            "TypeScript",
+            "HTML",
+            "CSS",
+            "TailwindCSS",
+            "responsive design",
+            "accessibility",
+            "performance",
+            "Webpack",
+            "Vite"
+        ],
+        "mustHave": [
+            "React",
+            "JavaScript",
+            "CSS"
+        ],
+        "goodToHave": [
+            "design systems",
+            "animations",
+            "testing"
+        ],
+        "embedding": []
+    },
+    "backend_developer": {
+        "name": "Backend Developer",
+        "keywords": [
+            "Node.js",
+            "Python",
+            "Java",
+            "Go",
+            "REST API",
+            "GraphQL",
+            "PostgreSQL",
+            "MongoDB",
+            "Redis",
+            "Docker",
+            "microservices",
+            "authentication",
+            "security"
+        ],
+        "mustHave": [
+            "API design",
+            "databases",
+            "backend language"
+        ],
+        "goodToHave": [
+            "system design",
+            "caching",
+            "message queues"
+        ],
+        "embedding": []
+    },
+    "app_developer": {
+        "name": "App Developer",
+        "keywords": [
+            "React Native",
+            "Flutter",
+            "Swift",
+            "Kotlin",
+            "iOS",
+            "Android",
+            "mobile development",
+            "app store",
+            "push notifications",
+            "offline",
+            "responsive",
+            "cross-platform"
+        ],
+        "mustHave": [
+            "mobile framework",
+            "app deployment",
+            "UI/UX"
+        ],
+        "goodToHave": [
+            "published apps",
+            "app store optimization"
+        ],
+        "embedding": []
+    },
+    "devops_engineer": {
+        "name": "DevOps Engineer",
+        "keywords": [
+            "Docker",
+            "Kubernetes",
+            "AWS",
+            "GCP",
+            "Azure",
+            "CI/CD",
+            "Jenkins",
+            "GitHub Actions",
+            "Terraform",
+            "Ansible",
+            "Linux",
+            "monitoring",
+            "Prometheus",
+            "Grafana"
+        ],
+        "mustHave": [
+            "cloud platform",
+            "containerization",
+            "CI/CD"
+        ],
+        "goodToHave": [
+            "infrastructure as code",
+            "security",
+            "cost optimization"
+        ],
+        "embedding": []
+    },
+    "product_manager": {
+        "name": "Product Manager",
+        "keywords": [
+            "product strategy",
+            "roadmap",
+            "user research",
+            "A/B testing",
+            "metrics",
+            "OKRs",
+            "Agile",
+            "Scrum",
+            "stakeholder management",
+            "wireframes",
+            "PRD"
+        ],
+        "mustHave": [
+            "product vision",
+            "user research",
+            "metrics"
+        ],
+        "goodToHave": [
+            "technical background",
+            "design thinking"
+        ],
+        "embedding": []
+    }
+}
