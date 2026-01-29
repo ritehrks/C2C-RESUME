@@ -1,0 +1,119 @@
+2026-01-29T16:26:33.377047Z  INFO tailwindcss_oxide::scanner: Provided sources:
+2026-01-29T16:26:33.377593Z  INFO tailwindcss_oxide::scanner: Source: PublicSourceEntry { base: "C:\\Users\\rites\\OneDrive\\Desktop\\RESUME\\client", pattern: "**/*", negated: false }
+2026-01-29T16:26:33.378530Z  INFO tailwindcss_oxide::scanner: Optimized sources:
+2026-01-29T16:26:33.378547Z  INFO tailwindcss_oxide::scanner: Source: Auto { base: "C:\\Users\\rites\\OneDrive\\Desktop\\RESUME\\client" }
+2026-01-29T16:26:33.380780Z  INFO scan_sources: tailwindcss_oxide::scanner: enter
+2026-01-29T16:26:33.382679Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\rites\\OneDrive\\Desktop\\RESUME\\client\\eslint.config.mjs"
+2026-01-29T16:26:33.382788Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\rites\\OneDrive\\Desktop\\RESUME\\client\\next.config.ts"
+2026-01-29T16:26:33.383062Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\rites\\OneDrive\\Desktop\\RESUME\\client\\package.json"
+2026-01-29T16:26:33.383133Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\rites\\OneDrive\\Desktop\\RESUME\\client\\postcss.config.mjs"
+2026-01-29T16:26:33.383248Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\rites\\OneDrive\\Desktop\\RESUME\\client\\public"
+2026-01-29T16:26:33.383414Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\rites\\OneDrive\\Desktop\\RESUME\\client\\public\\file.svg"
+2026-01-29T16:26:33.383482Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\rites\\OneDrive\\Desktop\\RESUME\\client\\public\\globe.svg"
+2026-01-29T16:26:33.383565Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\rites\\OneDrive\\Desktop\\RESUME\\client\\public\\next.svg"
+2026-01-29T16:26:33.383632Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\rites\\OneDrive\\Desktop\\RESUME\\client\\public\\vercel.svg"
+2026-01-29T16:26:33.383696Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\rites\\OneDrive\\Desktop\\RESUME\\client\\public\\window.svg"
+2026-01-29T16:26:33.384069Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\rites\\OneDrive\\Desktop\\RESUME\\client\\README.md"
+2026-01-29T16:26:33.384197Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\rites\\OneDrive\\Desktop\\RESUME\\client\\src"
+2026-01-29T16:26:33.384459Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\rites\\OneDrive\\Desktop\\RESUME\\client\\src\\app"
+2026-01-29T16:26:33.384628Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\rites\\OneDrive\\Desktop\\RESUME\\client\\src\\app\\(dashboard)"
+2026-01-29T16:26:33.384770Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\rites\\OneDrive\\Desktop\\RESUME\\client\\src\\app\\(dashboard)\\dashboard"
+2026-01-29T16:26:33.384879Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\rites\\OneDrive\\Desktop\\RESUME\\client\\src\\app\\(dashboard)\\dashboard\\page.tsx"
+2026-01-29T16:26:33.384948Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\rites\\OneDrive\\Desktop\\RESUME\\client\\src\\app\\(dashboard)\\layout.tsx"
+2026-01-29T16:26:33.385024Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\rites\\OneDrive\\Desktop\\RESUME\\client\\src\\app\\(dashboard)\\profile"
+2026-01-29T16:26:33.385121Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\rites\\OneDrive\\Desktop\\RESUME\\client\\src\\app\\(dashboard)\\profile\\page.tsx"
+2026-01-29T16:26:33.385233Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\rites\\OneDrive\\Desktop\\RESUME\\client\\src\\app\\analyzer"
+2026-01-29T16:26:33.385331Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\rites\\OneDrive\\Desktop\\RESUME\\client\\src\\app\\analyzer\\page.tsx"
+2026-01-29T16:26:33.385424Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\rites\\OneDrive\\Desktop\\RESUME\\client\\src\\app\\builder"
+2026-01-29T16:26:33.385582Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\rites\\OneDrive\\Desktop\\RESUME\\client\\src\\app\\builder\\page.tsx"
+2026-01-29T16:26:33.385659Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\rites\\OneDrive\\Desktop\\RESUME\\client\\src\\app\\globals.css"
+2026-01-29T16:26:33.385709Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\rites\\OneDrive\\Desktop\\RESUME\\client\\src\\app\\layout.tsx"
+2026-01-29T16:26:33.385758Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\rites\\OneDrive\\Desktop\\RESUME\\client\\src\\app\\page.tsx"
+2026-01-29T16:26:33.385893Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\rites\\OneDrive\\Desktop\\RESUME\\client\\src\\components"
+2026-01-29T16:26:33.386056Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\rites\\OneDrive\\Desktop\\RESUME\\client\\src\\components\\analyzer"
+2026-01-29T16:26:33.386235Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\rites\\OneDrive\\Desktop\\RESUME\\client\\src\\components\\layout"
+2026-01-29T16:26:33.386396Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\rites\\OneDrive\\Desktop\\RESUME\\client\\src\\components\\resume"
+2026-01-29T16:26:33.386575Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\rites\\OneDrive\\Desktop\\RESUME\\client\\src\\components\\ui"
+2026-01-29T16:26:33.386755Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\rites\\OneDrive\\Desktop\\RESUME\\client\\src\\hooks"
+2026-01-29T16:26:33.386907Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\rites\\OneDrive\\Desktop\\RESUME\\client\\src\\lib"
+2026-01-29T16:26:33.387080Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\rites\\OneDrive\\Desktop\\RESUME\\client\\src\\store"
+2026-01-29T16:26:33.387229Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\rites\\OneDrive\\Desktop\\RESUME\\client\\src\\types"
+2026-01-29T16:26:33.387395Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\rites\\OneDrive\\Desktop\\RESUME\\client\\tsconfig.json"
+2026-01-29T16:26:33.387484Z  INFO scan_sources: tailwindcss_oxide::scanner: exit
+2026-01-29T16:26:33.387493Z  INFO extract_candidates: tailwindcss_oxide::scanner: enter
+2026-01-29T16:26:33.387500Z  INFO extract_candidates:read_all_files: tailwindcss_oxide::scanner: enter
+2026-01-29T16:26:33.387505Z  INFO extract_candidates:read_all_files: tailwindcss_oxide::scanner: Reading 18 file(s)
+2026-01-29T16:26:33.388245Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\rites\\OneDrive\\Desktop\\RESUME\\client\\src\\app\\analyzer\\page.tsx"
+2026-01-29T16:26:33.388327Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\rites\\OneDrive\\Desktop\\RESUME\\client\\src\\app\\layout.tsx"
+2026-01-29T16:26:33.388349Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\rites\\OneDrive\\Desktop\\RESUME\\client\\public\\file.svg"
+2026-01-29T16:26:33.388399Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\rites\\OneDrive\\Desktop\\RESUME\\client\\src\\app\\builder\\page.tsx"
+2026-01-29T16:26:33.388426Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\rites\\OneDrive\\Desktop\\RESUME\\client\\src\\app\\page.tsx"
+2026-01-29T16:26:33.388442Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\rites\\OneDrive\\Desktop\\RESUME\\client\\src\\app\\(dashboard)\\layout.tsx"
+2026-01-29T16:26:33.388451Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\rites\\OneDrive\\Desktop\\RESUME\\client\\public\\globe.svg"
+2026-01-29T16:26:33.388509Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\rites\\OneDrive\\Desktop\\RESUME\\client\\public\\next.svg"
+2026-01-29T16:26:33.388514Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\rites\\OneDrive\\Desktop\\RESUME\\client\\tsconfig.json"
+2026-01-29T16:26:33.388513Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\rites\\OneDrive\\Desktop\\RESUME\\client\\README.md"
+2026-01-29T16:26:33.388531Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\rites\\OneDrive\\Desktop\\RESUME\\client\\src\\app\\(dashboard)\\profile\\page.tsx"
+2026-01-29T16:26:33.388527Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\rites\\OneDrive\\Desktop\\RESUME\\client\\eslint.config.mjs"
+2026-01-29T16:26:33.388651Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\rites\\OneDrive\\Desktop\\RESUME\\client\\package.json"
+2026-01-29T16:26:33.388535Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\rites\\OneDrive\\Desktop\\RESUME\\client\\src\\app\\(dashboard)\\dashboard\\page.tsx"
+2026-01-29T16:26:33.388676Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\rites\\OneDrive\\Desktop\\RESUME\\client\\public\\vercel.svg"
+2026-01-29T16:26:33.388687Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\rites\\OneDrive\\Desktop\\RESUME\\client\\postcss.config.mjs"
+2026-01-29T16:26:33.388556Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\rites\\OneDrive\\Desktop\\RESUME\\client\\public\\window.svg"
+2026-01-29T16:26:33.388708Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\rites\\OneDrive\\Desktop\\RESUME\\client\\next.config.ts"
+2026-01-29T16:26:33.388769Z  INFO extract_candidates:read_all_files: tailwindcss_oxide::scanner: exit
+2026-01-29T16:26:33.388789Z  INFO extract_candidates:parse_all_blobs: tailwindcss_oxide::scanner: enter
+2026-01-29T16:26:33.388796Z  INFO extract_candidates:parse_all_blobs:extract: tailwindcss_oxide::scanner: enter
+2026-01-29T16:26:33.390700Z  INFO extract_candidates:parse_all_blobs:extract: tailwindcss_oxide::scanner: exit
+2026-01-29T16:26:33.390748Z  INFO extract_candidates:parse_all_blobs: tailwindcss_oxide::scanner: exit
+2026-01-29T16:26:33.390758Z  INFO extract_candidates:read_all_files: tailwindcss_oxide::scanner: enter
+2026-01-29T16:26:33.390763Z  INFO extract_candidates:read_all_files: tailwindcss_oxide::scanner: Reading 1 file(s)
+2026-01-29T16:26:33.390955Z  INFO extract_candidates:read_all_files: tailwindcss_oxide::scanner: Reading "C:\\Users\\rites\\OneDrive\\Desktop\\RESUME\\client\\src\\app\\globals.css"
+2026-01-29T16:26:33.390980Z  INFO extract_candidates:read_all_files: tailwindcss_oxide::scanner: exit
+2026-01-29T16:26:33.390994Z  INFO extract_candidates:extract_css_variables: tailwindcss_oxide::scanner: enter
+2026-01-29T16:26:33.391000Z  INFO extract_candidates:extract_css_variables:extract: tailwindcss_oxide::scanner: enter
+2026-01-29T16:26:33.391329Z  INFO extract_candidates:extract_css_variables:extract: tailwindcss_oxide::scanner: exit
+2026-01-29T16:26:33.391356Z  INFO extract_candidates:extract_css_variables: tailwindcss_oxide::scanner: exit
+2026-01-29T16:26:33.391740Z  INFO extract_candidates: tailwindcss_oxide::scanner: exit
+2026-01-29T16:26:33.392313Z  INFO get_files: tailwindcss_oxide::scanner: enter
+2026-01-29T16:26:33.392334Z  INFO get_files:scan_sources: tailwindcss_oxide::scanner: enter
+2026-01-29T16:26:33.394869Z  INFO get_files:scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\rites\\OneDrive\\Desktop\\RESUME\\client\\public"
+2026-01-29T16:26:33.395435Z  INFO get_files:scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\rites\\OneDrive\\Desktop\\RESUME\\client\\src"
+2026-01-29T16:26:33.395674Z  INFO get_files:scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\rites\\OneDrive\\Desktop\\RESUME\\client\\src\\app"
+2026-01-29T16:26:33.395896Z  INFO get_files:scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\rites\\OneDrive\\Desktop\\RESUME\\client\\src\\app\\(dashboard)"
+2026-01-29T16:26:33.396117Z  INFO get_files:scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\rites\\OneDrive\\Desktop\\RESUME\\client\\src\\app\\(dashboard)\\dashboard"
+2026-01-29T16:26:33.396439Z  INFO get_files:scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\rites\\OneDrive\\Desktop\\RESUME\\client\\src\\app\\(dashboard)\\profile"
+2026-01-29T16:26:33.396757Z  INFO get_files:scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\rites\\OneDrive\\Desktop\\RESUME\\client\\src\\app\\analyzer"
+2026-01-29T16:26:33.397053Z  INFO get_files:scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\rites\\OneDrive\\Desktop\\RESUME\\client\\src\\app\\builder"
+2026-01-29T16:26:33.397736Z  INFO get_files:scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\rites\\OneDrive\\Desktop\\RESUME\\client\\src\\components"
+2026-01-29T16:26:33.398689Z  INFO get_files:scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\rites\\OneDrive\\Desktop\\RESUME\\client\\src\\components\\analyzer"
+2026-01-29T16:26:33.399031Z  INFO get_files:scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\rites\\OneDrive\\Desktop\\RESUME\\client\\src\\components\\layout"
+2026-01-29T16:26:33.399617Z  INFO get_files:scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\rites\\OneDrive\\Desktop\\RESUME\\client\\src\\components\\resume"
+2026-01-29T16:26:33.399962Z  INFO get_files:scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\rites\\OneDrive\\Desktop\\RESUME\\client\\src\\components\\ui"
+2026-01-29T16:26:33.400819Z  INFO get_files:scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\rites\\OneDrive\\Desktop\\RESUME\\client\\src\\hooks"
+2026-01-29T16:26:33.401201Z  INFO get_files:scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\rites\\OneDrive\\Desktop\\RESUME\\client\\src\\lib"
+2026-01-29T16:26:33.401515Z  INFO get_files:scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\rites\\OneDrive\\Desktop\\RESUME\\client\\src\\store"
+2026-01-29T16:26:33.401832Z  INFO get_files:scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\rites\\OneDrive\\Desktop\\RESUME\\client\\src\\types"
+2026-01-29T16:26:33.402192Z  INFO get_files:scan_sources: tailwindcss_oxide::scanner: exit
+2026-01-29T16:26:33.402491Z  INFO get_files: tailwindcss_oxide::scanner: exit
+2026-01-29T16:26:33.402723Z  INFO get_globs: tailwindcss_oxide::scanner: enter
+2026-01-29T16:26:33.402736Z  INFO get_globs:scan_sources: tailwindcss_oxide::scanner: enter
+2026-01-29T16:26:33.404714Z  INFO get_globs:scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\rites\\OneDrive\\Desktop\\RESUME\\client\\public"
+2026-01-29T16:26:33.405077Z  INFO get_globs:scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\rites\\OneDrive\\Desktop\\RESUME\\client\\src"
+2026-01-29T16:26:33.405230Z  INFO get_globs:scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\rites\\OneDrive\\Desktop\\RESUME\\client\\src\\app"
+2026-01-29T16:26:33.405410Z  INFO get_globs:scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\rites\\OneDrive\\Desktop\\RESUME\\client\\src\\app\\(dashboard)"
+2026-01-29T16:26:33.405597Z  INFO get_globs:scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\rites\\OneDrive\\Desktop\\RESUME\\client\\src\\app\\(dashboard)\\dashboard"
+2026-01-29T16:26:33.405905Z  INFO get_globs:scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\rites\\OneDrive\\Desktop\\RESUME\\client\\src\\app\\(dashboard)\\profile"
+2026-01-29T16:26:33.406133Z  INFO get_globs:scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\rites\\OneDrive\\Desktop\\RESUME\\client\\src\\app\\analyzer"
+2026-01-29T16:26:33.406752Z  INFO get_globs:scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\rites\\OneDrive\\Desktop\\RESUME\\client\\src\\app\\builder"
+2026-01-29T16:26:33.407520Z  INFO get_globs:scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\rites\\OneDrive\\Desktop\\RESUME\\client\\src\\components"
+2026-01-29T16:26:33.408033Z  INFO get_globs:scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\rites\\OneDrive\\Desktop\\RESUME\\client\\src\\components\\analyzer"
+2026-01-29T16:26:33.408491Z  INFO get_globs:scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\rites\\OneDrive\\Desktop\\RESUME\\client\\src\\components\\layout"
+2026-01-29T16:26:33.408853Z  INFO get_globs:scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\rites\\OneDrive\\Desktop\\RESUME\\client\\src\\components\\resume"
+2026-01-29T16:26:33.409317Z  INFO get_globs:scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\rites\\OneDrive\\Desktop\\RESUME\\client\\src\\components\\ui"
+2026-01-29T16:26:33.409678Z  INFO get_globs:scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\rites\\OneDrive\\Desktop\\RESUME\\client\\src\\hooks"
+2026-01-29T16:26:33.409961Z  INFO get_globs:scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\rites\\OneDrive\\Desktop\\RESUME\\client\\src\\lib"
+2026-01-29T16:26:33.410152Z  INFO get_globs:scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\rites\\OneDrive\\Desktop\\RESUME\\client\\src\\store"
+2026-01-29T16:26:33.410323Z  INFO get_globs:scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\rites\\OneDrive\\Desktop\\RESUME\\client\\src\\types"
+2026-01-29T16:26:33.410604Z  INFO get_globs:scan_sources: tailwindcss_oxide::scanner: exit
+2026-01-29T16:26:33.416565Z  INFO get_globs: tailwindcss_oxide::scanner: exit

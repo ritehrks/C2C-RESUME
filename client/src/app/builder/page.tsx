@@ -560,10 +560,8 @@ export default function BuilderPage() {
                         >
                             {/* MNIT Resume Preview */}
                             <div className="flex gap-4 mb-4">
-                                {/* MNIT Logo placeholder */}
-                                <div className="w-[2.35cm] h-[2.35cm] bg-gray-200 flex items-center justify-center text-xs text-gray-500 rounded">
-                                    MNIT Logo
-                                </div>
+                                {/* MNIT Logo */}
+                                <img src="/mnit-logo.png" alt="MNIT Jaipur" className="w-[2.35cm] h-[2.35cm] object-contain" />
                                 <div className="flex-1">
                                     <div className="flex justify-between items-start">
                                         <div>
