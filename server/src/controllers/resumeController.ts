@@ -4,20 +4,50 @@
 import { Request, Response } from 'express';
 import { generatePdf, ResumeData } from '../services/latex/latexEngine.js';
 import { Resume } from '../models/Resume.js';
+import { User } from '../models/User.js';
 import mongoose from 'mongoose';
+import jwt from 'jsonwebtoken';
+
+const JWT_SECRET = process.env.JWT_SECRET || 'c2c-resume-secret-key-change-in-production';
+
+// Helper to get user ID from request (dev mode or JWT)
+const getUserId = async (req: Request): Promise<string | null> => {
+    const authHeader = req.headers.authorization;
+
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+        try {
+            const token = authHeader.split(' ')[1];
+            const decoded = jwt.verify(token, JWT_SECRET) as { userId: string };
+            return decoded.userId;
+        } catch {
+            return null;
+        }
+    }
+
+    // In dev mode, return the dev user's ID
+    if (process.env.NODE_ENV !== 'production') {
+        const devUser = await User.findOne({ email: 'dev@c2c.mnit.ac.in' });
+        return devUser?._id.toString() || null;
+    }
+
+    return null;
+};
 
 export const resumeController = {
     // GET /api/resumes - Get all resumes (for dashboard)
     getAll: async (req: Request, res: Response) => {
         try {
-            // For now, fetch all resumes (auth can be added later)
-            // Select only fields needed for dashboard cards
-            const resumes = await Resume.find()
-                .select('_id name version templateId updatedAt createdAt')
+            const userId = await getUserId(req);
+
+            // Build query - in dev without auth, show all; otherwise filter by user
+            const query = userId ? { userId: new mongoose.Types.ObjectId(userId) } : {};
+
+            const resumes = await Resume.find(query)
+                .select('_id name version templateId updatedAt createdAt userId')
                 .sort({ updatedAt: -1 })
                 .lean();
 
-            console.log(`📋 Fetched ${resumes.length} resumes`);
+            console.log(`📋 Fetched ${resumes.length} resumes${userId ? ` for user ${userId}` : ''}`);
             res.json({
                 success: true,
                 count: resumes.length,
@@ -83,10 +113,18 @@ export const resumeController = {
                 });
             }
 
+            // Get user ID from auth or dev mode
+            const userId = await getUserId(req);
+            if (!userId) {
+                return res.status(401).json({
+                    success: false,
+                    error: 'Authentication required to create resume'
+                });
+            }
+
             // Create new resume document
-            // Note: userId should come from auth middleware in production
             const newResume = new Resume({
-                userId: new mongoose.Types.ObjectId(), // Placeholder - replace with auth user ID
+                userId: new mongoose.Types.ObjectId(userId),
                 name: resumeData.name,
                 version: 1,
                 templateId: resumeData.templateId || 'mnit_resume',
@@ -210,7 +248,7 @@ export const resumeController = {
         try {
             console.log('📥 Received PDF generation request');
 
-            const resumeData: ResumeData = req.body;
+            const { templateName, ...resumeData }: ResumeData & { templateName?: string } = req.body;
 
             // Validate required fields
             if (!resumeData.name || !resumeData.email) {
@@ -219,8 +257,12 @@ export const resumeController = {
                 });
             }
 
+            // Default to mnit_resume if no template specified
+            const template = templateName || 'mnit_resume';
+            console.log(`📑 Using template: ${template}`);
+
             // Generate PDF using LaTeX-On-HTTP API
-            const pdfBuffer = await generatePdf(resumeData, 'mnit_resume');
+            const pdfBuffer = await generatePdf(resumeData as ResumeData, template);
 
             // Set response headers for PDF download
             const fileName = `${resumeData.name.replace(/\s+/g, '_')}_Resume.pdf`;

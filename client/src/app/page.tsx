@@ -11,8 +11,14 @@ export default function Home() {
             <Image src="/logo-v2.png" alt="C2C Logo" width={160} height={56} className="h-14 w-auto" priority />
           </div>
           <div className="flex items-center gap-4">
-            <Link href="/analyzer" className="hidden sm:flex items-center gap-2 px-6 h-10 rounded-lg text-navy-900 hover:text-royal-600 font-semibold transition-colors">
+            <Link href="/dashboard" className="hidden sm:flex items-center gap-2 px-4 h-10 rounded-lg text-navy-900 hover:text-royal-600 font-semibold transition-colors">
+              Dashboard
+            </Link>
+            <Link href="/analyzer" className="hidden sm:flex items-center gap-2 px-4 h-10 rounded-lg text-navy-900 hover:text-royal-600 font-semibold transition-colors">
               ATS Analyzer
+            </Link>
+            <Link href="/profile" className="hidden sm:flex items-center justify-center size-10 rounded-lg text-navy-900 hover:text-royal-600 hover:bg-slate-100 transition-colors" title="Profile">
+              <span className="material-symbols-outlined">account_circle</span>
             </Link>
             <Link href="/builder" className="hidden sm:flex items-center gap-2 px-6 h-10 rounded-lg bg-royal-600 hover:bg-royal-500 text-white shadow-md shadow-royal-600/20 text-sm font-semibold transition-all duration-200 transform hover:-translate-y-0.5">
               <span className="material-symbols-outlined text-lg">school</span>
@@ -43,14 +49,20 @@ export default function Home() {
                   The definitive LaTeX-based platform for students. Create ATS-compliant resumes with academic precision in seconds.
                 </p>
               </div>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-                <Link href="/builder" className="group flex items-center justify-center gap-2 h-14 px-8 rounded-lg bg-navy-800 hover:bg-navy-900 text-white text-base font-bold shadow-lg shadow-navy-900/20 transition-all duration-200 transform hover:-translate-y-0.5">
-                  <span className="material-symbols-outlined group-hover:animate-pulse">add_circle</span>
-                  <span>Create New</span>
-                </Link>
-                <Link href="/analyzer" className="group flex items-center justify-center gap-2 h-14 px-8 rounded-lg bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:border-royal-600 text-navy-900 dark:text-white text-base font-bold transition-all duration-200 transform hover:-translate-y-0.5 hover:shadow-md">
+              <div className="flex flex-col gap-4 justify-center lg:justify-start">
+                <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+                  <Link href="/builder?template=mnit" className="group flex items-center justify-center gap-2 h-14 px-8 rounded-lg bg-navy-800 hover:bg-navy-900 text-white text-base font-bold shadow-lg shadow-navy-900/20 transition-all duration-200 transform hover:-translate-y-0.5">
+                    <span className="material-symbols-outlined group-hover:animate-pulse">school</span>
+                    <span>MNIT Official</span>
+                  </Link>
+                  <Link href="/builder?template=generic" className="group flex items-center justify-center gap-2 h-14 px-8 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-base font-bold shadow-lg shadow-emerald-600/20 transition-all duration-200 transform hover:-translate-y-0.5">
+                    <span className="material-symbols-outlined group-hover:animate-pulse">description</span>
+                    <span>Generic ATS</span>
+                  </Link>
+                </div>
+                <Link href="/analyzer" className="group flex items-center justify-center gap-2 h-12 px-8 rounded-lg bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:border-royal-600 text-navy-900 dark:text-white text-base font-bold transition-all duration-200 transform hover:-translate-y-0.5 hover:shadow-md sm:w-fit sm:mx-auto lg:mx-0">
                   <span className="material-symbols-outlined text-slate-400 group-hover:text-royal-600 transition-colors">upload_file</span>
-                  <span>Analyze Existing</span>
+                  <span>Analyze Existing Resume</span>
                 </Link>
               </div>
               <div className="flex items-center justify-center lg:justify-start gap-2 pt-2">

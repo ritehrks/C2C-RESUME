@@ -1,10 +1,11 @@
 // Simple Analyzer Service
 // Runs locally using @xenova/transformers - NO external API calls
 
-import { pipeline, type Pipeline } from '@xenova/transformers';
+import { pipeline } from '@xenova/transformers';
 // import ROLE_PROFILES from './roleProfiles.json'; // TODO: Import role profiles
 
-let embedder: Pipeline | null = null;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let embedder: any = null;
 
 /**
  * Initialize the local embedding model
@@ -122,5 +123,5 @@ export interface SimpleAnalysisResult {
         weak: string[];
     };
     hasQuantification: boolean;
-    analysisType: 'simple';
+    analysisType: 'simple' | 'deep';
 }

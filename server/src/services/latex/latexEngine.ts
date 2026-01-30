@@ -8,6 +8,7 @@ import * as path from 'path';
 const LATEX_API_URL = 'https://latex.ytotech.com/builds/sync';
 
 // Resume data interface matching frontend
+// Extended to support both MNIT and Generic ATS templates
 export interface ResumeData {
     name: string;
     course: string;
@@ -55,6 +56,10 @@ export interface ResumeData {
         description: string;
         date: string;
     }[];
+    // Generic template specific fields
+    summary?: string;
+    location?: string;
+    institution?: string;
 }
 
 // Escape special LaTeX characters
@@ -91,8 +96,8 @@ function escapeObject(obj: any): any {
     return obj;
 }
 
-// Convert resume data to template-friendly format
-function prepareTemplateData(data: ResumeData): any {
+// Convert resume data to MNIT template-friendly format
+function prepareMnitTemplateData(data: ResumeData): any {
     const escaped = escapeObject(data);
 
     return {
@@ -150,16 +155,104 @@ function prepareTemplateData(data: ResumeData): any {
     };
 }
 
+// Convert resume data to Generic ATS template-friendly format
+function prepareGenericTemplateData(data: ResumeData): any {
+    const escaped = escapeObject(data);
+
+    // Build educations array
+    const educations = [];
+
+    // Primary education (college/university)
+    const years = escaped.educationYear?.split('-') || [];
+    educations.push({
+        INSTITUTION: escaped.institution || 'Your University',
+        DEGREE: escaped.degree || 'Bachelor of Technology',
+        BRANCH: escaped.course,
+        START_YEAR: years[0] || '2020',
+        END_YEAR: years[1] || '2024',
+        CGPA: escaped.cgpa,
+        PERCENTAGE: null,
+    });
+
+    // Secondary education (school) if exists
+    if (escaped.schoolName) {
+        educations.push({
+            INSTITUTION: escaped.schoolName,
+            DEGREE: 'Class XII',
+            BRANCH: escaped.schoolBoard,
+            START_YEAR: '',
+            END_YEAR: escaped.schoolYear,
+            CGPA: null,
+            PERCENTAGE: escaped.schoolPercentage,
+        });
+    }
+
+    const experiences = escaped.experiences?.map((exp: any) => ({
+        COMPANY: exp.company,
+        LOCATION: exp.location,
+        ROLE: exp.role,
+        DATES: exp.dates,
+        ITEMS: exp.items.filter((item: string) => item.trim()),
+    })) || [];
+
+    const projects = escaped.projects?.map((proj: any) => ({
+        NAME: proj.name,
+        DESCRIPTION: proj.description,
+        DATES: proj.dates,
+        TECHNOLOGIES: proj.technologies,
+        ITEMS: proj.items.filter((item: string) => item.trim()),
+    })) || [];
+
+    const positions = escaped.positions?.map((pos: any) => ({
+        TITLE: pos.title,
+        ORGANIZATION: pos.organization,
+        TENURE: pos.tenure,
+    })) || [];
+
+    const achievements = escaped.achievements?.map((ach: any) => ({
+        TITLE: ach.title,
+        DESCRIPTION: ach.description,
+        DATE: ach.date,
+    })) || [];
+
+    return {
+        NAME: escaped.name,
+        LOCATION: escaped.location || 'India',
+        EMAIL: escaped.email,
+        PHONE: escaped.phone,
+        GITHUB_URL: escaped.githubUrl,
+        LINKEDIN_URL: escaped.linkedinUrl,
+        SUMMARY: escaped.summary,
+        // Education
+        EDUCATIONS: educations,
+        // Skills
+        LANGUAGES: escaped.languages,
+        FRAMEWORKS: escaped.frameworks,
+        DEV_TOOLS: escaped.devTools,
+        CLOUD_DB: escaped.cloudDb,
+        CORE_CS: escaped.coursework,
+        SOFT_SKILLS: escaped.softSkills,
+        // Dynamic sections with boolean flags for conditionals
+        HAS_EXPERIENCES: experiences.length > 0,
+        EXPERIENCES: experiences,
+        HAS_PROJECTS: projects.length > 0,
+        PROJECTS: projects,
+        HAS_POSITIONS: positions.length > 0,
+        POSITIONS: positions,
+        HAS_ACHIEVEMENTS: achievements.length > 0,
+        ACHIEVEMENTS: achievements,
+    };
+}
+
 // Load and render the LaTeX template
 function renderTemplate(templateName: string, data: ResumeData): string {
     const templatePath = path.join(__dirname, 'templates', `${templateName}.tex`);
     const templateContent = fs.readFileSync(templatePath, 'utf-8');
 
-    const templateData = prepareTemplateData(data);
-
-    // Configure Mustache to use {{ }} delimiters (already default)
-    // But we need to handle the LaTeX-style delimiters in our template
-    // Our template uses {{{VAR}}} for unescaped and {{#SECTION}}...{{/SECTION}} for sections
+    // Choose the right data transformer based on template
+    const templateData = templateName === 'generic_ats_resume'
+        ? prepareGenericTemplateData(data)
+        : prepareMnitTemplateData(data);
 
     return Mustache.render(templateContent, templateData);
 }

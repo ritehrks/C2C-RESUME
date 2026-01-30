@@ -127,7 +127,11 @@ const resumeSchema = new Schema<IResume>(
             }],
         },
         pdfUrl: String,
-        templateId: { type: String, default: 'default' },
+        templateId: {
+            type: String,
+            enum: ['mnit_resume', 'generic_ats_resume'],
+            default: 'mnit_resume'
+        },
     },
     { timestamps: true }
 );

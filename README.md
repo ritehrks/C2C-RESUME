@@ -1,29 +1,54 @@
 # C2C Resume Platform
 
-A modern, full-stack resume builder with ATS optimization powered by AI.
-
 <p align="center">
   <img src="client/public/logo-v2.png" alt="C2C Logo" width="200">
 </p>
 
+<p align="center">
+  <strong>Official LaTeX-based Resume Builder for MNIT Jaipur</strong>
+</p>
+
+<p align="center">
+  <a href="#features">Features</a> •
+  <a href="#quick-start">Quick Start</a> •
+  <a href="#documentation">Documentation</a> •
+  <a href="#tech-stack">Tech Stack</a>
+</p>
+
+---
+
 ## ✨ Features
 
 ### 📄 Resume Builder
-- Intuitive form-based resume creation
+- **Two Professional Templates:**
+  - **MNIT Official** - Optimized for MNIT students with college branding
+  - **Generic ATS** - Universal format for any industry/institution
 - Real-time LaTeX PDF generation
-- Multiple template support
+- **PDF Preview Modal** - View PDF before downloading
 - Auto-save with version tracking
+- Intuitive form-based editing
+
+### 👤 User Profile & Authentication
+- **Google OAuth 2.0** authentication
+- **Master Profile** - Store reusable data (personal info, education, skills)
+- Development mode with mock user (no login required locally)
+- JWT-based session management
 
 ### 📊 ATS Analyzer
-- **Simple Analysis**: Keyword matching, action verb detection
-- **Deep AI Analysis**: Gemini-powered insights with personalized feedback
-- Match percentage scoring
-- Actionable improvement suggestions
+- **Simple Analysis** (Instant, local):
+  - Keyword matching
+  - Action verb detection
+  - Section analysis
+  - Semantic similarity scoring
+- **Deep AI Analysis** (Gemini-powered):
+  - Personalized content suggestions
+  - Industry-specific recommendations
+  - ATS optimization tips
 
 ### 📁 Dashboard
-- View all your resumes in one place
-- Quick edit and delete
-- Template preview
+- View all resumes in one place
+- Quick edit, delete, and duplicate
+- Template badge indicators
 - Last modified tracking
 
 ---
@@ -31,8 +56,9 @@ A modern, full-stack resume builder with ATS optimization powered by AI.
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Node.js v18+
+- Node.js v20+
 - MongoDB (local or Atlas)
+- LaTeX distribution (pdflatex)
 - npm or yarn
 
 ### Installation
@@ -51,171 +77,169 @@ cd ../client
 npm install
 ```
 
-### Configuration
+### Environment Setup
 
-**Server (`server/.env`):**
+**Server (.env):**
 ```env
-PORT=5000
-CLIENT_URL=http://localhost:3000
 MONGODB_URI=mongodb://localhost:27017/c2c-resume
-
-# Optional: For AI-powered analysis
-GOOGLE_API_KEY=your_gemini_api_key
+JWT_SECRET=your-secret-key
+GEMINI_API_KEY=your-gemini-key
+NODE_ENV=development
+PORT=5000
 ```
 
-**Client (`client/.env.local`):**
+**Client (.env.local):**
 ```env
 NEXT_PUBLIC_API_URL=http://localhost:5000
 ```
 
-### Running the Application
+### Run Development Servers
 
 ```bash
-# Terminal 1: Start MongoDB (if local)
-mongod
-
-# Terminal 2: Start Backend
+# Terminal 1 - Server
 cd server
 npm run dev
 
-# Terminal 3: Start Frontend
+# Terminal 2 - Client
 cd client
 npm run dev
 ```
 
 **Access:**
-- 🌐 Frontend: http://localhost:3000
-- 🔌 API: http://localhost:5000
-- ❤️ Health: http://localhost:5000/health
-
----
-
-## 📁 Project Structure
-
-```
-C2C-RESUME/
-├── client/                 # Next.js Frontend (Port 3000)
-│   ├── src/
-│   │   ├── app/
-│   │   │   ├── (dashboard)/dashboard/  # Resume dashboard
-│   │   │   ├── analyzer/               # ATS analyzer
-│   │   │   ├── builder/                # Resume builder
-│   │   │   └── page.tsx                # Landing page
-│   │   └── lib/
-│   │       └── api.ts                  # API service
-│   └── public/                         # Static assets
-│
-├── server/                 # Express Backend (Port 5000)
-│   ├── src/
-│   │   ├── controllers/                # Request handlers
-│   │   ├── models/                     # Mongoose schemas
-│   │   ├── routes/                     # API routes
-│   │   └── services/
-│   │       ├── ai/                     # Gemini integration
-│   │       └── latex/                  # PDF generation
-│   └── .env                            # Environment config
-│
-├── IMPLEMENTATION_DOCS.md  # Detailed documentation
-└── README.md               # This file
-```
-
----
-
-## 🔌 API Endpoints
-
-### Resumes
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/resumes` | List all resumes |
-| GET | `/api/resumes/:id` | Get single resume |
-| POST | `/api/resumes` | Create resume |
-| PUT | `/api/resumes/:id` | Update resume |
-| DELETE | `/api/resumes/:id` | Delete resume |
-| POST | `/api/resumes/generate-pdf` | Generate PDF |
-
-### Analyzer
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/api/analyze/simple` | Quick keyword analysis |
-| POST | `/api/analyze/deep` | AI-powered analysis |
-
----
-
-## 🤖 AI Features
-
-To enable Gemini AI-powered deep analysis:
-
-1. Get a free API key from [Google AI Studio](https://aistudio.google.com/app/apikey)
-2. Add to `server/.env`:
-   ```env
-   GOOGLE_API_KEY=your_api_key_here
-   ```
-3. Restart the server
-
-### What Deep Analysis Provides:
-- Overall resume assessment
-- Strengths and improvement areas
-- Keyword optimization with context tips
-- Content suggestions for each section
-- Competitive edge insights
-- Step-by-step action plan
-
----
-
-## 🛠️ Tech Stack
-
-| Layer | Technology |
-|-------|------------|
-| Frontend | Next.js 14, React, TypeScript, Tailwind CSS |
-| Backend | Express.js, TypeScript, Node.js |
-| Database | MongoDB, Mongoose |
-| AI | Google Gemini API |
-| PDF | LaTeX templates |
-| Icons | Material Symbols |
-
----
-
-## 📝 Usage
-
-### Creating a Resume
-1. Go to Dashboard → Click "Create New Resume"
-2. Fill in your details in the builder
-3. Click "Save New" to save to database
-4. Click "Download PDF" to generate your resume
-
-### Analyzing Your Resume
-1. Go to ATS Analyzer
-2. Paste the target job description
-3. Paste your resume text
-4. Choose Simple or Deep Analysis
-5. Review feedback and improve your resume
+- Frontend: http://localhost:3000
+- Backend: http://localhost:5000
 
 ---
 
 ## 📚 Documentation
 
-For detailed implementation documentation, see:
-- [IMPLEMENTATION_DOCS.md](./IMPLEMENTATION_DOCS.md) - Complete technical documentation
-- [IMPLEMENTATION_PLAN.md](./IMPLEMENTATION_PLAN.md) - Project roadmap and phases
+For comprehensive technical documentation, see **[DOCUMENTATION.md](./DOCUMENTATION.md)** which includes:
+
+- 🏗 System Architecture
+- 📚 API Documentation
+- 🗄 Database Schema
+- 🔐 Authentication Flow
+- ⚙️ Environment Variables
+- 🗺 Future Roadmap
 
 ---
 
-## 🤝 Contributing
+## 🛠 Tech Stack
+
+### Frontend
+| Technology | Purpose |
+|------------|---------|
+| Next.js 16 | React framework with App Router |
+| TypeScript | Type safety |
+| Tailwind CSS 4 | Utility-first styling |
+| React 19 | UI library |
+
+### Backend
+| Technology | Purpose |
+|------------|---------|
+| Express.js | Web framework |
+| TypeScript | Type safety |
+| Mongoose | MongoDB ODM |
+| jsonwebtoken | JWT authentication |
+
+### Infrastructure
+| Technology | Purpose |
+|------------|---------|
+| MongoDB | Primary database |
+| Redis | Rate limiting |
+| Gemini API | AI analysis |
+| LaTeX | PDF generation |
+
+---
+
+## 📂 Project Structure
+
+```
+C2C-RESUME/
+├── client/                 # Next.js frontend
+│   ├── src/
+│   │   ├── app/           # App router pages
+│   │   │   ├── (dashboard)/ 
+│   │   │   │   ├── dashboard/
+│   │   │   │   └── profile/
+│   │   │   ├── analyzer/
+│   │   │   ├── builder/
+│   │   │   └── page.tsx   # Landing page
+│   │   └── lib/           # API utilities
+│   └── public/            # Static assets
+│
+├── server/                 # Express backend
+│   ├── src/
+│   │   ├── controllers/   # Route handlers
+│   │   ├── models/        # Mongoose schemas
+│   │   ├── routes/        # API routes
+│   │   └── services/      # Business logic
+│   │       ├── analyzer/  # Analysis engines
+│   │       └── latex/     # PDF generation
+│   └── templates/         # LaTeX templates
+│
+├── DOCUMENTATION.md        # Technical docs
+└── README.md              # This file
+```
+
+---
+
+## 🔧 API Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/auth/google` | Initiate OAuth |
+| GET | `/api/auth/me` | Get current user |
+| PUT | `/api/auth/profile` | Update profile |
+| GET | `/api/resumes` | List resumes |
+| POST | `/api/resumes` | Create resume |
+| PUT | `/api/resumes/:id` | Update resume |
+| DELETE | `/api/resumes/:id` | Delete resume |
+| POST | `/api/resumes/generate-pdf` | Generate PDF |
+| POST | `/api/analyze/simple` | Simple analysis |
+| POST | `/api/analyze/deep` | AI analysis |
+
+---
+
+## 🗺 Roadmap
+
+### ✅ Phase 1 (Complete)
+- Resume Builder with 2 templates
+- PDF generation with LaTeX
+- Simple & Deep analysis
+- User authentication
+- Master profile management
+- PDF preview modal
+
+### 🔄 Phase 2 (In Progress)
+- [ ] DOCX export
+- [ ] JSON export/import
+- [ ] Analysis history
+- [ ] Resume versioning
+
+### 📋 Phase 3 (Planned)
+- [ ] LinkedIn import
+- [ ] Job matching
+- [ ] Mobile app
+
+---
+
+## 📝 Contributing
 
 1. Fork the repository
-2. Create a feature branch
-3. Commit your changes
-4. Push to the branch
+2. Create feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit changes (`git commit -m 'Add amazing feature'`)
+4. Push to branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
 ---
 
 ## 📄 License
 
-This project is licensed under the MIT License.
+This project is proprietary software developed for MNIT Jaipur Placement Cell.
 
 ---
 
 <p align="center">
-  Made with ❤️ by the C2C Team
+  <strong>Built with ❤️ for MNIT Jaipur</strong>
 </p>
