@@ -8,5 +8,6 @@ router.get('/google', authController.googleAuth);
 router.get('/callback', authController.googleCallback);
 router.post('/logout', authController.logout);
 router.get('/me', authController.getMe);
+router.put('/profile', authController.updateProfile);
 
 export default router;

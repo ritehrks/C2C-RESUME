@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect, Suspense } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
+import { resumeApi } from '@/lib/api';
 
 // Types for resume data
 interface Experience {
@@ -123,9 +125,199 @@ const defaultResumeData: ResumeData = {
     ]
 };
 
-export default function BuilderPage() {
+function BuilderContent() {
+    const searchParams = useSearchParams();
+    const router = useRouter();
+    const editId = searchParams.get('id');
+    const templateParam = searchParams.get('template');
+
     const [zoom, setZoom] = useState(85);
     const [resumeData, setResumeData] = useState<ResumeData>(defaultResumeData);
+    const [resumeId, setResumeId] = useState<string | null>(editId);
+    const [resumeName, setResumeName] = useState('Untitled Resume');
+    const [isLoading, setIsLoading] = useState(!!editId);
+    const [isSaving, setIsSaving] = useState(false);
+    const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+    const [selectedTemplate, setSelectedTemplate] = useState<'mnit_resume' | 'generic_ats_resume'>(
+        templateParam === 'generic' ? 'generic_ats_resume' : 'mnit_resume'
+    );
+
+    // Load existing resume if ID is provided in URL
+    useEffect(() => {
+        if (editId) {
+            loadResume(editId);
+        }
+    }, [editId]);
+
+    const loadResume = async (id: string) => {
+        try {
+            setIsLoading(true);
+            const data = await resumeApi.getOne(id);
+            if (data.success && data.resume) {
+                setResumeId(id);
+                setResumeName(data.resume.name);
+
+                // Map database content to local format
+                const content = data.resume.content;
+                if (content) {
+                    setResumeData({
+                        // Personal Info
+                        name: content.personalInfo?.name || defaultResumeData.name,
+                        email: content.personalInfo?.email || defaultResumeData.email,
+                        phone: content.personalInfo?.phone || defaultResumeData.phone,
+                        githubUrl: content.personalInfo?.github || defaultResumeData.githubUrl,
+                        linkedinUrl: content.personalInfo?.linkedin || defaultResumeData.linkedinUrl,
+                        course: defaultResumeData.course, // Not stored in content
+                        roll: defaultResumeData.roll, // Not stored in content
+                        collegeEmail: defaultResumeData.collegeEmail, // Not stored in content
+                        degree: content.education?.[0]?.branch || defaultResumeData.degree,
+
+                        // Education
+                        cgpa: String(content.education?.[0]?.cgpa || defaultResumeData.cgpa),
+                        educationYear: content.education?.[0]
+                            ? `${content.education[0].startYear}-${content.education[0].endYear}`
+                            : defaultResumeData.educationYear,
+                        schoolName: defaultResumeData.schoolName, // Not in content model
+                        schoolPercentage: defaultResumeData.schoolPercentage,
+                        schoolBoard: defaultResumeData.schoolBoard,
+                        schoolYear: defaultResumeData.schoolYear,
+
+                        // Skills
+                        languages: content.skills?.languages?.join(', ') || defaultResumeData.languages,
+                        devTools: content.skills?.tools?.join(', ') || defaultResumeData.devTools,
+                        frameworks: content.skills?.frameworks?.join(', ') || defaultResumeData.frameworks,
+                        cloudDb: content.skills?.databases?.join(', ') || defaultResumeData.cloudDb,
+                        softSkills: defaultResumeData.softSkills,
+                        coursework: defaultResumeData.coursework,
+                        interests: defaultResumeData.interests,
+
+                        // Experience
+                        experiences: content.experience?.map((exp: any) => ({
+                            company: exp.company || '',
+                            location: '', // Not in content model
+                            role: exp.role || '',
+                            dates: `${exp.startDate || ''} - ${exp.endDate || ''}`,
+                            items: exp.bullets || [''],
+                        })) || defaultResumeData.experiences,
+
+                        // Projects
+                        projects: content.projects?.map((proj: any) => ({
+                            name: proj.title || '',
+                            description: proj.description || '',
+                            dates: '', // Not in content model
+                            technologies: proj.techStack?.join(', ') || '',
+                            items: proj.bullets || [''],
+                        })) || defaultResumeData.projects,
+
+                        // Positions of Responsibility
+                        positions: content.pors?.map((por: any) => ({
+                            title: por.position || '',
+                            organization: por.organization || '',
+                            tenure: por.duration || '',
+                        })) || defaultResumeData.positions,
+
+                        // Achievements
+                        achievements: content.achievements?.map((ach: any) => ({
+                            title: ach.title || '',
+                            description: ach.description || '',
+                            date: ach.date || '',
+                        })) || defaultResumeData.achievements,
+                    });
+                }
+
+                // Load saved template selection
+                if (data.resume.templateId) {
+                    setSelectedTemplate(data.resume.templateId as 'mnit_resume' | 'generic_ats_resume');
+                }
+            }
+        } catch (error) {
+            console.error('Failed to load resume:', error);
+            alert('Failed to load resume. Starting with a blank template.');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleSave = async () => {
+        try {
+            setIsSaving(true);
+            setSaveStatus('saving');
+
+            const saveData = {
+                name: resumeName || resumeData.name || 'Untitled Resume',
+                templateId: selectedTemplate,
+                content: {
+                    personalInfo: {
+                        name: resumeData.name,
+                        email: resumeData.email,
+                        phone: resumeData.phone,
+                        linkedin: resumeData.linkedinUrl,
+                        github: resumeData.githubUrl,
+                    },
+                    education: [{
+                        institution: 'MNIT Jaipur',
+                        branch: resumeData.degree,
+                        cgpa: parseFloat(resumeData.cgpa) || 0,
+                        startYear: parseInt(resumeData.educationYear.split('-')[0]) || 2021,
+                        endYear: parseInt(resumeData.educationYear.split('-')[1]) || 2025,
+                    }],
+                    experience: resumeData.experiences.map(exp => ({
+                        company: exp.company,
+                        role: exp.role,
+                        startDate: exp.dates.split(' - ')[0] || '',
+                        endDate: exp.dates.split(' - ')[1] || '',
+                        bullets: exp.items,
+                    })),
+                    projects: resumeData.projects.map(proj => ({
+                        title: proj.name,
+                        techStack: proj.technologies.split(', '),
+                        description: proj.description,
+                        bullets: proj.items,
+                    })),
+                    skills: {
+                        languages: resumeData.languages.split(', '),
+                        frameworks: resumeData.frameworks.split(', '),
+                        tools: resumeData.devTools.split(', '),
+                        databases: resumeData.cloudDb.split(', '),
+                    },
+                    achievements: resumeData.achievements.map(ach => ({
+                        title: ach.title,
+                        description: ach.description,
+                        date: ach.date,
+                    })),
+                    certifications: [],
+                    pors: resumeData.positions.map(pos => ({
+                        position: pos.title,
+                        organization: pos.organization,
+                        duration: pos.tenure,
+                        description: '',
+                    })),
+                },
+            };
+
+            if (resumeId) {
+                // Update existing resume
+                await resumeApi.update(resumeId, saveData);
+            } else {
+                // Create new resume
+                const result = await resumeApi.create(saveData);
+                if (result.resume._id) {
+                    setResumeId(result.resume._id);
+                    // Update URL without full reload
+                    window.history.replaceState({}, '', `/builder?id=${result.resume._id}`);
+                }
+            }
+
+            setSaveStatus('saved');
+            setTimeout(() => setSaveStatus('idle'), 2000);
+        } catch (error: any) {
+            console.error('Save error:', error);
+            setSaveStatus('error');
+            alert(`Failed to save: ${error.message}`);
+        } finally {
+            setIsSaving(false);
+        }
+    };
 
     const updateField = (field: keyof ResumeData, value: string) => {
         setResumeData(prev => ({ ...prev, [field]: value }));
@@ -219,10 +411,103 @@ export default function BuilderPage() {
         }));
     };
 
-    const handleDownloadPDF = () => {
-        // For now, show alert. Backend integration will handle actual PDF generation
-        alert("PDF Download will be available after backend integration. The LaTeX template is ready!");
-        console.log("Resume Data:", resumeData);
+    const [isGenerating, setIsGenerating] = useState(false);
+
+    const handleDownloadPDF = async () => {
+        setIsGenerating(true);
+        try {
+            const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+
+            const response = await fetch(`${API_URL}/api/resumes/generate-pdf`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    ...resumeData,
+                    templateName: selectedTemplate,
+                }),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to generate PDF');
+            }
+
+            // Get the PDF blob and trigger download
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `${resumeData.name.replace(/\s+/g, '_')}_Resume.pdf`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(url);
+
+        } catch (error: any) {
+            console.error('PDF generation error:', error);
+            alert(`Failed to generate PDF: ${error.message}`);
+        } finally {
+            setIsGenerating(false);
+        }
+    };
+
+    // PDF Preview state and functions
+    const [showPreview, setShowPreview] = useState(false);
+    const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+    const [isLoadingPreview, setIsLoadingPreview] = useState(false);
+
+    const handlePreviewPDF = async () => {
+        setIsLoadingPreview(true);
+        try {
+            const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+
+            const response = await fetch(`${API_URL}/api/resumes/generate-pdf`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    ...resumeData,
+                    templateName: selectedTemplate,
+                }),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to generate PDF');
+            }
+
+            // Get the PDF blob and create a URL for preview
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            setPreviewUrl(url);
+            setShowPreview(true);
+        } catch (error: any) {
+            console.error('PDF preview error:', error);
+            alert(`Failed to generate preview: ${error.message}`);
+        } finally {
+            setIsLoadingPreview(false);
+        }
+    };
+
+    const handleDownloadFromPreview = () => {
+        if (!previewUrl) return;
+        const link = document.createElement('a');
+        link.href = previewUrl;
+        link.download = `${resumeData.name.replace(/\s+/g, '_')}_Resume.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
+    const closePreview = () => {
+        setShowPreview(false);
+        if (previewUrl) {
+            window.URL.revokeObjectURL(previewUrl);
+            setPreviewUrl(null);
+        }
     };
 
     return (
@@ -236,21 +521,102 @@ export default function BuilderPage() {
                     <Image src="/logo-v2.png" alt="C2C Logo" width={140} height={50} className="h-12 w-auto" />
                     <div className="hidden sm:block">
                         <p className="text-sm font-semibold text-gray-900 dark:text-white">{resumeData.name || "Untitled Resume"}</p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">MNIT Official Template</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                            {selectedTemplate === 'mnit_resume' ? 'MNIT Official Template' : 'Generic ATS Template'}
+                        </p>
                     </div>
                 </div>
                 <div className="flex items-center gap-4">
-                    <div className="hidden sm:flex items-center text-sm font-medium text-green-600 dark:text-green-400 gap-1">
-                        <span className="material-symbols-outlined text-[18px]">check_circle</span>
-                        <span>Auto-saved</span>
+                    {/* Save Status Indicator */}
+                    <div className="hidden sm:flex items-center text-sm font-medium gap-1">
+                        {saveStatus === 'saving' && (
+                            <span className="flex items-center gap-1 text-yellow-600 dark:text-yellow-400">
+                                <span className="material-symbols-outlined text-[18px] animate-spin">progress_activity</span>
+                                <span>Saving...</span>
+                            </span>
+                        )}
+                        {saveStatus === 'saved' && (
+                            <span className="flex items-center gap-1 text-green-600 dark:text-green-400">
+                                <span className="material-symbols-outlined text-[18px]">check_circle</span>
+                                <span>Saved!</span>
+                            </span>
+                        )}
+                        {saveStatus === 'error' && (
+                            <span className="flex items-center gap-1 text-red-600 dark:text-red-400">
+                                <span className="material-symbols-outlined text-[18px]">error</span>
+                                <span>Error</span>
+                            </span>
+                        )}
+                        {saveStatus === 'idle' && resumeId && (
+                            <span className="flex items-center gap-1 text-slate-500 dark:text-slate-400">
+                                <span className="material-symbols-outlined text-[18px]">cloud_done</span>
+                                <span>Synced</span>
+                            </span>
+                        )}
                     </div>
                     <div className="h-6 w-px bg-gray-200 dark:bg-gray-700 mx-2 hidden sm:block"></div>
+                    {/* Save Button */}
+                    <button
+                        onClick={handleSave}
+                        disabled={isSaving}
+                        className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold shadow-sm transition-all ${isSaving
+                            ? 'bg-gray-400 cursor-not-allowed text-white'
+                            : 'bg-green-600 hover:bg-green-700 text-white'
+                            }`}
+                    >
+                        {isSaving ? (
+                            <>
+                                <span className="material-symbols-outlined text-[18px] animate-spin">progress_activity</span>
+                                <span className="hidden sm:inline">Saving...</span>
+                            </>
+                        ) : (
+                            <>
+                                <span className="material-symbols-outlined text-[18px]">save</span>
+                                <span className="hidden sm:inline">{resumeId ? 'Save' : 'Save New'}</span>
+                            </>
+                        )}
+                    </button>
+                    {/* Preview PDF Button */}
+                    <button
+                        onClick={handlePreviewPDF}
+                        disabled={isLoadingPreview}
+                        className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold shadow-sm transition-all ${isLoadingPreview
+                            ? 'bg-gray-400 cursor-not-allowed text-white'
+                            : 'bg-purple-600 hover:bg-purple-700 text-white'
+                            }`}
+                    >
+                        {isLoadingPreview ? (
+                            <>
+                                <span className="material-symbols-outlined text-[18px] animate-spin">progress_activity</span>
+                                <span className="hidden sm:inline">Loading...</span>
+                            </>
+                        ) : (
+                            <>
+                                <span className="material-symbols-outlined text-[18px]">visibility</span>
+                                <span className="hidden sm:inline">Preview</span>
+                            </>
+                        )}
+                    </button>
+                    {/* Download PDF Button */}
                     <button
                         onClick={handleDownloadPDF}
-                        className="flex items-center gap-2 bg-app-primary hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-semibold shadow-sm transition-all"
+                        disabled={isGenerating}
+                        className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold shadow-sm transition-all ${isGenerating
+                            ? 'bg-gray-400 cursor-not-allowed'
+                            : 'bg-app-primary hover:bg-blue-700 text-white'
+                            }`}
                     >
-                        <span className="material-symbols-outlined text-[18px]">download</span>
-                        <span className="hidden sm:inline">Download PDF</span>
+                        {isGenerating ? (
+                            <>
+                                <span className="material-symbols-outlined text-[18px] animate-spin">progress_activity</span>
+                                <span className="hidden sm:inline">Generating...</span>
+                            </>
+                        ) : (
+                            <>
+                                <span className="material-symbols-outlined text-[18px]">download</span>
+                                <span className="hidden sm:inline">Download PDF</span>
+                            </>
+                        )}
                     </button>
                 </div>
             </header>
@@ -259,9 +625,49 @@ export default function BuilderPage() {
                 {/* Sidebar - Editor */}
                 <div className="w-full lg:w-[450px] xl:w-[500px] flex-none flex flex-col border-r border-[#e7ebf3] dark:border-gray-800 bg-white dark:bg-[#101622] overflow-y-auto">
                     <div className="p-6 pb-20">
-                        <div className="mb-6 flex justify-between items-end">
-                            <h2 className="text-2xl font-bold tracking-tight dark:text-white">Editor</h2>
-                            <span className="text-xs font-semibold uppercase tracking-wider text-app-primary bg-app-primary/10 px-2 py-1 rounded">MNIT Format</span>
+                        <div className="mb-6 flex flex-col gap-4">
+                            <div className="flex justify-between items-end">
+                                <h2 className="text-2xl font-bold tracking-tight dark:text-white">Editor</h2>
+                                <span className={`text-xs font-semibold uppercase tracking-wider px-2 py-1 rounded ${selectedTemplate === 'mnit_resume'
+                                    ? 'text-app-primary bg-app-primary/10'
+                                    : 'text-emerald-600 bg-emerald-100 dark:text-emerald-400 dark:bg-emerald-900/30'
+                                    }`}>
+                                    {selectedTemplate === 'mnit_resume' ? 'MNIT Format' : 'ATS Format'}
+                                </span>
+                            </div>
+
+                            {/* Template Selector */}
+                            <div className="flex flex-col gap-2">
+                                <label className="text-xs font-semibold text-gray-600 dark:text-gray-400">Resume Template</label>
+                                <div className="grid grid-cols-2 gap-2">
+                                    <button
+                                        onClick={() => setSelectedTemplate('mnit_resume')}
+                                        className={`flex flex-col items-center gap-1.5 p-3 rounded-lg border-2 transition-all ${selectedTemplate === 'mnit_resume'
+                                            ? 'border-app-primary bg-app-primary/5 dark:bg-app-primary/10'
+                                            : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+                                            }`}
+                                    >
+                                        <span className={`material-symbols-outlined text-[24px] ${selectedTemplate === 'mnit_resume' ? 'text-app-primary' : 'text-gray-400'
+                                            }`}>school</span>
+                                        <span className={`text-xs font-semibold ${selectedTemplate === 'mnit_resume' ? 'text-app-primary' : 'text-gray-600 dark:text-gray-400'
+                                            }`}>MNIT Official</span>
+                                        <span className="text-[10px] text-gray-400 dark:text-gray-500">College specific</span>
+                                    </button>
+                                    <button
+                                        onClick={() => setSelectedTemplate('generic_ats_resume')}
+                                        className={`flex flex-col items-center gap-1.5 p-3 rounded-lg border-2 transition-all ${selectedTemplate === 'generic_ats_resume'
+                                            ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20'
+                                            : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+                                            }`}
+                                    >
+                                        <span className={`material-symbols-outlined text-[24px] ${selectedTemplate === 'generic_ats_resume' ? 'text-emerald-500' : 'text-gray-400'
+                                            }`}>description</span>
+                                        <span className={`text-xs font-semibold ${selectedTemplate === 'generic_ats_resume' ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-600 dark:text-gray-400'
+                                            }`}>Generic ATS</span>
+                                        <span className="text-[10px] text-gray-400 dark:text-gray-500">Universal format</span>
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                         <div className="flex flex-col gap-4">
 
@@ -539,7 +945,12 @@ export default function BuilderPage() {
                     <div className="flex-none h-[60px] w-full bg-white dark:bg-[#101622] border-b border-[#e7ebf3] dark:border-gray-800 px-8 flex items-center justify-between z-10">
                         <div className="flex items-center gap-2">
                             <span className="text-xs font-bold uppercase tracking-wider text-gray-400">Live Preview</span>
-                            <span className="text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-2 py-0.5 rounded font-medium">MNIT Format</span>
+                            <span className={`text-xs px-2 py-0.5 rounded font-medium ${selectedTemplate === 'mnit_resume'
+                                ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
+                                : 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400'
+                                }`}>
+                                {selectedTemplate === 'mnit_resume' ? 'MNIT Format' : 'ATS Format'}
+                            </span>
                         </div>
                         <div className="flex items-center gap-3">
                             <div className="flex items-center bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
@@ -698,6 +1109,83 @@ export default function BuilderPage() {
                     </div>
                 </div>
             </div>
+
+            {/* PDF Preview Modal */}
+            {showPreview && previewUrl && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+                    <div className="bg-white dark:bg-[#1a2235] rounded-2xl shadow-2xl w-full max-w-5xl h-[90vh] flex flex-col overflow-hidden">
+                        {/* Modal Header */}
+                        <div className="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-700">
+                            <div className="flex items-center gap-3">
+                                <span className="size-10 rounded-lg bg-purple-500/10 flex items-center justify-center">
+                                    <span className="material-symbols-outlined text-purple-500">picture_as_pdf</span>
+                                </span>
+                                <div>
+                                    <h3 className="font-bold text-lg">PDF Preview</h3>
+                                    <p className="text-sm text-slate-500">{resumeData.name}_Resume.pdf</p>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <button
+                                    onClick={handleDownloadFromPreview}
+                                    className="flex items-center gap-2 px-4 py-2 bg-app-primary hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors"
+                                >
+                                    <span className="material-symbols-outlined text-[20px]">download</span>
+                                    Download
+                                </button>
+                                <button
+                                    onClick={closePreview}
+                                    className="size-10 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition-colors"
+                                >
+                                    <span className="material-symbols-outlined">close</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* PDF Viewer */}
+                        <div className="flex-1 bg-slate-100 dark:bg-slate-900 p-4 overflow-hidden">
+                            <iframe
+                                src={previewUrl || undefined}
+                                className="w-full h-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white"
+                                title="PDF Preview"
+                            />
+                        </div>
+
+                        {/* Modal Footer */}
+                        <div className="p-3 border-t border-slate-200 dark:border-slate-700 flex items-center justify-between">
+                            <p className="text-xs text-slate-500">
+                                <span className="material-symbols-outlined text-[14px] align-middle mr-1">info</span>
+                                Preview generated with {selectedTemplate === 'mnit_resume' ? 'MNIT Official' : 'Generic ATS'} template
+                            </p>
+                            <button
+                                onClick={closePreview}
+                                className="text-sm text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 font-medium"
+                            >
+                                Close Preview
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
+    );
+}
+
+// Loading fallback for Suspense
+function BuilderLoading() {
+    return (
+        <div className="bg-app-bg-light dark:bg-app-bg-dark text-[#0d121b] dark:text-white font-display overflow-hidden flex flex-col h-screen items-center justify-center">
+            <span className="material-symbols-outlined text-5xl text-app-primary animate-spin">progress_activity</span>
+            <p className="mt-4 text-slate-500">Loading builder...</p>
+        </div>
+    );
+}
+
+// Export default with Suspense boundary
+export default function BuilderPage() {
+    return (
+        <Suspense fallback={<BuilderLoading />}>
+            <BuilderContent />
+        </Suspense>
     );
 }

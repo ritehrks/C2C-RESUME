@@ -1,9 +1,139 @@
 "use client";
 
+import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+
+// Simple analysis result type
+interface SimpleAnalysisResult {
+    matchPercentage: number;
+    rating: string;
+    ratingLabel: string;
+    matchedKeywords: string[];
+    missingKeywords: string[];
+    actionVerbs: {
+        strong: string[];
+        weak: string[];
+    };
+    suggestions: string[];
+    stats: {
+        hardSkillsFound: number;
+        hardSkillsRequired: number;
+        strongVerbsCount: number;
+        weakVerbsCount: number;
+    };
+}
+
+// Deep analysis AI result type
+interface DeepAnalysisResult {
+    matchPercentage: number;
+    matchedKeywords: string[];
+    missingKeywords: string[];
+    stats: {
+        hardSkillsFound: number;
+        hardSkillsRequired: number;
+        strongVerbsCount: number;
+        weakVerbsCount: number;
+    };
+    ai: {
+        overallAssessment: string;
+        strengthsAnalysis: string[];
+        improvementAreas: string[];
+        keywordOptimization: {
+            strongMatches: string[];
+            suggestedAdditions: string[];
+            contextTips: string[];
+        };
+        contentSuggestions: {
+            summary: string;
+            experience: string;
+            skills: string;
+            achievements: string;
+        };
+        atsOptimization: string[];
+        competitiveEdge: string;
+        actionPlan: string[];
+    };
+}
+
+type AnalysisMode = 'simple' | 'deep';
+
 export default function AnalyzerPage() {
+    const [jobDescription, setJobDescription] = useState('');
+    const [resumeText, setResumeText] = useState('');
+    const [isAnalyzing, setIsAnalyzing] = useState(false);
+    const [analysisMode, setAnalysisMode] = useState<AnalysisMode>('simple');
+    const [simpleResult, setSimpleResult] = useState<SimpleAnalysisResult | null>(null);
+    const [deepResult, setDeepResult] = useState<DeepAnalysisResult | null>(null);
+    const [isAiPowered, setIsAiPowered] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
+    const handleAnalysis = async (mode: AnalysisMode) => {
+        if (!jobDescription.trim() || !resumeText.trim()) {
+            setError('Please provide both job description and resume text');
+            return;
+        }
+
+        setIsAnalyzing(true);
+        setAnalysisMode(mode);
+        setError(null);
+
+        try {
+            const endpoint = mode === 'simple' ? '/api/analyze/simple' : '/api/analyze/deep';
+            const response = await fetch(`${API_URL}${endpoint}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ jobDescription, resumeText }),
+            });
+
+            const data = await response.json();
+
+            if (!data.success) {
+                throw new Error(data.error || 'Analysis failed');
+            }
+
+            if (mode === 'simple') {
+                setSimpleResult(data.analysis);
+                setDeepResult(null);
+            } else {
+                setDeepResult(data.analysis);
+                setSimpleResult(null);
+                setIsAiPowered(data.isAiPowered);
+            }
+        } catch (err: any) {
+            setError(err.message || 'Failed to analyze resume');
+            console.error('Analysis error:', err);
+        } finally {
+            setIsAnalyzing(false);
+        }
+    };
+
+    // Get color classes based on match percentage
+    const getMatchColor = (percentage: number) => {
+        if (percentage >= 80) return 'text-green-600 dark:text-green-400';
+        if (percentage >= 60) return 'text-blue-600 dark:text-blue-400';
+        if (percentage >= 40) return 'text-yellow-600 dark:text-yellow-400';
+        return 'text-red-600 dark:text-red-400';
+    };
+
+    const getRatingBadgeColor = (percentage: number) => {
+        if (percentage >= 80) return 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300';
+        if (percentage >= 60) return 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300';
+        if (percentage >= 40) return 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300';
+        return 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300';
+    };
+
+    const getRatingLabel = (percentage: number) => {
+        if (percentage >= 80) return 'Excellent Match';
+        if (percentage >= 60) return 'Good Match';
+        if (percentage >= 40) return 'Fair Match';
+        return 'Needs Improvement';
+    };
+
+    const currentResult = simpleResult || deepResult;
+
     return (
         <div className="bg-app-bg-light dark:bg-app-bg-dark text-[#0d121b] dark:text-white font-display min-h-screen flex flex-col">
             {/* Header */}
@@ -22,7 +152,7 @@ export default function AnalyzerPage() {
                     <button className="p-2 text-[#4c669a] dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full">
                         <span className="material-symbols-outlined text-[20px]">notifications</span>
                     </button>
-                    <div className="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-9 border border-gray-200 dark:border-gray-700" style={{ backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuD_MoKaHUPqURBOZ3uDCbeY2dalr51yGhJoxSrpRHprl2IuhiDtkA7u8vdKn7i_rwRqKA4wOVsKI4sAJmCHTbbXoQptG_QBqtPuP6prWQrwjkZFbqSe4I-BqvoYcLJjwDptJi4hM8ewtzm7oYcCbF2cswk-AIzGsEdEGG2dg9efrIWRY6nw6aAn6OMdBFqHU4DOr4wdcu4JCAjTlXpVi9dE7Wd93gHaMEAjCxN34s5RPC-YOOab0XHxP2BQnLzlBVoCJkrHBKPm8LM')" }}></div>
+                    <div className="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-9 border border-gray-200 dark:border-gray-700 bg-gradient-to-br from-blue-500 to-purple-600"></div>
                 </div>
             </header>
 
@@ -37,7 +167,7 @@ export default function AnalyzerPage() {
                         </div>
                         <h1 className="text-[#0d121b] dark:text-white tracking-tight text-3xl md:text-4xl font-bold leading-tight">ATS Analyzer</h1>
                         <p className="text-[#4c669a] dark:text-gray-400 text-base font-normal max-w-2xl">
-                            Optimize your resume for the Applicant Tracking System. Compare your resume against job descriptions to identify gaps and improve your ranking.
+                            Optimize your resume for the Applicant Tracking System. Choose Simple Analysis for quick feedback or Deep Analysis for AI-powered insights.
                         </p>
                     </div>
                 </div>
@@ -50,179 +180,349 @@ export default function AnalyzerPage() {
                                 <span className="material-symbols-outlined text-app-primary">description</span>
                                 <h3 className="text-[#0d121b] dark:text-white font-bold text-lg">Target Job Description</h3>
                             </div>
-                            <label className="flex flex-col w-full">
-                                <span className="sr-only">Job Description</span>
-                                <textarea className="form-input w-full resize-none rounded-lg text-[#0d121b] dark:text-white focus:outline-0 focus:ring-2 focus:ring-app-primary/20 border border-[#cfd7e7] dark:border-gray-600 bg-[#f8f9fc] dark:bg-[#101622] min-h-[220px] placeholder:text-[#8d9ab3] p-4 text-sm font-normal leading-relaxed transition-all" placeholder="Paste the full job description here (e.g. Responsibilities, Requirements, Skills)..."></textarea>
-                            </label>
+                            <textarea
+                                className="form-input w-full resize-none rounded-lg text-[#0d121b] dark:text-white focus:outline-0 focus:ring-2 focus:ring-app-primary/20 border border-[#cfd7e7] dark:border-gray-600 bg-[#f8f9fc] dark:bg-[#101622] min-h-[160px] placeholder:text-[#8d9ab3] p-4 text-sm font-normal leading-relaxed transition-all"
+                                placeholder="Paste the full job description here (e.g. Responsibilities, Requirements, Skills)..."
+                                value={jobDescription}
+                                onChange={(e) => setJobDescription(e.target.value)}
+                            />
                         </div>
 
                         <div className="bg-white dark:bg-[#1e2636] rounded-xl shadow-sm border border-[#e7ebf3] dark:border-gray-700 p-6">
                             <div className="flex items-center gap-2 mb-4">
-                                <span className="material-symbols-outlined text-app-primary">upload_file</span>
-                                <h3 className="text-[#0d121b] dark:text-white font-bold text-lg">Your Resume</h3>
+                                <span className="material-symbols-outlined text-app-primary">article</span>
+                                <h3 className="text-[#0d121b] dark:text-white font-bold text-lg">Your Resume Text</h3>
                             </div>
-                            <div className="group relative flex flex-col items-center justify-center gap-4 rounded-lg border-2 border-dashed border-[#cfd7e7] dark:border-gray-600 bg-[#f8f9fc] dark:bg-[#101622] hover:bg-[#edf2fa] dark:hover:bg-[#1a202c] transition-colors px-6 py-10 cursor-pointer">
-                                <div className="p-3 bg-white dark:bg-[#2d3748] rounded-full shadow-sm">
-                                    <span className="material-symbols-outlined text-[#4c669a] dark:text-gray-400 text-3xl">cloud_upload</span>
-                                </div>
-                                <div className="text-center space-y-1">
-                                    <p className="text-[#0d121b] dark:text-white text-base font-semibold">Click to upload or drag and drop</p>
-                                    <p className="text-[#4c669a] dark:text-gray-400 text-xs">PDF, DOCX up to 10MB</p>
-                                </div>
-                                <input className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" type="file" />
-                            </div>
-                            <div className="hidden mt-4 flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/20 border border-green-100 dark:border-green-900/50 rounded-lg">
-                                <div className="flex items-center gap-3">
-                                    <span className="material-symbols-outlined text-green-600 dark:text-green-400">picture_as_pdf</span>
-                                    <div>
-                                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">Senior_Dev_Resume.pdf</p>
-                                        <p className="text-xs text-gray-500 dark:text-gray-400">1.2 MB</p>
-                                    </div>
-                                </div>
-                                <button className="text-gray-400 hover:text-red-500 transition-colors">
-                                    <span className="material-symbols-outlined text-[20px]">close</span>
-                                </button>
-                            </div>
+                            <textarea
+                                className="form-input w-full resize-none rounded-lg text-[#0d121b] dark:text-white focus:outline-0 focus:ring-2 focus:ring-app-primary/20 border border-[#cfd7e7] dark:border-gray-600 bg-[#f8f9fc] dark:bg-[#101622] min-h-[160px] placeholder:text-[#8d9ab3] p-4 text-sm font-normal leading-relaxed transition-all"
+                                placeholder="Paste your resume text here or copy from your resume builder..."
+                                value={resumeText}
+                                onChange={(e) => setResumeText(e.target.value)}
+                            />
                         </div>
 
+                        {error && (
+                            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 text-red-600 dark:text-red-400 flex items-center gap-2">
+                                <span className="material-symbols-outlined">error</span>
+                                {error}
+                            </div>
+                        )}
+
+                        {/* Analysis Buttons */}
                         <div className="flex flex-col sm:flex-row gap-4">
-                            <button className="flex-1 flex items-center justify-center gap-2 rounded-xl h-14 bg-white hover:bg-gray-50 dark:bg-[#1e2636] dark:hover:bg-[#2a3449] border border-[#cfd7e7] dark:border-gray-600 text-app-primary dark:text-blue-400 text-lg font-bold shadow-sm transition-colors">
-                                <span className="material-symbols-outlined">analytics</span>
-                                Simple Analysis
+                            <button
+                                onClick={() => handleAnalysis('simple')}
+                                disabled={isAnalyzing}
+                                className={`flex-1 flex items-center justify-center gap-2 rounded-xl h-14 font-bold shadow-sm transition-all ${isAnalyzing && analysisMode === 'simple'
+                                        ? 'bg-gray-400 cursor-not-allowed text-white'
+                                        : 'bg-white hover:bg-gray-50 dark:bg-[#1e2636] dark:hover:bg-[#2a3449] border border-[#cfd7e7] dark:border-gray-600 text-app-primary dark:text-blue-400'
+                                    }`}
+                            >
+                                {isAnalyzing && analysisMode === 'simple' ? (
+                                    <>
+                                        <span className="material-symbols-outlined animate-spin">progress_activity</span>
+                                        Analyzing...
+                                    </>
+                                ) : (
+                                    <>
+                                        <span className="material-symbols-outlined">analytics</span>
+                                        Simple Analysis
+                                    </>
+                                )}
                             </button>
-                            <button className="flex-1 flex items-center justify-center gap-2 rounded-xl h-14 bg-app-primary hover:bg-app-primary/90 transition-colors text-white text-lg font-bold shadow-lg shadow-app-primary/20">
-                                <span className="material-symbols-outlined">network_intelligence</span>
-                                Deep Analysis
+                            <button
+                                onClick={() => handleAnalysis('deep')}
+                                disabled={isAnalyzing}
+                                className={`flex-1 flex items-center justify-center gap-2 rounded-xl h-14 font-bold shadow-lg transition-all ${isAnalyzing && analysisMode === 'deep'
+                                        ? 'bg-gray-400 cursor-not-allowed text-white'
+                                        : 'bg-gradient-to-r from-purple-600 to-app-primary hover:from-purple-700 hover:to-blue-700 text-white shadow-purple-500/20'
+                                    }`}
+                            >
+                                {isAnalyzing && analysisMode === 'deep' ? (
+                                    <>
+                                        <span className="material-symbols-outlined animate-spin">progress_activity</span>
+                                        AI Analyzing...
+                                    </>
+                                ) : (
+                                    <>
+                                        <span className="material-symbols-outlined">auto_awesome</span>
+                                        Deep AI Analysis
+                                    </>
+                                )}
                             </button>
                         </div>
+
+                        <p className="text-xs text-center text-slate-500 dark:text-slate-400">
+                            🚀 Deep Analysis uses Gemini AI for comprehensive insights
+                        </p>
                     </div>
 
                     {/* Right Column: Results */}
                     <div className="lg:col-span-7 flex flex-col gap-6">
-                        <div className="bg-white dark:bg-[#1e2636] rounded-xl shadow-sm border border-[#e7ebf3] dark:border-gray-700 p-6 md:p-8">
-                            <div className="flex flex-col md:flex-row gap-8 items-center">
-                                <div className="relative size-48 flex-shrink-0">
-                                    <svg className="size-full -rotate-90" viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg">
-                                        <path className="text-gray-100 dark:text-gray-700" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" strokeDasharray="100, 100" strokeWidth="3"></path>
-                                        <path className="text-app-primary" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" strokeDasharray="85, 100" strokeLinecap="round" strokeWidth="3"></path>
-                                    </svg>
-                                    <div className="absolute inset-0 flex flex-col items-center justify-center">
-                                        <span className="text-4xl font-bold text-[#0d121b] dark:text-white">85%</span>
-                                        <span className="text-sm font-medium text-[#4c669a] dark:text-gray-400 uppercase tracking-wide">Match</span>
-                                    </div>
-                                </div>
-                                <div className="flex flex-col flex-1">
-                                    <div className="flex items-center justify-between mb-2">
-                                        <h2 className="text-2xl font-bold text-[#0d121b] dark:text-white">Good Match</h2>
-                                        <span className="px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-full text-xs font-bold uppercase tracking-wide">High Potential</span>
-                                    </div>
-                                    <p className="text-[#4c669a] dark:text-gray-400 leading-relaxed mb-4">
-                                        Your resume aligns well with the job description. You have most of the critical hard skills, but there are a few keyword gaps that could improve your visibility to ATS algorithms.
-                                    </p>
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div className="bg-[#f8f9fc] dark:bg-[#101622] rounded-lg p-3 border border-[#e7ebf3] dark:border-gray-800">
-                                            <p className="text-xs text-[#4c669a] dark:text-gray-400 mb-1">Hard Skills</p>
-                                            <p className="text-lg font-bold text-[#0d121b] dark:text-white">18/22</p>
-                                        </div>
-                                        <div className="bg-[#f8f9fc] dark:bg-[#101622] rounded-lg p-3 border border-[#e7ebf3] dark:border-gray-800">
-                                            <p className="text-xs text-[#4c669a] dark:text-gray-400 mb-1">Action Verbs</p>
-                                            <p className="text-lg font-bold text-[#0d121b] dark:text-white">Strong</p>
-                                        </div>
-                                    </div>
-                                </div>
+                        {!currentResult ? (
+                            // Empty state
+                            <div className="bg-white dark:bg-[#1e2636] rounded-xl shadow-sm border border-[#e7ebf3] dark:border-gray-700 p-12 text-center">
+                                <span className="material-symbols-outlined text-6xl text-slate-300 dark:text-slate-600 mb-4">query_stats</span>
+                                <h3 className="text-xl font-semibold text-slate-700 dark:text-slate-300 mb-2">No Analysis Yet</h3>
+                                <p className="text-slate-500 dark:text-slate-400">
+                                    Paste a job description and your resume text, then choose an analysis type.
+                                </p>
                             </div>
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div className="bg-white dark:bg-[#1e2636] rounded-xl shadow-sm border border-[#e7ebf3] dark:border-gray-700 p-6">
-                                <div className="flex items-center justify-between mb-4">
-                                    <h3 className="text-[#0d121b] dark:text-white font-bold text-lg flex items-center gap-2">
-                                        <span className="material-symbols-outlined text-red-500">warning</span>
-                                        Missing Keywords
-                                    </h3>
-                                    <span className="text-xs font-medium bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 px-2 py-1 rounded">Critical</span>
-                                </div>
-                                <p className="text-sm text-[#4c669a] dark:text-gray-400 mb-4">These skills appear frequently in the job description but are missing from your resume.</p>
-                                <div className="flex flex-wrap gap-2">
-                                    <span className="px-3 py-1.5 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-300 border border-red-100 dark:border-red-900/50 rounded-full text-sm font-medium flex items-center gap-1">
-                                        Docker
-                                        <span className="material-symbols-outlined text-[14px]">add_circle</span>
-                                    </span>
-                                    <span className="px-3 py-1.5 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-300 border border-red-100 dark:border-red-900/50 rounded-full text-sm font-medium flex items-center gap-1">
-                                        Redis
-                                        <span className="material-symbols-outlined text-[14px]">add_circle</span>
-                                    </span>
-                                    <span className="px-3 py-1.5 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-300 border border-red-100 dark:border-red-900/50 rounded-full text-sm font-medium flex items-center gap-1">
-                                        Kubernetes
-                                        <span className="material-symbols-outlined text-[14px]">add_circle</span>
-                                    </span>
-                                    <span className="px-3 py-1.5 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-300 border border-red-100 dark:border-red-900/50 rounded-full text-sm font-medium flex items-center gap-1">
-                                        gRPC
-                                        <span className="material-symbols-outlined text-[14px]">add_circle</span>
-                                    </span>
-                                </div>
-                                <div className="mt-6 pt-4 border-t border-[#e7ebf3] dark:border-gray-700">
-                                    <h4 className="text-sm font-semibold text-[#0d121b] dark:text-white mb-3">Matched Skills</h4>
-                                    <div className="flex flex-wrap gap-2 opacity-75">
-                                        <span className="px-2.5 py-1 bg-green-50 dark:bg-green-900/10 text-green-700 dark:text-green-400 border border-green-100 dark:border-green-900/30 rounded-md text-xs font-medium">React</span>
-                                        <span className="px-2.5 py-1 bg-green-50 dark:bg-green-900/10 text-green-700 dark:text-green-400 border border-green-100 dark:border-green-900/30 rounded-md text-xs font-medium">TypeScript</span>
-                                        <span className="px-2.5 py-1 bg-green-50 dark:bg-green-900/10 text-green-700 dark:text-green-400 border border-green-100 dark:border-green-900/30 rounded-md text-xs font-medium">Node.js</span>
-                                        <span className="px-2.5 py-1 bg-green-50 dark:bg-green-900/10 text-green-700 dark:text-green-400 border border-green-100 dark:border-green-900/30 rounded-md text-xs font-medium">AWS</span>
-                                        <span className="px-2.5 py-1 bg-green-50 dark:bg-green-900/10 text-green-700 dark:text-green-400 border border-green-100 dark:border-green-900/30 rounded-md text-xs font-medium">PostgreSQL</span>
-                                        <span className="text-xs text-gray-400 flex items-center px-1">+13 more</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="flex flex-col gap-6">
-                                <div className="bg-white dark:bg-[#1e2636] rounded-xl shadow-sm border border-[#e7ebf3] dark:border-gray-700 p-6 flex-1">
-                                    <div className="flex items-center gap-2 mb-4">
-                                        <span className="material-symbols-outlined text-app-primary">psychology</span>
-                                        <h3 className="text-[#0d121b] dark:text-white font-bold text-lg">Impact & Tone</h3>
-                                    </div>
-                                    <p className="text-sm text-[#4c669a] dark:text-gray-400 mb-4">Replace weak passive verbs with strong action-oriented language.</p>
-                                    <div className="space-y-3">
-                                        <div className="flex items-start gap-3 p-3 bg-red-50 dark:bg-red-900/10 rounded-lg">
-                                            <span className="material-symbols-outlined text-red-500 text-[20px] mt-0.5">remove_circle</span>
-                                            <div className="flex-1">
-                                                <p className="text-sm font-medium text-red-700 dark:text-red-300">Weak: &quot;Helped with...&quot;</p>
-                                                <p className="text-xs text-red-600/70 dark:text-red-400/70 mt-1">Vague and passive.</p>
+                        ) : (
+                            <>
+                                {/* Score Card */}
+                                <div className="bg-white dark:bg-[#1e2636] rounded-xl shadow-sm border border-[#e7ebf3] dark:border-gray-700 p-6 md:p-8">
+                                    <div className="flex flex-col md:flex-row gap-8 items-center">
+                                        <div className="relative size-40 flex-shrink-0">
+                                            <svg className="size-full -rotate-90" viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg">
+                                                <path className="text-gray-100 dark:text-gray-700" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" strokeDasharray="100, 100" strokeWidth="3"></path>
+                                                <path className={getMatchColor(currentResult.matchPercentage)} d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" strokeDasharray={`${currentResult.matchPercentage}, 100`} strokeLinecap="round" strokeWidth="3"></path>
+                                            </svg>
+                                            <div className="absolute inset-0 flex flex-col items-center justify-center">
+                                                <span className={`text-3xl font-bold ${getMatchColor(currentResult.matchPercentage)}`}>{currentResult.matchPercentage}%</span>
+                                                <span className="text-xs font-medium text-[#4c669a] dark:text-gray-400 uppercase tracking-wide">Match</span>
                                             </div>
                                         </div>
-                                        <div className="flex items-center justify-center">
-                                            <span className="material-symbols-outlined text-gray-400">arrow_downward</span>
-                                        </div>
-                                        <div className="flex items-start gap-3 p-3 bg-green-50 dark:bg-green-900/10 rounded-lg">
-                                            <span className="material-symbols-outlined text-green-600 text-[20px] mt-0.5">check_circle</span>
-                                            <div className="flex-1">
-                                                <p className="text-sm font-medium text-green-800 dark:text-green-300">Strong: &quot;Spearheaded...&quot;</p>
-                                                <p className="text-xs text-green-700/70 dark:text-green-400/70 mt-1">Shows leadership and direct impact.</p>
+                                        <div className="flex flex-col flex-1">
+                                            <div className="flex items-center gap-3 mb-2">
+                                                <h2 className="text-xl font-bold text-[#0d121b] dark:text-white">{getRatingLabel(currentResult.matchPercentage)}</h2>
+                                                <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide ${getRatingBadgeColor(currentResult.matchPercentage)}`}>
+                                                    {deepResult && isAiPowered ? '🤖 AI Powered' : simpleResult ? 'Quick Scan' : ''}
+                                                </span>
+                                            </div>
+
+                                            {/* AI Overall Assessment for Deep Analysis */}
+                                            {deepResult?.ai?.overallAssessment ? (
+                                                <p className="text-[#4c669a] dark:text-gray-400 leading-relaxed mb-4">
+                                                    {deepResult.ai.overallAssessment}
+                                                </p>
+                                            ) : (
+                                                <p className="text-[#4c669a] dark:text-gray-400 leading-relaxed mb-4">
+                                                    {currentResult.matchPercentage >= 80
+                                                        ? "Excellent! Your resume strongly matches the job requirements."
+                                                        : currentResult.matchPercentage >= 60
+                                                            ? "Good match! A few tweaks could make it even better."
+                                                            : "Your resume needs some optimization for this role."}
+                                                </p>
+                                            )}
+
+                                            <div className="grid grid-cols-2 gap-3">
+                                                <div className="bg-[#f8f9fc] dark:bg-[#101622] rounded-lg p-3 border border-[#e7ebf3] dark:border-gray-800">
+                                                    <p className="text-xs text-[#4c669a] dark:text-gray-400 mb-1">Skills Matched</p>
+                                                    <p className="text-lg font-bold text-[#0d121b] dark:text-white">
+                                                        {currentResult.stats?.hardSkillsFound || currentResult.matchedKeywords?.length || 0}/
+                                                        {currentResult.stats?.hardSkillsRequired || (currentResult.matchedKeywords?.length || 0) + (currentResult.missingKeywords?.length || 0)}
+                                                    </p>
+                                                </div>
+                                                <div className="bg-[#f8f9fc] dark:bg-[#101622] rounded-lg p-3 border border-[#e7ebf3] dark:border-gray-800">
+                                                    <p className="text-xs text-[#4c669a] dark:text-gray-400 mb-1">Missing</p>
+                                                    <p className="text-lg font-bold text-red-500">{currentResult.missingKeywords?.length || 0}</p>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                        </div>
 
-                        <div className="bg-gradient-to-r from-[#1152d4] to-[#0a3690] rounded-xl shadow-lg p-6 text-white relative overflow-hidden">
-                            <div className="absolute right-0 top-0 h-full w-1/3 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
-                            <div className="relative z-10">
-                                <div className="flex items-center gap-2 mb-3">
-                                    <span className="material-symbols-outlined">auto_fix_high</span>
-                                    <h3 className="font-bold text-lg">Quick Wins</h3>
-                                </div>
-                                <ul className="space-y-2 text-sm md:text-base text-blue-100">
-                                    <li className="flex items-start gap-2">
-                                        <span className="block size-1.5 mt-2 rounded-full bg-blue-300"></span>
-                                        <span>Add a &quot;Technical Skills&quot; section near the top of your resume.</span>
-                                    </li>
-                                    <li className="flex items-start gap-2">
-                                        <span className="block size-1.5 mt-2 rounded-full bg-blue-300"></span>
-                                        <span>Quantify your achievements (e.g., &quot;reduced latency by 20%&quot;).</span>
-                                    </li>
-                                </ul>
-                            </div>
-                        </div>
+                                {/* AI Deep Analysis Results */}
+                                {deepResult?.ai && (
+                                    <>
+                                        {/* Strengths & Improvements */}
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            <div className="bg-white dark:bg-[#1e2636] rounded-xl shadow-sm border border-[#e7ebf3] dark:border-gray-700 p-6">
+                                                <div className="flex items-center gap-2 mb-4">
+                                                    <span className="material-symbols-outlined text-green-500">thumb_up</span>
+                                                    <h3 className="text-[#0d121b] dark:text-white font-bold text-lg">Strengths</h3>
+                                                </div>
+                                                <ul className="space-y-2">
+                                                    {deepResult.ai.strengthsAnalysis?.map((strength, i) => (
+                                                        <li key={i} className="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-300">
+                                                            <span className="material-symbols-outlined text-green-500 text-[16px] mt-0.5">check_circle</span>
+                                                            {strength}
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            </div>
+
+                                            <div className="bg-white dark:bg-[#1e2636] rounded-xl shadow-sm border border-[#e7ebf3] dark:border-gray-700 p-6">
+                                                <div className="flex items-center gap-2 mb-4">
+                                                    <span className="material-symbols-outlined text-yellow-500">tips_and_updates</span>
+                                                    <h3 className="text-[#0d121b] dark:text-white font-bold text-lg">Room for Improvement</h3>
+                                                </div>
+                                                <ul className="space-y-2">
+                                                    {deepResult.ai.improvementAreas?.map((area, i) => (
+                                                        <li key={i} className="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-300">
+                                                            <span className="material-symbols-outlined text-yellow-500 text-[16px] mt-0.5">arrow_forward</span>
+                                                            {area}
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            </div>
+                                        </div>
+
+                                        {/* Keyword Optimization */}
+                                        <div className="bg-white dark:bg-[#1e2636] rounded-xl shadow-sm border border-[#e7ebf3] dark:border-gray-700 p-6">
+                                            <div className="flex items-center gap-2 mb-4">
+                                                <span className="material-symbols-outlined text-app-primary">key</span>
+                                                <h3 className="text-[#0d121b] dark:text-white font-bold text-lg">Keyword Optimization</h3>
+                                            </div>
+
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                                <div>
+                                                    <p className="text-xs font-semibold text-green-600 dark:text-green-400 mb-2 uppercase">Strong Matches</p>
+                                                    <div className="flex flex-wrap gap-2">
+                                                        {deepResult.ai.keywordOptimization?.strongMatches?.slice(0, 6).map((kw, i) => (
+                                                            <span key={i} className="px-2.5 py-1 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 rounded-full text-xs font-medium">{kw}</span>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <p className="text-xs font-semibold text-red-600 dark:text-red-400 mb-2 uppercase">Add These Keywords</p>
+                                                    <div className="flex flex-wrap gap-2">
+                                                        {deepResult.ai.keywordOptimization?.suggestedAdditions?.slice(0, 6).map((kw, i) => (
+                                                            <span key={i} className="px-2.5 py-1 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 rounded-full text-xs font-medium">{kw}</span>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {deepResult.ai.keywordOptimization?.contextTips?.length > 0 && (
+                                                <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-700">
+                                                    <p className="text-xs font-semibold text-slate-600 dark:text-slate-400 mb-2">💡 How to Add Keywords Naturally:</p>
+                                                    <ul className="space-y-1.5">
+                                                        {deepResult.ai.keywordOptimization.contextTips.slice(0, 3).map((tip, i) => (
+                                                            <li key={i} className="text-sm text-slate-500 dark:text-slate-400 flex items-start gap-2">
+                                                                <span className="text-app-primary">•</span>
+                                                                {tip}
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* ATS Optimization Tips */}
+                                        <div className="bg-gradient-to-r from-[#1152d4] to-[#0a3690] rounded-xl shadow-lg p-6 text-white relative overflow-hidden">
+                                            <div className="absolute right-0 top-0 h-full w-1/3 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
+                                            <div className="relative z-10">
+                                                <div className="flex items-center gap-2 mb-4">
+                                                    <span className="material-symbols-outlined">rocket_launch</span>
+                                                    <h3 className="font-bold text-lg">Action Plan</h3>
+                                                </div>
+                                                <ol className="space-y-2 text-sm text-blue-100">
+                                                    {deepResult.ai.actionPlan?.map((action, i) => (
+                                                        <li key={i} className="flex items-start gap-3">
+                                                            <span className="flex-shrink-0 w-6 h-6 rounded-full bg-white/20 flex items-center justify-center text-xs font-bold">{i + 1}</span>
+                                                            <span>{action}</span>
+                                                        </li>
+                                                    ))}
+                                                </ol>
+                                            </div>
+                                        </div>
+
+                                        {/* Competitive Edge */}
+                                        {deepResult.ai.competitiveEdge && (
+                                            <div className="bg-gradient-to-r from-purple-600 to-pink-500 rounded-xl shadow-lg p-6 text-white">
+                                                <div className="flex items-center gap-2 mb-3">
+                                                    <span className="material-symbols-outlined">diamond</span>
+                                                    <h3 className="font-bold text-lg">Your Competitive Edge</h3>
+                                                </div>
+                                                <p className="text-purple-100">{deepResult.ai.competitiveEdge}</p>
+                                            </div>
+                                        )}
+                                    </>
+                                )}
+
+                                {/* Simple Analysis Results - Keywords */}
+                                {simpleResult && (
+                                    <>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            {/* Missing Keywords */}
+                                            <div className="bg-white dark:bg-[#1e2636] rounded-xl shadow-sm border border-[#e7ebf3] dark:border-gray-700 p-6">
+                                                <div className="flex items-center justify-between mb-4">
+                                                    <h3 className="text-[#0d121b] dark:text-white font-bold text-lg flex items-center gap-2">
+                                                        <span className="material-symbols-outlined text-red-500">warning</span>
+                                                        Missing Keywords
+                                                    </h3>
+                                                </div>
+                                                <div className="flex flex-wrap gap-2">
+                                                    {simpleResult.missingKeywords?.slice(0, 8).map((keyword, i) => (
+                                                        <span key={i} className="px-3 py-1.5 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-300 rounded-full text-sm font-medium">{keyword}</span>
+                                                    ))}
+                                                </div>
+
+                                                <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-700">
+                                                    <p className="text-xs font-semibold text-slate-600 dark:text-slate-400 mb-2">Matched ({simpleResult.matchedKeywords?.length})</p>
+                                                    <div className="flex flex-wrap gap-2">
+                                                        {simpleResult.matchedKeywords?.slice(0, 6).map((keyword, i) => (
+                                                            <span key={i} className="px-2.5 py-1 bg-green-50 dark:bg-green-900/10 text-green-700 dark:text-green-400 rounded-md text-xs font-medium">{keyword}</span>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* Action Verbs */}
+                                            <div className="bg-white dark:bg-[#1e2636] rounded-xl shadow-sm border border-[#e7ebf3] dark:border-gray-700 p-6">
+                                                <div className="flex items-center gap-2 mb-4">
+                                                    <span className="material-symbols-outlined text-app-primary">psychology</span>
+                                                    <h3 className="text-[#0d121b] dark:text-white font-bold text-lg">Action Verbs</h3>
+                                                </div>
+
+                                                {simpleResult.actionVerbs?.weak?.length > 0 && (
+                                                    <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/10 rounded-lg">
+                                                        <p className="text-sm font-medium text-red-700 dark:text-red-300 mb-1">Weak verbs to replace:</p>
+                                                        <p className="text-xs text-red-600/70 dark:text-red-400/70">{simpleResult.actionVerbs.weak.join(', ')}</p>
+                                                    </div>
+                                                )}
+
+                                                {simpleResult.actionVerbs?.strong?.length > 0 && (
+                                                    <div className="p-3 bg-green-50 dark:bg-green-900/10 rounded-lg">
+                                                        <p className="text-sm font-medium text-green-800 dark:text-green-300 mb-1">Strong verbs used:</p>
+                                                        <p className="text-xs text-green-700/70 dark:text-green-400/70">{simpleResult.actionVerbs.strong.slice(0, 5).join(', ')}</p>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        {/* Suggestions */}
+                                        {simpleResult.suggestions?.length > 0 && (
+                                            <div className="bg-gradient-to-r from-[#1152d4] to-[#0a3690] rounded-xl shadow-lg p-6 text-white relative overflow-hidden">
+                                                <div className="relative z-10">
+                                                    <div className="flex items-center gap-2 mb-3">
+                                                        <span className="material-symbols-outlined">auto_fix_high</span>
+                                                        <h3 className="font-bold text-lg">Quick Wins</h3>
+                                                    </div>
+                                                    <ul className="space-y-2 text-sm text-blue-100">
+                                                        {simpleResult.suggestions.map((suggestion, i) => (
+                                                            <li key={i} className="flex items-start gap-2">
+                                                                <span className="block size-1.5 mt-2 rounded-full bg-blue-300"></span>
+                                                                <span>{suggestion}</span>
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Upgrade prompt */}
+                                        <div className="bg-gradient-to-r from-purple-600/10 to-app-primary/10 rounded-xl border-2 border-dashed border-purple-300 dark:border-purple-700 p-6 text-center">
+                                            <span className="material-symbols-outlined text-4xl text-purple-500 mb-2">auto_awesome</span>
+                                            <h3 className="font-bold text-lg text-slate-800 dark:text-white mb-2">Want More Detailed Insights?</h3>
+                                            <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
+                                                Get AI-powered feedback with personalized suggestions, competitive edge analysis, and a step-by-step action plan.
+                                            </p>
+                                            <button
+                                                onClick={() => handleAnalysis('deep')}
+                                                disabled={isAnalyzing}
+                                                className="inline-flex items-center gap-2 px-6 py-2 bg-gradient-to-r from-purple-600 to-app-primary text-white rounded-lg font-semibold hover:from-purple-700 hover:to-blue-700 transition-all"
+                                            >
+                                                <span className="material-symbols-outlined text-[18px]">auto_awesome</span>
+                                                Run Deep AI Analysis
+                                            </button>
+                                        </div>
+                                    </>
+                                )}
+                            </>
+                        )}
                     </div>
                 </div>
             </main>

@@ -3,7 +3,7 @@
 % Author
 % License : MIT
 %------------------------
-
+{{=<< >>=}}
 %---- Required Packages and Functions ----
 
 \documentclass[a4paper,11pt]{article}
@@ -126,12 +126,12 @@
 %-------------------------------------------
 %%%%%%  CV STARTS HERE  %%%%%%%%%%%
 %%%%%% DEFINE ELEMENTS HERE %%%%%%%
-\newcommand{\name}{{{NAME}}} % Your Name
-\newcommand{\course}{{{COURSE}}} % Your Program
-\newcommand{\roll}{{{ROLL}}} % Your Roll No.
-\newcommand{\phone}{{{PHONE}}} % Your Phone Number
-\newcommand{\emaila}{{{EMAIL}}} %Email 1
-\newcommand{\emailb}{{{COLLEGE_EMAIL}}} %Email 2
+\newcommand{\name}{<<NAME>>} % Your Name
+\newcommand{\course}{<<COURSE>>} % Your Program
+\newcommand{\roll}{<<ROLL>>} % Your Roll No.
+\newcommand{\phone}{<<PHONE>>} % Your Phone Number
+\newcommand{\emaila}{<<EMAIL>>} %Email 1
+\newcommand{\emailb}{<<COLLEGE_EMAIL>>} %Email 2
 
 
 
@@ -141,16 +141,13 @@
 %----------HEADING-----------------
 
 
-\parbox{2.35cm}{%
-\includegraphics[width=2.35cm,clip]{Mnit_logo_bw.png}
-}
-\parbox{\dimexpr\linewidth-2.8cm\relax}{
+\parbox{\linewidth}{
 \begin{tabularx}{\linewidth}{L r} \\
   \textbf{\Large \name} & {\raisebox{0.0\height}{\footnotesize \faPhone}\ +91-\phone}\\
   {Roll No.: \roll} & \href{mailto:\emaila}{\raisebox{0.0\height}{\footnotesize \faEnvelope}\ {\emaila}} \\
   \course &  \href{mailto:\emailb}{\raisebox{0.0\height}{\footnotesize \faEnvelope}\ {\emailb}}\\
-  {{{DEGREE}}} &  \href{{{GITHUB_URL}}}{\raisebox{0.0\height}{\footnotesize \faGithub}\ {GitHub Profile}} \\
-  {Malaviya National Institute Of Technology, Jaipur} & \href{{{LINKEDIN_URL}}}{\raisebox{0.0\height}{\footnotesize \faLinkedin}\ {LinkedIn Profile}}
+  {<<DEGREE>>} &  \href{<<GITHUB_URL>>}{\raisebox{0.0\height}{\footnotesize \faGithub}\ {GitHub Profile}} \\
+  {Malaviya National Institute Of Technology, Jaipur} & \href{<<LINKEDIN_URL>>}{\raisebox{0.0\height}{\footnotesize \faLinkedin}\ {LinkedIn Profile}}
 \end{tabularx}
 }
 
@@ -161,13 +158,13 @@
 \section{\textbf{Education}}
   \resumeSubHeadingListStart
     \resumeSubheading
-      {Malaviya National Institute of Technology, Jaipur}{CGPA: {{CGPA}}}
-      {{{DEGREE}}}{{{EDUCATION_YEAR}}}
-    {{#SCHOOL}}
+      {Malaviya National Institute of Technology, Jaipur}{CGPA: <<CGPA>>}
+      {<<DEGREE>>}{<<EDUCATION_YEAR>>}
+    <<#SCHOOL>>
     \resumeSubheading
-      {{{SCHOOL_NAME}}}{Percentage: {{SCHOOL_PERCENTAGE}}}
-      {{{SCHOOL_BOARD}}}{{{SCHOOL_YEAR}}}
-    {{/SCHOOL}}
+      {<<SCHOOL_NAME>>}{Percentage: <<SCHOOL_PERCENTAGE>>}
+      {<<SCHOOL_BOARD>>}{<<SCHOOL_YEAR>>}
+    <</SCHOOL>>
   \resumeSubHeadingListEnd
 \vspace{-5.5mm}
 
@@ -176,18 +173,18 @@
 %-----------EXPERIENCE-----------------
 \section{\textbf{Experience}}
   \resumeSubHeadingListStart
-    {{#EXPERIENCES}}
+    <<#EXPERIENCES>>
     \resumeSubheading
-      {{{COMPANY}}}{{{LOCATION}}}
-      {{{ROLE}}}{{{DATES}}}
+      {<<COMPANY>>}{<<LOCATION>>}
+      {<<ROLE>>}{<<DATES>>}
       \vspace{-2.0mm}
       \resumeItemListStart
-    {{#ITEMS}}
-    \item {{{.}}}
-    {{/ITEMS}}
+    <<#ITEMS>>
+    \item <<.>>
+    <</ITEMS>>
     \resumeItemListEnd
     \vspace{-3.0mm}
-    {{/EXPERIENCES}}
+    <</EXPERIENCES>>
   \resumeSubHeadingListEnd
 \vspace{-8.5mm}
 
@@ -196,20 +193,20 @@
 %-----------PROJECTS-----------------
 \section{\textbf{Personal Projects}}
 \resumeSubHeadingListStart
-    {{#PROJECTS}}
+    <<#PROJECTS>>
     \resumeProject
-      {{{NAME}}}
-      {{{DESCRIPTION}}}
-      {{{DATES}}}
+      {<<NAME>>}
+      {<<DESCRIPTION>>}
+      {<<DATES>>}
       {}
       \resumeItemListStart
-        \item {Tools \& technologies used: {{TECHNOLOGIES}}}
-        {{#ITEMS}}
-        \item {{{.}}}
-        {{/ITEMS}}
+        \item {Tools \& technologies used: <<TECHNOLOGIES>>}
+        <<#ITEMS>>
+        \item <<.>>
+        <</ITEMS>>
     \resumeItemListEnd
     \vspace{-2mm}
-    {{/PROJECTS}}
+    <</PROJECTS>>
   \resumeSubHeadingListEnd
 \vspace{-5.5mm}
 
@@ -219,13 +216,13 @@
 \section{\textbf{Technical Skills and Interests}}
  \begin{itemize}[leftmargin=0.05in, label={}]
     \small{\item{
-     \textbf{Languages}{: {{LANGUAGES}}} \\
-     \textbf{Developer Tools}{: {{DEV_TOOLS}}} \\
-     \textbf{Frameworks}{: {{FRAMEWORKS}}} \\
-     \textbf{Cloud/Databases}{: {{CLOUD_DB}}} \\
-     \textbf{Soft Skills}{: {{SOFT_SKILLS}}} \\
-     \textbf{Coursework}{: {{COURSEWORK}}} \\
-     \textbf{Areas of Interest}{: {{INTERESTS}}} \\
+     \textbf{Languages}{: <<LANGUAGES>>} \\
+     \textbf{Developer Tools}{: <<DEV_TOOLS>>} \\
+     \textbf{Frameworks}{: <<FRAMEWORKS>>} \\
+     \textbf{Cloud/Databases}{: <<CLOUD_DB>>} \\
+     \textbf{Soft Skills}{: <<SOFT_SKILLS>>} \\
+     \textbf{Coursework}{: <<COURSEWORK>>} \\
+     \textbf{Areas of Interest}{: <<INTERESTS>>} \\
     }}
  \end{itemize}
  \vspace{-16pt}
@@ -236,11 +233,11 @@
 \section{\textbf{Positions of Responsibility}}
 \vspace{-0.4mm}
 \resumeSubHeadingListStart
-{{#POSITIONS}}
-\resumePOR{{{TITLE}}, }
-    {{{ORGANIZATION}}}
-    {{{TENURE}}}
-{{/POSITIONS}}
+<<#POSITIONS>>
+\resumePOR{<<TITLE>>, }
+    {<<ORGANIZATION>>}
+    {<<TENURE>>}
+<</POSITIONS>>
 \resumeSubHeadingListEnd
 \vspace{-5mm}
 
@@ -251,11 +248,11 @@
 \section{\textbf{Achievements}}
 \vspace{-0.4mm}
 \resumeSubHeadingListStart
-{{#ACHIEVEMENTS}}
-\resumePOR{{{TITLE}} }
-    {{{DESCRIPTION}}}
-    {{{DATE}}}
-{{/ACHIEVEMENTS}}
+<<#ACHIEVEMENTS>>
+\resumePOR{<<TITLE>> }
+    {<<DESCRIPTION>>}
+    {<<DATE>>}
+<</ACHIEVEMENTS>>
 \resumeSubHeadingListEnd
 \vspace{-5mm}
 
