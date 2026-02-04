@@ -5,8 +5,8 @@
   "main": "dist/index.js",
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "build": "tsc",
-    "postbuild": "xcopy /E /I /Y src\\services\\latex\\templates dist\\services\\latex\\templates",
+    "build": "tsc && npm run copy-templates",
+    "copy-templates": "node -e \"const fs=require('fs');const path=require('path');function copyDir(src,dest){fs.mkdirSync(dest,{recursive:true});fs.readdirSync(src).forEach(f=>{const s=path.join(src,f),d=path.join(dest,f);fs.statSync(s).isDirectory()?copyDir(s,d):fs.copyFileSync(s,d)})};copyDir('src/services/latex/templates','dist/services/latex/templates')\"",
     "start": "node dist/index.js",
     "lint": "eslint src/"
   },
@@ -20,6 +20,14 @@
   "license": "MIT",
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/multer": "^1.4.13",
+    "@types/mustache": "^4.2.6",
+    "@types/node": "^20.10.0",
+    "@types/uuid": "^9.0.7",
     "@xenova/transformers": "^2.17.2",
     "bcryptjs": "^2.4.3",
     "compromise": "^14.10.0",
@@ -32,26 +40,18 @@
     "multer": "^1.4.5-lts.1",
     "mustache": "^4.2.0",
     "pdf-parse": "^1.1.1",
+    "typescript": "^5.3.0",
     "uuid": "^9.0.0"
   },
   "devDependencies": {
-    "@types/bcryptjs": "^2.4.6",
-    "@types/cors": "^2.8.17",
-    "@types/express": "^4.17.21",
     "@types/jest": "^30.0.0",
-    "@types/jsonwebtoken": "^9.0.10",
-    "@types/multer": "^1.4.13",
-    "@types/mustache": "^4.2.6",
-    "@types/node": "^20.10.0",
     "@types/supertest": "^6.0.3",
-    "@types/uuid": "^9.0.7",
     "@typescript-eslint/eslint-plugin": "^6.13.0",
     "@typescript-eslint/parser": "^6.13.0",
     "eslint": "^8.55.0",
     "jest": "^30.2.0",
     "supertest": "^7.2.2",
     "ts-jest": "^29.4.6",
-    "tsx": "^4.6.0",
-    "typescript": "^5.3.0"
+    "tsx": "^4.6.0"
   }
 }
