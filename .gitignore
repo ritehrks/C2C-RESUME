@@ -39,3 +39,10 @@ coverage/
 # Misc
 *.pem
 .vercel
+
+# Documentation (keep README only)
+DOCUMENTATION.md
+IMPLEMENTATION_DOCS.md
+PROJECT_PROGRESS.md
+SIMPLE_ANALYSIS_DOCS.md
+C2C_RESUME_PLATFORM_BLUEPRINT.md
