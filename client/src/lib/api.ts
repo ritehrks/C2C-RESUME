@@ -281,4 +281,135 @@ export const statsApi = {
     },
 };
 
+// Contest API for attendance system
+export const contestApi = {
+    // ==================== ADMIN: Contest Management ====================
+
+    getAllContests: async (token: string, filters?: { status?: string; type?: string }) => {
+        const params = new URLSearchParams();
+        if (filters?.status) params.append('status', filters.status);
+        if (filters?.type) params.append('type', filters.type);
+
+        const response = await fetch(`${API_URL}/api/contests?${params}`, {
+            headers: { Authorization: `Bearer ${token}` },
+        });
+        return response.json();
+    },
+
+    getContest: async (token: string, id: string) => {
+        const response = await fetch(`${API_URL}/api/contests/${id}`, {
+            headers: { Authorization: `Bearer ${token}` },
+        });
+        return response.json();
+    },
+
+    createContest: async (token: string, contestData: any) => {
+        const response = await fetch(`${API_URL}/api/contests`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify(contestData),
+        });
+        return response.json();
+    },
+
+    updateContest: async (token: string, id: string, contestData: any) => {
+        const response = await fetch(`${API_URL}/api/contests/${id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify(contestData),
+        });
+        return response.json();
+    },
+
+    deleteContest: async (token: string, id: string) => {
+        const response = await fetch(`${API_URL}/api/contests/${id}`, {
+            method: 'DELETE',
+            headers: { Authorization: `Bearer ${token}` },
+        });
+        return response.json();
+    },
+
+    toggleContestStatus: async (token: string, id: string) => {
+        const response = await fetch(`${API_URL}/api/contests/${id}/toggle`, {
+            method: 'PATCH',
+            headers: { Authorization: `Bearer ${token}` },
+        });
+        return response.json();
+    },
+
+    regenerateQRToken: async (token: string, id: string) => {
+        const response = await fetch(`${API_URL}/api/contests/${id}/regenerate-qr`, {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${token}` },
+        });
+        return response.json();
+    },
+
+    // ==================== ADMIN: Attendance Management ====================
+
+    getContestAttendance: async (token: string, id: string, sort?: string, order?: string) => {
+        const params = new URLSearchParams();
+        if (sort) params.append('sort', sort);
+        if (order) params.append('order', order);
+
+        const response = await fetch(`${API_URL}/api/contests/${id}/attendance?${params}`, {
+            headers: { Authorization: `Bearer ${token}` },
+        });
+        return response.json();
+    },
+
+    exportAttendanceCSV: (token: string, id: string) => {
+        // Returns URL for downloading CSV
+        return `${API_URL}/api/contests/${id}/attendance/export?token=${encodeURIComponent(token)}`;
+    },
+
+    deleteAttendanceRecord: async (token: string, contestId: string, attendanceId: string) => {
+        const response = await fetch(`${API_URL}/api/contests/${contestId}/attendance/${attendanceId}`, {
+            method: 'DELETE',
+            headers: { Authorization: `Bearer ${token}` },
+        });
+        return response.json();
+    },
+
+    // ==================== PUBLIC: Attendance Marking ====================
+
+    getContestByToken: async (qrToken: string) => {
+        const response = await fetch(`${API_URL}/api/contests/public/${qrToken}`);
+        return response.json();
+    },
+
+    markAttendance: async (qrToken: string, attendanceData: {
+        name: string;
+        email: string;
+        studentId: string;
+        branch: string;
+        phone?: string;
+        latitude?: number;
+        longitude?: number;
+        locationAccuracy?: number;
+    }) => {
+        const response = await fetch(`${API_URL}/api/contests/public/${qrToken}/mark`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(attendanceData),
+        });
+        return response.json();
+    },
+
+    checkAttendance: async (qrToken: string, email?: string, studentId?: string) => {
+        const params = new URLSearchParams();
+        if (email) params.append('email', email);
+        if (studentId) params.append('studentId', studentId);
+
+        const response = await fetch(`${API_URL}/api/contests/public/${qrToken}/check?${params}`);
+        return response.json();
+    },
+};
+
 export default resumeApi;

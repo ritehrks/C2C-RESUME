@@ -8,6 +8,7 @@ import resumeRoutes from './routes/resumes.js';
 import analyzerRoutes from './routes/analyzer.js';
 import authRoutes from './routes/auth.js';
 import statsRoutes from './routes/stats.js';
+import contestRoutes from './routes/contests.js';
 
 // Import database connection and seeders
 import { connectDB } from './config/database.js';
@@ -25,7 +26,7 @@ const API_URL = process.env.API_URL || `http://localhost:${PORT}`;
 // Middleware
 app.use(cors({
     origin: process.env.CLIENT_URL || 'http://localhost:3000',
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
     credentials: true,
 }));
 app.use(express.json({ limit: '10mb' }));
@@ -35,6 +36,7 @@ app.use('/api/resumes', resumeRoutes);
 app.use('/api/analyze', analyzerRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/stats', statsRoutes);
+app.use('/api/contests', contestRoutes);
 
 // Health check endpoints (for keepalive and monitoring)
 app.get('/health', (req, res) => {
