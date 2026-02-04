@@ -1,8 +1,9 @@
 // Auth Controller
-// Google OAuth authentication with JWT tokens
+// Google OAuth and Email/Password authentication with JWT tokens
 
 import { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
+import bcrypt from 'bcryptjs';
 import { User } from '../models/User.js';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'c2c-resume-secret-key-change-in-production';
@@ -269,4 +270,147 @@ export const authController = {
             res.status(500).json({ success: false, error: 'Failed to update profile' });
         }
     },
+
+    // POST /api/auth/login - Email/Password login
+    login: async (req: Request, res: Response) => {
+        try {
+            const { email, password } = req.body;
+
+            if (!email || !password) {
+                return res.status(400).json({ success: false, error: 'Email and password are required' });
+            }
+
+            // Find user by email
+            const user = await User.findOne({ email: email.toLowerCase() });
+
+            if (!user) {
+                return res.status(401).json({ success: false, error: 'Invalid email or password' });
+            }
+
+            // Check if user has a password (local auth)
+            if (!user.password) {
+                return res.status(401).json({ success: false, error: 'This account uses Google login' });
+            }
+
+            // Verify password
+            const isMatch = await bcrypt.compare(password, user.password);
+            if (!isMatch) {
+                return res.status(401).json({ success: false, error: 'Invalid email or password' });
+            }
+
+            // Generate token
+            const token = generateToken(user._id.toString(), user.email);
+
+            res.json({
+                success: true,
+                message: 'Login successful',
+                token,
+                user: {
+                    id: user._id,
+                    email: user.email,
+                    name: user.name,
+                    role: user.role,
+                    profileImage: user.profileImage,
+                },
+            });
+        } catch (error: any) {
+            console.error('❌ Login error:', error);
+            res.status(500).json({ success: false, error: 'Login failed' });
+        }
+    },
+
+    // POST /api/auth/register - User registration
+    register: async (req: Request, res: Response) => {
+        try {
+            const { email, password, name } = req.body;
+
+            if (!email || !password || !name) {
+                return res.status(400).json({ success: false, error: 'Email, password, and name are required' });
+            }
+
+            if (password.length < 6) {
+                return res.status(400).json({ success: false, error: 'Password must be at least 6 characters' });
+            }
+
+            // Check if user exists
+            const existingUser = await User.findOne({ email: email.toLowerCase() });
+            if (existingUser) {
+                return res.status(409).json({ success: false, error: 'User already exists' });
+            }
+
+            // Hash password
+            const salt = await bcrypt.genSalt(10);
+            const hashedPassword = await bcrypt.hash(password, salt);
+
+            // Create new user
+            const user = new User({
+                email: email.toLowerCase(),
+                name,
+                password: hashedPassword,
+                authProvider: 'local',
+                role: 'user',
+                masterProfile: {
+                    personalInfo: {},
+                    education: [],
+                    skills: { languages: [], frameworks: [], tools: [], databases: [] },
+                },
+            });
+
+            await user.save();
+            console.log(`✅ New user registered: ${user.email}`);
+
+            // Generate token
+            const token = generateToken(user._id.toString(), user.email);
+
+            res.status(201).json({
+                success: true,
+                message: 'Registration successful',
+                token,
+                user: {
+                    id: user._id,
+                    email: user.email,
+                    name: user.name,
+                    role: user.role,
+                },
+            });
+        } catch (error: any) {
+            console.error('❌ Register error:', error);
+            res.status(500).json({ success: false, error: 'Registration failed' });
+        }
+    },
+};
+
+// Seed admin user on server start
+export const seedAdminUser = async () => {
+    try {
+        const adminEmail = 'ritesh@123';
+        const adminPassword = '12345678';
+
+        const existingAdmin = await User.findOne({ email: adminEmail });
+
+        if (!existingAdmin) {
+            const salt = await bcrypt.genSalt(10);
+            const hashedPassword = await bcrypt.hash(adminPassword, salt);
+
+            const adminUser = new User({
+                email: adminEmail,
+                name: 'Ritesh Admin',
+                password: hashedPassword,
+                authProvider: 'local',
+                role: 'admin',
+                masterProfile: {
+                    personalInfo: {},
+                    education: [],
+                    skills: { languages: [], frameworks: [], tools: [], databases: [] },
+                },
+            });
+
+            await adminUser.save();
+            console.log('🔐 Admin user created: ritesh@123 / 12345678');
+        } else {
+            console.log('🔐 Admin user already exists');
+        }
+    } catch (error) {
+        console.error('❌ Failed to seed admin user:', error);
+    }
 };

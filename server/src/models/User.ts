@@ -6,8 +6,10 @@ import mongoose, { Schema, Document } from 'mongoose';
 export interface IUser extends Document {
     email: string;
     name: string;
+    password?: string;
     profileImage?: string;
-    authProvider: 'google';
+    authProvider: 'google' | 'local';
+    role: 'user' | 'admin';
     masterProfile: {
         personalInfo: {
             phone?: string;
@@ -30,6 +32,8 @@ export interface IUser extends Document {
             databases: string[];
         };
     };
+    deepAnalysisCount: number;
+    lastDeepAnalysisReset: Date;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -38,8 +42,10 @@ const userSchema = new Schema<IUser>(
     {
         email: { type: String, required: true, unique: true },
         name: { type: String, required: true },
+        password: { type: String },
         profileImage: String,
-        authProvider: { type: String, default: 'google' },
+        authProvider: { type: String, enum: ['google', 'local'], default: 'google' },
+        role: { type: String, enum: ['user', 'admin'], default: 'user' },
         masterProfile: {
             personalInfo: {
                 phone: String,
@@ -62,6 +68,8 @@ const userSchema = new Schema<IUser>(
                 databases: [String],
             },
         },
+        deepAnalysisCount: { type: Number, default: 0 },
+        lastDeepAnalysisReset: { type: Date, default: Date.now },
     },
     { timestamps: true }
 );

@@ -51,7 +51,7 @@ export async function runDeepAnalysis(
     const simpleResults = await runSimpleAnalysis(resumeText, selectedRole);
 
     // 3. Call Gemini for AI insights
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-3-flash-preview' });
 
     const prompt = `
 You are a resume expert. Analyze this ${selectedRole} resume and provide:

@@ -6,24 +6,278 @@ import Image from 'next/image';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
-// Simple analysis result type
+// Pre-defined job templates for quick selection
+const JOB_TEMPLATES = [
+    {
+        id: 'sde',
+        title: 'Software Development Engineer (SDE)',
+        icon: '💻',
+        description: `Software Development Engineer (SDE)
+
+About the Role:
+We are looking for a talented Software Development Engineer to join our team. You will be working on building scalable, high-performance applications.
+
+Requirements:
+- Bachelor's degree in Computer Science or related field
+- 2+ years of experience in software development
+- Strong proficiency in at least one programming language (JavaScript, Python, Java, C++)
+- Experience with data structures and algorithms
+- Familiarity with system design and architecture
+- Experience with REST APIs and microservices
+- Knowledge of databases (SQL and NoSQL)
+- Experience with Git and version control
+- Understanding of CI/CD pipelines
+- Strong problem-solving skills
+
+Nice to Have:
+- Experience with cloud platforms (AWS, GCP, Azure)
+- Familiarity with Docker and Kubernetes
+- Contributions to open source projects
+- Competitive programming experience`
+    },
+    {
+        id: 'frontend',
+        title: 'Frontend Developer',
+        icon: '🎨',
+        description: `Frontend Developer
+
+About the Role:
+We are seeking a skilled Frontend Developer to create amazing user experiences for our web applications.
+
+Requirements:
+- 2+ years of experience in frontend development
+- Strong proficiency in React, Vue, or Angular
+- Expert knowledge of JavaScript/TypeScript
+- Deep understanding of HTML5 and CSS3
+- Experience with responsive design and mobile-first development
+- Familiarity with state management (Redux, Zustand, MobX)
+- Knowledge of build tools (Webpack, Vite)
+- Experience with testing frameworks (Jest, Cypress)
+- Understanding of web accessibility (WCAG) and SEO best practices
+- Experience with CSS frameworks (Tailwind, Bootstrap, Material-UI)
+
+Nice to Have:
+- Experience with Next.js or similar frameworks
+- Knowledge of design systems
+- Familiarity with Figma or design tools
+- Performance optimization experience
+- Experience with PWA development`
+    },
+    {
+        id: 'backend',
+        title: 'Backend Developer',
+        icon: '⚙️',
+        description: `Backend Developer
+
+About the Role:
+We are looking for a Backend Developer to build robust, scalable server-side applications and APIs.
+
+Requirements:
+- 2+ years of backend development experience
+- Strong proficiency in Node.js, Python, Java, or Go
+- Experience with RESTful API design and development
+- Knowledge of databases (PostgreSQL, MySQL, MongoDB, Redis)
+- Understanding of authentication and authorization (OAuth, JWT)
+- Experience with microservices architecture
+- Familiarity with Docker and containerization
+- Knowledge of message queues (RabbitMQ, Kafka)
+- Experience with caching strategies
+- Understanding of security best practices
+
+Nice to Have:
+- Experience with GraphQL
+- Knowledge of cloud services (AWS, GCP, Azure)
+- Experience with serverless architecture
+- Understanding of event-driven architecture
+- Database optimization and query tuning`
+    },
+    {
+        id: 'fullstack',
+        title: 'Full Stack Developer',
+        icon: '🔧',
+        description: `Full Stack Developer
+
+About the Role:
+We need a versatile Full Stack Developer who can work on both frontend and backend technologies.
+
+Requirements:
+- 3+ years of full stack development experience
+- Frontend: React, Vue, or Angular with TypeScript
+- Backend: Node.js, Python, or Java
+- Experience with REST APIs and GraphQL
+- Strong database skills (PostgreSQL, MongoDB)
+- Understanding of system design principles
+- Experience with Git and version control
+- Knowledge of Docker and deployment pipelines
+- Familiarity with cloud platforms (AWS/GCP/Azure)
+- Strong debugging and problem-solving skills
+
+Nice to Have:
+- Experience with Next.js or similar frameworks
+- Knowledge of Kubernetes
+- CI/CD pipeline setup experience
+- Performance optimization skills
+- Experience with testing (unit, integration, e2e)`
+    },
+    {
+        id: 'devops',
+        title: 'DevOps Engineer',
+        icon: '🚀',
+        description: `DevOps Engineer
+
+About the Role:
+We are hiring a DevOps Engineer to build and maintain our infrastructure, CI/CD pipelines, and ensure system reliability.
+
+Requirements:
+- 2+ years of DevOps experience
+- Strong knowledge of cloud platforms (AWS, GCP, or Azure)
+- Experience with Docker and Kubernetes
+- Proficiency in CI/CD tools (Jenkins, GitHub Actions, GitLab CI)
+- Infrastructure as Code (Terraform, Pulumi, CloudFormation)
+- Configuration management (Ansible, Chef, Puppet)
+- Strong Linux/Unix administration skills
+- Experience with monitoring and logging (Prometheus, Grafana, ELK)
+- Shell scripting and automation
+- Understanding of networking and security
+
+Nice to Have:
+- Kubernetes certifications (CKA, CKAD)
+- Cloud certifications (AWS Solutions Architect, GCP Professional)
+- Experience with service mesh (Istio)
+- Cost optimization experience
+- Disaster recovery planning`
+    },
+    {
+        id: 'data_scientist',
+        title: 'Data Scientist',
+        icon: '📊',
+        description: `Data Scientist
+
+About the Role:
+We are looking for a Data Scientist to extract insights from data and build predictive models.
+
+Requirements:
+- Master's or PhD in Computer Science, Statistics, or related field
+- Strong proficiency in Python (pandas, numpy, scikit-learn)
+- Experience with machine learning algorithms and techniques
+- Deep understanding of statistics and probability
+- Experience with data visualization (Matplotlib, Seaborn, Tableau)
+- Knowledge of SQL and database querying
+- Experience with Jupyter notebooks
+- Understanding of A/B testing and hypothesis testing
+- Feature engineering and data preprocessing skills
+- Strong communication skills for presenting findings
+
+Nice to Have:
+- Deep learning experience (TensorFlow, PyTorch)
+- NLP or computer vision experience
+- Kaggle competitions or publications
+- Big data tools (Spark, Hadoop)
+- Experience with cloud ML services (SageMaker, Vertex AI)`
+    },
+    {
+        id: 'ml_engineer',
+        title: 'Machine Learning Engineer',
+        icon: '🤖',
+        description: `Machine Learning Engineer
+
+About the Role:
+We are seeking a Machine Learning Engineer to develop and deploy ML models at scale.
+
+Requirements:
+- 2+ years of ML engineering experience
+- Strong proficiency in Python
+- Experience with deep learning frameworks (TensorFlow, PyTorch)
+- Model deployment and serving experience
+- Understanding of MLOps best practices
+- Experience with feature engineering and data pipelines
+- Knowledge of cloud ML platforms (AWS SageMaker, GCP Vertex AI)
+- Docker and Kubernetes for ML workloads
+- Model monitoring and performance tracking
+- Experience with distributed training
+
+Nice to Have:
+- NLP or Computer Vision specialization
+- Experience with transformers and LLMs
+- MLflow, Kubeflow, or similar MLOps tools
+- Real-time inference optimization
+- Published papers or research experience`
+    },
+    {
+        id: 'product_manager',
+        title: 'Product Manager',
+        icon: '📋',
+        description: `Product Manager
+
+About the Role:
+We are looking for a Product Manager to drive product strategy and execution.
+
+Requirements:
+- 3+ years of product management experience
+- Strong understanding of product development lifecycle
+- Experience with Agile/Scrum methodologies
+- Excellent stakeholder management skills
+- Data-driven decision making
+- Experience with user research and customer interviews
+- Proficiency in product analytics tools
+- Strong communication and presentation skills
+- Experience writing PRDs and specifications
+- Understanding of UX/UI principles
+
+Nice to Have:
+- Technical background or coding experience
+- MBA or business degree
+- Experience with A/B testing
+- Previous startup experience
+- Industry domain expertise`
+    }
+];
+
+// Simple analysis result type - matches new backend response
 interface SimpleAnalysisResult {
+    overallScore: number;
     matchPercentage: number;
     rating: string;
     ratingLabel: string;
-    matchedKeywords: string[];
-    missingKeywords: string[];
+    ratingColor: string;
+    scores: {
+        keyword: number;
+        semantic: number;
+        actionVerbs: number;
+        sections: number;
+        quantification: number;
+    };
+    semanticAnalysis?: {
+        similarity: number;
+        modelUsed: string;
+        interpretation: string;
+    };
+    keywords: {
+        resume: string[];
+        job: string[];
+        matched: string[];
+        missing: string[];
+        byCategory?: Record<string, { matched: string[]; missing: string[] }>;
+    };
     actionVerbs: {
         strong: string[];
         weak: string[];
     };
+    sections: Record<string, boolean>;
+    quantification: { found: boolean; examples: string[] };
     suggestions: string[];
     stats: {
-        hardSkillsFound: number;
-        hardSkillsRequired: number;
+        resumeKeywordsFound: number;
+        jobKeywordsFound: number;
+        matchedCount: number;
+        missingCount: number;
         strongVerbsCount: number;
         weakVerbsCount: number;
+        sectionsDetected: number;
     };
+    // Legacy support
+    matchedKeywords?: string[];
+    missingKeywords?: string[];
 }
 
 // Deep analysis AI result type
@@ -70,6 +324,78 @@ export default function AnalyzerPage() {
     const [isAiPowered, setIsAiPowered] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
+    // PDF upload states
+    const [isUploading, setIsUploading] = useState(false);
+    const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
+    const [isDragging, setIsDragging] = useState(false);
+
+    // Handle PDF file upload
+    const handleFileUpload = async (file: File) => {
+        if (!file) return;
+
+        if (file.type !== 'application/pdf') {
+            setError('Please upload a PDF file');
+            return;
+        }
+
+        if (file.size > 5 * 1024 * 1024) {
+            setError('File size must be less than 5MB');
+            return;
+        }
+
+        setIsUploading(true);
+        setError(null);
+
+        try {
+            const formData = new FormData();
+            formData.append('resume', file);
+
+            const response = await fetch(`${API_URL}/api/analyze/parse-pdf`, {
+                method: 'POST',
+                body: formData,
+            });
+
+            const data = await response.json();
+
+            if (!data.success) {
+                throw new Error(data.error || 'Failed to parse PDF');
+            }
+
+            setResumeText(data.data.text);
+            setUploadedFileName(data.data.fileName);
+            console.log(`✅ Parsed PDF: ${data.data.numPages} pages`);
+
+        } catch (err: any) {
+            setError(err.message || 'Failed to upload PDF');
+            console.error('Upload error:', err);
+        } finally {
+            setIsUploading(false);
+        }
+    };
+
+    // Handle drag and drop
+    const handleDragOver = (e: React.DragEvent) => {
+        e.preventDefault();
+        setIsDragging(true);
+    };
+
+    const handleDragLeave = (e: React.DragEvent) => {
+        e.preventDefault();
+        setIsDragging(false);
+    };
+
+    const handleDrop = (e: React.DragEvent) => {
+        e.preventDefault();
+        setIsDragging(false);
+        const file = e.dataTransfer.files[0];
+        if (file) handleFileUpload(file);
+    };
+
+    const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) handleFileUpload(file);
+    };
+
     const handleAnalysis = async (mode: AnalysisMode) => {
         if (!jobDescription.trim() || !resumeText.trim()) {
             setError('Please provide both job description and resume text');
@@ -82,9 +408,17 @@ export default function AnalyzerPage() {
 
         try {
             const endpoint = mode === 'simple' ? '/api/analyze/simple' : '/api/analyze/deep';
+
+            // Get auth token for tracking (optional)
+            const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+            const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
+            }
+
             const response = await fetch(`${API_URL}${endpoint}`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers,
                 body: JSON.stringify({ jobDescription, resumeText }),
             });
 
@@ -180,6 +514,31 @@ export default function AnalyzerPage() {
                                 <span className="material-symbols-outlined text-app-primary">description</span>
                                 <h3 className="text-[#0d121b] dark:text-white font-bold text-lg">Target Job Description</h3>
                             </div>
+
+                            {/* Job Role Quick Select Dropdown */}
+                            <div className="mb-4">
+                                <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-2">
+                                    Quick Select Role (or paste your own below)
+                                </label>
+                                <select
+                                    className="w-full px-4 py-3 rounded-lg bg-[#f8f9fc] dark:bg-[#101622] border border-[#cfd7e7] dark:border-gray-600 text-[#0d121b] dark:text-white text-sm focus:outline-0 focus:ring-2 focus:ring-app-primary/20 transition-all cursor-pointer"
+                                    onChange={(e) => {
+                                        const selectedRole = JOB_TEMPLATES.find(j => j.id === e.target.value);
+                                        if (selectedRole) {
+                                            setJobDescription(selectedRole.description);
+                                        }
+                                    }}
+                                    defaultValue=""
+                                >
+                                    <option value="" disabled>📋 Select a common job role...</option>
+                                    {JOB_TEMPLATES.map((job) => (
+                                        <option key={job.id} value={job.id}>
+                                            {job.icon} {job.title}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
                             <textarea
                                 className="form-input w-full resize-none rounded-lg text-[#0d121b] dark:text-white focus:outline-0 focus:ring-2 focus:ring-app-primary/20 border border-[#cfd7e7] dark:border-gray-600 bg-[#f8f9fc] dark:bg-[#101622] min-h-[160px] placeholder:text-[#8d9ab3] p-4 text-sm font-normal leading-relaxed transition-all"
                                 placeholder="Paste the full job description here (e.g. Responsibilities, Requirements, Skills)..."
@@ -189,13 +548,62 @@ export default function AnalyzerPage() {
                         </div>
 
                         <div className="bg-white dark:bg-[#1e2636] rounded-xl shadow-sm border border-[#e7ebf3] dark:border-gray-700 p-6">
-                            <div className="flex items-center gap-2 mb-4">
-                                <span className="material-symbols-outlined text-app-primary">article</span>
-                                <h3 className="text-[#0d121b] dark:text-white font-bold text-lg">Your Resume Text</h3>
+                            <div className="flex items-center justify-between mb-4">
+                                <div className="flex items-center gap-2">
+                                    <span className="material-symbols-outlined text-app-primary">article</span>
+                                    <h3 className="text-[#0d121b] dark:text-white font-bold text-lg">Your Resume</h3>
+                                </div>
+                                {uploadedFileName && (
+                                    <span className="text-xs text-green-600 dark:text-green-400 flex items-center gap-1">
+                                        <span className="material-symbols-outlined text-[16px]">check_circle</span>
+                                        {uploadedFileName}
+                                    </span>
+                                )}
                             </div>
+
+                            {/* PDF Upload Zone */}
+                            <div
+                                onDragOver={handleDragOver}
+                                onDragLeave={handleDragLeave}
+                                onDrop={handleDrop}
+                                className={`relative border-2 border-dashed rounded-lg p-6 mb-4 text-center transition-all cursor-pointer ${isDragging
+                                    ? 'border-app-primary bg-blue-50 dark:bg-blue-900/20'
+                                    : 'border-[#cfd7e7] dark:border-gray-600 hover:border-app-primary hover:bg-gray-50 dark:hover:bg-[#101622]'
+                                    }`}
+                                onClick={() => document.getElementById('pdf-upload')?.click()}
+                            >
+                                <input
+                                    type="file"
+                                    id="pdf-upload"
+                                    accept=".pdf"
+                                    onChange={handleFileInput}
+                                    className="hidden"
+                                />
+                                {isUploading ? (
+                                    <div className="flex flex-col items-center gap-2">
+                                        <span className="material-symbols-outlined text-3xl text-app-primary animate-spin">progress_activity</span>
+                                        <p className="text-sm text-slate-600 dark:text-slate-400">Parsing PDF...</p>
+                                    </div>
+                                ) : (
+                                    <div className="flex flex-col items-center gap-2">
+                                        <span className="material-symbols-outlined text-3xl text-slate-400">upload_file</span>
+                                        <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                                            Drop your resume PDF here or <span className="text-app-primary">browse</span>
+                                        </p>
+                                        <p className="text-xs text-slate-500">PDF only, max 5MB</p>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="flex items-center gap-3 mb-3">
+                                <div className="flex-1 h-px bg-slate-200 dark:bg-slate-700"></div>
+                                <span className="text-xs text-slate-400 uppercase">or paste text</span>
+                                <div className="flex-1 h-px bg-slate-200 dark:bg-slate-700"></div>
+                            </div>
+
                             <textarea
-                                className="form-input w-full resize-none rounded-lg text-[#0d121b] dark:text-white focus:outline-0 focus:ring-2 focus:ring-app-primary/20 border border-[#cfd7e7] dark:border-gray-600 bg-[#f8f9fc] dark:bg-[#101622] min-h-[160px] placeholder:text-[#8d9ab3] p-4 text-sm font-normal leading-relaxed transition-all"
-                                placeholder="Paste your resume text here or copy from your resume builder..."
+                                className="form-input w-full resize-none rounded-lg text-[#0d121b] dark:text-white focus:outline-0 focus:ring-2 focus:ring-app-primary/20 border border-[#cfd7e7] dark:border-gray-600 bg-[#f8f9fc] dark:bg-[#101622] min-h-[120px] placeholder:text-[#8d9ab3] p-4 text-sm font-normal leading-relaxed transition-all"
+                                placeholder="Or paste your resume text here..."
                                 value={resumeText}
                                 onChange={(e) => setResumeText(e.target.value)}
                             />
@@ -214,8 +622,8 @@ export default function AnalyzerPage() {
                                 onClick={() => handleAnalysis('simple')}
                                 disabled={isAnalyzing}
                                 className={`flex-1 flex items-center justify-center gap-2 rounded-xl h-14 font-bold shadow-sm transition-all ${isAnalyzing && analysisMode === 'simple'
-                                        ? 'bg-gray-400 cursor-not-allowed text-white'
-                                        : 'bg-white hover:bg-gray-50 dark:bg-[#1e2636] dark:hover:bg-[#2a3449] border border-[#cfd7e7] dark:border-gray-600 text-app-primary dark:text-blue-400'
+                                    ? 'bg-gray-400 cursor-not-allowed text-white'
+                                    : 'bg-white hover:bg-gray-50 dark:bg-[#1e2636] dark:hover:bg-[#2a3449] border border-[#cfd7e7] dark:border-gray-600 text-app-primary dark:text-blue-400'
                                     }`}
                             >
                                 {isAnalyzing && analysisMode === 'simple' ? (
@@ -234,8 +642,8 @@ export default function AnalyzerPage() {
                                 onClick={() => handleAnalysis('deep')}
                                 disabled={isAnalyzing}
                                 className={`flex-1 flex items-center justify-center gap-2 rounded-xl h-14 font-bold shadow-lg transition-all ${isAnalyzing && analysisMode === 'deep'
-                                        ? 'bg-gray-400 cursor-not-allowed text-white'
-                                        : 'bg-gradient-to-r from-purple-600 to-app-primary hover:from-purple-700 hover:to-blue-700 text-white shadow-purple-500/20'
+                                    ? 'bg-gray-400 cursor-not-allowed text-white'
+                                    : 'bg-gradient-to-r from-purple-600 to-app-primary hover:from-purple-700 hover:to-blue-700 text-white shadow-purple-500/20'
                                     }`}
                             >
                                 {isAnalyzing && analysisMode === 'deep' ? (
@@ -274,14 +682,22 @@ export default function AnalyzerPage() {
                                 <div className="bg-white dark:bg-[#1e2636] rounded-xl shadow-sm border border-[#e7ebf3] dark:border-gray-700 p-6 md:p-8">
                                     <div className="flex flex-col md:flex-row gap-8 items-center">
                                         <div className="relative size-40 flex-shrink-0">
-                                            <svg className="size-full -rotate-90" viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg">
-                                                <path className="text-gray-100 dark:text-gray-700" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" strokeDasharray="100, 100" strokeWidth="3"></path>
-                                                <path className={getMatchColor(currentResult.matchPercentage)} d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" strokeDasharray={`${currentResult.matchPercentage}, 100`} strokeLinecap="round" strokeWidth="3"></path>
-                                            </svg>
-                                            <div className="absolute inset-0 flex flex-col items-center justify-center">
-                                                <span className={`text-3xl font-bold ${getMatchColor(currentResult.matchPercentage)}`}>{currentResult.matchPercentage}%</span>
-                                                <span className="text-xs font-medium text-[#4c669a] dark:text-gray-400 uppercase tracking-wide">Match</span>
-                                            </div>
+                                            {/* Use overallScore for simple, matchPercentage for deep */}
+                                            {(() => {
+                                                const displayScore = simpleResult?.overallScore ?? currentResult.matchPercentage;
+                                                return (
+                                                    <>
+                                                        <svg className="size-full -rotate-90" viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg">
+                                                            <path className="text-gray-100 dark:text-gray-700" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" strokeDasharray="100, 100" strokeWidth="3"></path>
+                                                            <path className={getMatchColor(displayScore)} d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" strokeDasharray={`${displayScore}, 100`} strokeLinecap="round" strokeWidth="3"></path>
+                                                        </svg>
+                                                        <div className="absolute inset-0 flex flex-col items-center justify-center">
+                                                            <span className={`text-3xl font-bold ${getMatchColor(displayScore)}`}>{displayScore}%</span>
+                                                            <span className="text-xs font-medium text-[#4c669a] dark:text-gray-400 uppercase tracking-wide">{simpleResult ? 'Overall' : 'Match'}</span>
+                                                        </div>
+                                                    </>
+                                                );
+                                            })()}
                                         </div>
                                         <div className="flex flex-col flex-1">
                                             <div className="flex items-center gap-3 mb-2">
@@ -310,13 +726,15 @@ export default function AnalyzerPage() {
                                                 <div className="bg-[#f8f9fc] dark:bg-[#101622] rounded-lg p-3 border border-[#e7ebf3] dark:border-gray-800">
                                                     <p className="text-xs text-[#4c669a] dark:text-gray-400 mb-1">Skills Matched</p>
                                                     <p className="text-lg font-bold text-[#0d121b] dark:text-white">
-                                                        {currentResult.stats?.hardSkillsFound || currentResult.matchedKeywords?.length || 0}/
-                                                        {currentResult.stats?.hardSkillsRequired || (currentResult.matchedKeywords?.length || 0) + (currentResult.missingKeywords?.length || 0)}
+                                                        {simpleResult?.stats?.matchedCount ?? simpleResult?.keywords?.matched?.length ?? 0}/
+                                                        {(simpleResult?.stats?.jobKeywordsFound ?? ((simpleResult?.keywords?.matched?.length ?? 0) + (simpleResult?.keywords?.missing?.length ?? 0))) || 1}
                                                     </p>
                                                 </div>
                                                 <div className="bg-[#f8f9fc] dark:bg-[#101622] rounded-lg p-3 border border-[#e7ebf3] dark:border-gray-800">
                                                     <p className="text-xs text-[#4c669a] dark:text-gray-400 mb-1">Missing</p>
-                                                    <p className="text-lg font-bold text-red-500">{currentResult.missingKeywords?.length || 0}</p>
+                                                    <p className="text-lg font-bold text-red-500">
+                                                        {simpleResult?.stats?.missingCount ?? simpleResult?.keywords?.missing?.length ?? currentResult.missingKeywords?.length ?? 0}
+                                                    </p>
                                                 </div>
                                             </div>
                                         </div>
@@ -385,7 +803,7 @@ export default function AnalyzerPage() {
                                                 </div>
                                             </div>
 
-                                            {deepResult.ai.keywordOptimization?.contextTips?.length > 0 && (
+                                            {Array.isArray(deepResult.ai.keywordOptimization?.contextTips) && deepResult.ai.keywordOptimization.contextTips.length > 0 && (
                                                 <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-700">
                                                     <p className="text-xs font-semibold text-slate-600 dark:text-slate-400 mb-2">💡 How to Add Keywords Naturally:</p>
                                                     <ul className="space-y-1.5">
@@ -435,6 +853,43 @@ export default function AnalyzerPage() {
                                 {/* Simple Analysis Results - Keywords */}
                                 {simpleResult && (
                                     <>
+                                        {/* Score Breakdown - NEW */}
+                                        {simpleResult.scores && (
+                                            <div className="bg-white dark:bg-[#1e2636] rounded-xl shadow-sm border border-[#e7ebf3] dark:border-gray-700 p-6">
+                                                <div className="flex items-center gap-2 mb-4">
+                                                    <span className="material-symbols-outlined text-app-primary">analytics</span>
+                                                    <h3 className="text-[#0d121b] dark:text-white font-bold text-lg">Score Breakdown</h3>
+                                                </div>
+                                                <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                                                    <div className="text-center p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                                                        <p className="text-xl font-bold text-blue-600">{simpleResult.scores.keyword}%</p>
+                                                        <p className="text-xs text-blue-500">Keywords</p>
+                                                    </div>
+                                                    <div className="text-center p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
+                                                        <p className="text-xl font-bold text-purple-600">{simpleResult.scores.semantic || 0}%</p>
+                                                        <p className="text-xs text-purple-500">Semantic</p>
+                                                    </div>
+                                                    <div className="text-center p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                                                        <p className="text-xl font-bold text-green-600">{simpleResult.scores.sections}%</p>
+                                                        <p className="text-xs text-green-500">Sections</p>
+                                                    </div>
+                                                    <div className="text-center p-3 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
+                                                        <p className="text-xl font-bold text-orange-600">{simpleResult.scores.actionVerbs}%</p>
+                                                        <p className="text-xs text-orange-500">Action Verbs</p>
+                                                    </div>
+                                                    <div className="text-center p-3 bg-pink-50 dark:bg-pink-900/20 rounded-lg">
+                                                        <p className="text-xl font-bold text-pink-600">{simpleResult.scores.quantification}%</p>
+                                                        <p className="text-xs text-pink-500">Quantified</p>
+                                                    </div>
+                                                </div>
+                                                {simpleResult.semanticAnalysis && (
+                                                    <div className="mt-4 p-3 bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/10 dark:to-blue-900/10 rounded-lg">
+                                                        <p className="text-xs font-medium text-purple-700 dark:text-purple-300">🧠 AI Semantic Analysis: {simpleResult.semanticAnalysis.interpretation}</p>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                             {/* Missing Keywords */}
                                             <div className="bg-white dark:bg-[#1e2636] rounded-xl shadow-sm border border-[#e7ebf3] dark:border-gray-700 p-6">
@@ -445,15 +900,15 @@ export default function AnalyzerPage() {
                                                     </h3>
                                                 </div>
                                                 <div className="flex flex-wrap gap-2">
-                                                    {simpleResult.missingKeywords?.slice(0, 8).map((keyword, i) => (
+                                                    {(simpleResult.keywords?.missing ?? simpleResult.missingKeywords)?.slice(0, 8).map((keyword, i) => (
                                                         <span key={i} className="px-3 py-1.5 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-300 rounded-full text-sm font-medium">{keyword}</span>
                                                     ))}
                                                 </div>
 
                                                 <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-700">
-                                                    <p className="text-xs font-semibold text-slate-600 dark:text-slate-400 mb-2">Matched ({simpleResult.matchedKeywords?.length})</p>
+                                                    <p className="text-xs font-semibold text-slate-600 dark:text-slate-400 mb-2">Matched ({(simpleResult.keywords?.matched ?? simpleResult.matchedKeywords)?.length ?? 0})</p>
                                                     <div className="flex flex-wrap gap-2">
-                                                        {simpleResult.matchedKeywords?.slice(0, 6).map((keyword, i) => (
+                                                        {(simpleResult.keywords?.matched ?? simpleResult.matchedKeywords)?.slice(0, 6).map((keyword, i) => (
                                                             <span key={i} className="px-2.5 py-1 bg-green-50 dark:bg-green-900/10 text-green-700 dark:text-green-400 rounded-md text-xs font-medium">{keyword}</span>
                                                         ))}
                                                     </div>
@@ -478,6 +933,20 @@ export default function AnalyzerPage() {
                                                     <div className="p-3 bg-green-50 dark:bg-green-900/10 rounded-lg">
                                                         <p className="text-sm font-medium text-green-800 dark:text-green-300 mb-1">Strong verbs used:</p>
                                                         <p className="text-xs text-green-700/70 dark:text-green-400/70">{simpleResult.actionVerbs.strong.slice(0, 5).join(', ')}</p>
+                                                    </div>
+                                                )}
+
+                                                {/* Sections Detected - NEW */}
+                                                {simpleResult.sections && (
+                                                    <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-700">
+                                                        <p className="text-xs font-semibold text-slate-600 dark:text-slate-400 mb-2">Sections Detected</p>
+                                                        <div className="flex flex-wrap gap-2">
+                                                            {Object.entries(simpleResult.sections).map(([key, found]) => (
+                                                                <span key={key} className={`px-2 py-1 rounded text-xs font-medium ${found ? 'bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400' : 'bg-gray-100 text-gray-400 dark:bg-gray-800 dark:text-gray-500'}`}>
+                                                                    {found ? '✓' : '✗'} {key.replace('has', '')}
+                                                                </span>
+                                                            ))}
+                                                        </div>
                                                     </div>
                                                 )}
                                             </div>

@@ -51,11 +51,11 @@ export default function Home() {
               </div>
               <div className="flex flex-col gap-4 justify-center lg:justify-start">
                 <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-                  <Link href="/builder?template=mnit" className="group flex items-center justify-center gap-2 h-14 px-8 rounded-lg bg-navy-800 hover:bg-navy-900 text-white text-base font-bold shadow-lg shadow-navy-900/20 transition-all duration-200 transform hover:-translate-y-0.5">
+                  <Link href="/builder?template=mnit" className="group flex items-center justify-center gap-2 h-14 px-8 rounded-lg bg-app-primary hover:bg-blue-700 text-white text-base font-bold shadow-lg shadow-app-primary/20 transition-all duration-200 transform hover:-translate-y-0.5">
                     <span className="material-symbols-outlined group-hover:animate-pulse">school</span>
                     <span>MNIT Official</span>
                   </Link>
-                  <Link href="/builder?template=generic" className="group flex items-center justify-center gap-2 h-14 px-8 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-base font-bold shadow-lg shadow-emerald-600/20 transition-all duration-200 transform hover:-translate-y-0.5">
+                  <Link href="/builder?template=generic" className="group flex items-center justify-center gap-2 h-14 px-8 rounded-lg bg-blue-500 hover:bg-blue-600 text-white text-base font-bold shadow-lg shadow-blue-500/20 transition-all duration-200 transform hover:-translate-y-0.5">
                     <span className="material-symbols-outlined group-hover:animate-pulse">description</span>
                     <span>Generic ATS</span>
                   </Link>

@@ -6,9 +6,12 @@ import dotenv from 'dotenv';
 // Import routes
 import resumeRoutes from './routes/resumes.js';
 import analyzerRoutes from './routes/analyzer.js';
+import authRoutes from './routes/auth.js';
+import statsRoutes from './routes/stats.js';
 
-// Import database connection
+// Import database connection and seeders
 import { connectDB } from './config/database.js';
+import { seedAdminUser } from './controllers/index.js';
 
 dotenv.config();
 
@@ -26,9 +29,8 @@ app.use(express.json({ limit: '10mb' }));
 // Routes
 app.use('/api/resumes', resumeRoutes);
 app.use('/api/analyze', analyzerRoutes);
-// TODO: Uncomment when auth and profile are implemented
-// app.use('/api/auth', authRoutes);
-// app.use('/api/profile', profileRoutes);
+app.use('/api/auth', authRoutes);
+app.use('/api/stats', statsRoutes);
 
 // Health check
 app.get('/health', (req, res) => {
@@ -41,11 +43,16 @@ app.get('/health', (req, res) => {
 
 if (require.main === module) {
     // Connect to database, then start server
-    connectDB().then(() => {
+    connectDB().then(async () => {
+        // Seed admin user
+        await seedAdminUser();
+
         app.listen(PORT, () => {
             console.log(`🚀 C2C Resume Server running on http://localhost:${PORT}`);
             console.log(`📋 API Endpoints:`);
             console.log(`   - GET  /health`);
+            console.log(`   - POST /api/auth/login`);
+            console.log(`   - POST /api/auth/register`);
             console.log(`   - GET/POST/PUT/DELETE /api/resumes`);
             console.log(`   - POST /api/resumes/generate-pdf`);
             console.log(`   - POST /api/analyze/simple`);

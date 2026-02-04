@@ -561,7 +561,7 @@ function BuilderContent() {
                         disabled={isSaving}
                         className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold shadow-sm transition-all ${isSaving
                             ? 'bg-gray-400 cursor-not-allowed text-white'
-                            : 'bg-green-600 hover:bg-green-700 text-white'
+                            : 'bg-app-primary hover:bg-blue-700 text-white'
                             }`}
                     >
                         {isSaving ? (
@@ -582,7 +582,7 @@ function BuilderContent() {
                         disabled={isLoadingPreview}
                         className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold shadow-sm transition-all ${isLoadingPreview
                             ? 'bg-gray-400 cursor-not-allowed text-white'
-                            : 'bg-purple-600 hover:bg-purple-700 text-white'
+                            : 'bg-blue-500 hover:bg-blue-600 text-white'
                             }`}
                     >
                         {isLoadingPreview ? (
@@ -656,13 +656,13 @@ function BuilderContent() {
                                     <button
                                         onClick={() => setSelectedTemplate('generic_ats_resume')}
                                         className={`flex flex-col items-center gap-1.5 p-3 rounded-lg border-2 transition-all ${selectedTemplate === 'generic_ats_resume'
-                                            ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20'
+                                            ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
                                             : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
                                             }`}
                                     >
-                                        <span className={`material-symbols-outlined text-[24px] ${selectedTemplate === 'generic_ats_resume' ? 'text-emerald-500' : 'text-gray-400'
+                                        <span className={`material-symbols-outlined text-[24px] ${selectedTemplate === 'generic_ats_resume' ? 'text-blue-500' : 'text-gray-400'
                                             }`}>description</span>
-                                        <span className={`text-xs font-semibold ${selectedTemplate === 'generic_ats_resume' ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-600 dark:text-gray-400'
+                                        <span className={`text-xs font-semibold ${selectedTemplate === 'generic_ats_resume' ? 'text-blue-600 dark:text-blue-400' : 'text-gray-600 dark:text-gray-400'
                                             }`}>Generic ATS</span>
                                         <span className="text-[10px] text-gray-400 dark:text-gray-500">Universal format</span>
                                     </button>

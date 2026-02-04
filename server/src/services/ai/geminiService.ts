@@ -37,9 +37,24 @@ export async function runDeepAnalysisWithGemini(
     jobDescription: string
 ): Promise<DeepAnalysisResult> {
     const genAI = getGeminiClient();
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-3-flash-preview' });
+
+    // Get current date for context
+    const now = new Date();
+    const currentDate = now.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    });
+    const currentYear = now.getFullYear();
 
     const prompt = `You are an expert ATS (Applicant Tracking System) specialist and career coach. Analyze the following resume against the job description and provide detailed, actionable feedback.
+
+**IMPORTANT CONTEXT:**
+- Today's date is: ${currentDate}
+- Current year is: ${currentYear}
+- Dates from ${currentYear - 1} (${currentYear - 1}) and earlier are in the PAST, not the future
+- Do NOT flag recent dates (2024, 2025, early 2026) as "future-dated" or inconsistent
 
 **Job Description:**
 ${jobDescription}
@@ -75,6 +90,20 @@ Return ONLY valid JSON, no additional text or markdown formatting.`;
         const result = await model.generateContent(prompt);
         const response = await result.response;
         const text = response.text();
+
+        // Log token usage
+        const usageMetadata = response.usageMetadata;
+        if (usageMetadata) {
+            console.log('');
+            console.log('📊 ═══════════════════════════════════════════');
+            console.log('   GEMINI API TOKEN USAGE');
+            console.log('═══════════════════════════════════════════');
+            console.log(`   📥 Input Tokens:  ${usageMetadata.promptTokenCount || 'N/A'}`);
+            console.log(`   📤 Output Tokens: ${usageMetadata.candidatesTokenCount || 'N/A'}`);
+            console.log(`   📦 Total Tokens:  ${usageMetadata.totalTokenCount || 'N/A'}`);
+            console.log('═══════════════════════════════════════════');
+            console.log('');
+        }
 
         // Clean up the response - remove markdown code blocks if present
         let cleanedText = text.trim();
@@ -112,7 +141,7 @@ export async function getQuickFeedback(
     targetRole: string
 ): Promise<string> {
     const genAI = getGeminiClient();
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-3-flash-preview' });
 
     const prompts: Record<string, string> = {
         summary: `Improve this professional summary for a ${targetRole} position. Make it compelling and ATS-friendly:\n\n${content}\n\nProvide the improved version only.`,
