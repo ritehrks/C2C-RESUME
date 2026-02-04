@@ -1,17 +1,26 @@
 "use client";
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 
-interface AdminSidebarProps {
-    userName?: string;
-    userEmail?: string;
-    userImage?: string;
+interface UserData {
+    name: string;
+    email: string;
+    profileImage?: string;
 }
 
-export default function AdminSidebar({ userName = "Admin", userEmail = "admin@c2c.com", userImage }: AdminSidebarProps) {
+export default function AdminSidebar() {
     const pathname = usePathname();
     const router = useRouter();
+    const [userData, setUserData] = useState<UserData | null>(null);
+
+    useEffect(() => {
+        const storedUser = localStorage.getItem('user');
+        if (storedUser) {
+            setUserData(JSON.parse(storedUser));
+        }
+    }, []);
 
     const handleLogout = () => {
         localStorage.removeItem('token');
@@ -22,14 +31,15 @@ export default function AdminSidebar({ userName = "Admin", userEmail = "admin@c2
     const navItems = [
         { href: '/admin', icon: 'dashboard', label: 'Overview', exact: true },
         { href: '/admin/users', icon: 'group', label: 'User Management' },
-        { href: '/admin/analytics', icon: 'bar_chart', label: 'Analytics' },
-        { href: '/admin/settings', icon: 'settings', label: 'Settings' },
+        { href: '/admin/analytics', icon: 'analytics', label: 'Analytics' },
     ];
 
     const isActive = (href: string, exact?: boolean) => {
         if (exact) return pathname === href;
         return pathname.startsWith(href);
     };
+
+    const displayName = userData?.name || 'Admin';
 
     return (
         <aside className="w-64 flex-shrink-0 flex flex-col border-r border-gray-200 dark:border-gray-800 bg-white dark:bg-[#1a2233] h-full">
@@ -38,14 +48,17 @@ export default function AdminSidebar({ userName = "Admin", userEmail = "admin@c2
                     {/* User Profile Header */}
                     <div className="flex items-center gap-3 px-2">
                         <div
-                            className="relative bg-center bg-no-repeat bg-cover rounded-full size-10 border border-gray-200 dark:border-gray-700 flex items-center justify-center bg-[#1152d4]/10 text-[#1152d4] font-bold"
-                            style={userImage ? { backgroundImage: `url("${userImage}")` } : undefined}
+                            className="relative bg-center bg-no-repeat bg-cover rounded-full size-10 border border-gray-200 dark:border-gray-700 flex items-center justify-center bg-[#1152d4]/10 text-[#1152d4] font-bold overflow-hidden"
                         >
-                            {!userImage && userName.charAt(0).toUpperCase()}
+                            {userData?.profileImage ? (
+                                <img src={userData.profileImage} alt={displayName} className="w-full h-full object-cover" />
+                            ) : (
+                                displayName.charAt(0).toUpperCase()
+                            )}
                         </div>
                         <div className="flex flex-col">
-                            <h1 className="text-[#0d121b] dark:text-white text-sm font-semibold leading-tight">C2C Admin</h1>
-                            <p className="text-[#4c669a] dark:text-gray-400 text-xs font-normal leading-tight">Super Admin</p>
+                            <h1 className="text-[#0d121b] dark:text-white text-sm font-semibold leading-tight">{displayName}</h1>
+                            <p className="text-[#4c669a] dark:text-gray-400 text-xs font-normal leading-tight">Admin</p>
                         </div>
                     </div>
 
@@ -56,8 +69,8 @@ export default function AdminSidebar({ userName = "Admin", userEmail = "admin@c2
                                 key={item.href}
                                 href={item.href}
                                 className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors group ${isActive(item.href, item.exact)
-                                        ? 'bg-[#1152d4]/10 text-[#1152d4]'
-                                        : 'text-[#4c669a] hover:bg-gray-100 dark:hover:bg-gray-800'
+                                    ? 'bg-[#1152d4]/10 text-[#1152d4]'
+                                    : 'text-[#4c669a] hover:bg-gray-100 dark:hover:bg-gray-800'
                                     }`}
                             >
                                 <span className={`material-symbols-outlined text-[20px] ${isActive(item.href, item.exact) ? 'text-[#1152d4]' : 'text-[#4c669a] group-hover:text-[#1152d4]'} transition-colors`}>

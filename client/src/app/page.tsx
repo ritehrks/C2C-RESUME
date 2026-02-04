@@ -8,7 +8,7 @@ export default function Home() {
       <header className="w-full border-b border-border-light dark:border-white/10 bg-white/90 dark:bg-background-dark/90 backdrop-blur-md sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Image src="/logo-v2.png" alt="C2C Logo" width={160} height={56} className="h-14 w-auto" priority />
+            <img src="/logo-v2.png" alt="C2C Logo" className="h-14 w-auto" />
           </div>
           <div className="flex items-center gap-4">
             <Link href="/dashboard" className="hidden sm:flex items-center gap-2 px-4 h-10 rounded-lg text-navy-900 hover:text-royal-600 font-semibold transition-colors">

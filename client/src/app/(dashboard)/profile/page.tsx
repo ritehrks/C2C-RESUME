@@ -29,6 +29,13 @@ interface MasterProfile {
     };
 }
 
+interface UserData {
+    name: string;
+    email: string;
+    profileImage?: string;
+    createdAt?: string;
+}
+
 const defaultProfile: MasterProfile = {
     personalInfo: {
         name: '',
@@ -57,24 +64,62 @@ const defaultProfile: MasterProfile = {
 
 export default function ProfilePage() {
     const [profile, setProfile] = useState<MasterProfile>(defaultProfile);
-    const [activeTab, setActiveTab] = useState<'profile' | 'settings' | 'billing'>('profile');
+    const [activeTab, setActiveTab] = useState<'profile' | 'settings'>('profile');
     const [isSaving, setIsSaving] = useState(false);
     const [saveStatus, setSaveStatus] = useState<'idle' | 'saved' | 'error'>('idle');
+    const [userData, setUserData] = useState<UserData | null>(null);
 
-    // Mock user data (will be replaced with real auth)
-    const user = {
-        name: 'Guest User',
-        email: 'guest@c2c.mnit.ac.in',
-        avatar: null,
-        plan: 'Free',
-        joinedDate: 'January 2026',
+    // Fetch user data from localStorage (set during login)
+    useEffect(() => {
+        const storedUser = localStorage.getItem('user');
+        if (storedUser) {
+            const user = JSON.parse(storedUser);
+            setUserData({
+                name: user.name || 'User',
+                email: user.email || '',
+                profileImage: user.profileImage,
+                createdAt: user.createdAt
+            });
+
+            // Auto-fill profile personal info from user data
+            setProfile(prev => ({
+                ...prev,
+                personalInfo: {
+                    ...prev.personalInfo,
+                    name: user.name || prev.personalInfo.name,
+                    email: user.email || prev.personalInfo.email
+                }
+            }));
+        }
+    }, []);
+
+    // Format joined date
+    const getJoinedDate = () => {
+        if (userData?.createdAt) {
+            return new Date(userData.createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+        }
+        return 'Recently';
     };
 
     const handleSaveProfile = async () => {
         setIsSaving(true);
         try {
-            // For now, save to localStorage (will be API call later)
+            // Save to localStorage
             localStorage.setItem('masterProfile', JSON.stringify(profile));
+
+            // Also save to backend if token exists
+            const token = localStorage.getItem('token');
+            if (token) {
+                await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/profile`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ masterProfile: profile })
+                });
+            }
+
             setSaveStatus('saved');
             setTimeout(() => setSaveStatus('idle'), 3000);
         } catch {
@@ -114,6 +159,9 @@ export default function ProfilePage() {
         }));
     };
 
+    const displayName = profile.personalInfo.name || userData?.name || 'User';
+    const displayEmail = profile.personalInfo.email || userData?.email || '';
+
     return (
         <div className="p-4 sm:p-8">
             <div className="mx-auto max-w-6xl">
@@ -127,54 +175,36 @@ export default function ProfilePage() {
                         <div className="flex flex-col md:flex-row items-center gap-6">
                             {/* Avatar */}
                             <div className="relative">
-                                <div className="size-28 rounded-full bg-white/20 backdrop-blur-sm border-4 border-white/30 flex items-center justify-center">
-                                    <span className="text-5xl font-bold text-white">{(profile.personalInfo.name || user.name).charAt(0)}</span>
+                                <div className="size-28 rounded-full bg-white/20 backdrop-blur-sm border-4 border-white/30 flex items-center justify-center overflow-hidden">
+                                    {userData?.profileImage ? (
+                                        <img src={userData.profileImage} alt={displayName} className="w-full h-full object-cover" />
+                                    ) : (
+                                        <span className="text-5xl font-bold text-white">{displayName.charAt(0).toUpperCase()}</span>
+                                    )}
                                 </div>
-                                <button className="absolute bottom-0 right-0 size-8 rounded-full bg-white shadow-lg flex items-center justify-center hover:bg-gray-100 transition-colors">
-                                    <span className="material-symbols-outlined text-gray-700 text-[18px]">edit</span>
-                                </button>
                             </div>
 
                             {/* User Info */}
                             <div className="text-center md:text-left text-white">
-                                <h1 className="text-3xl font-bold mb-1">{profile.personalInfo.name || user.name}</h1>
-                                <p className="text-white/80 mb-3">{profile.personalInfo.email || user.email}</p>
+                                <h1 className="text-3xl font-bold mb-1">{displayName}</h1>
+                                <p className="text-white/80 mb-3">{displayEmail}</p>
                                 <div className="flex flex-wrap gap-3 justify-center md:justify-start">
                                     <span className="px-3 py-1 rounded-full bg-white/20 backdrop-blur-sm text-sm font-medium">
-                                        🎓 {user.plan} Plan
+                                        📅 Joined {getJoinedDate()}
                                     </span>
-                                    <span className="px-3 py-1 rounded-full bg-white/20 backdrop-blur-sm text-sm font-medium">
-                                        📅 Joined {user.joinedDate}
-                                    </span>
-                                </div>
-                            </div>
-
-                            {/* Quick Stats */}
-                            <div className="md:ml-auto grid grid-cols-3 gap-4 text-center">
-                                <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
-                                    <p className="text-3xl font-bold text-white">5</p>
-                                    <p className="text-xs text-white/70">Resumes</p>
-                                </div>
-                                <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
-                                    <p className="text-3xl font-bold text-white">12</p>
-                                    <p className="text-xs text-white/70">Analyses</p>
-                                </div>
-                                <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
-                                    <p className="text-3xl font-bold text-white">89%</p>
-                                    <p className="text-xs text-white/70">Avg Score</p>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                {/* Tabs */}
+                {/* Tabs - Removed Billing */}
                 <div className="flex gap-1 mb-6 bg-gray-100 dark:bg-gray-800/50 p-1 rounded-xl w-fit">
                     <button
                         onClick={() => setActiveTab('profile')}
                         className={`px-6 py-2.5 rounded-lg text-sm font-semibold transition-all ${activeTab === 'profile'
-                                ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
-                                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                            ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
+                            : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
                             }`}
                     >
                         <span className="material-symbols-outlined text-[18px] align-middle mr-2">person</span>
@@ -183,22 +213,12 @@ export default function ProfilePage() {
                     <button
                         onClick={() => setActiveTab('settings')}
                         className={`px-6 py-2.5 rounded-lg text-sm font-semibold transition-all ${activeTab === 'settings'
-                                ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
-                                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                            ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
+                            : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
                             }`}
                     >
                         <span className="material-symbols-outlined text-[18px] align-middle mr-2">settings</span>
                         Settings
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('billing')}
-                        className={`px-6 py-2.5 rounded-lg text-sm font-semibold transition-all ${activeTab === 'billing'
-                                ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
-                                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-                            }`}
-                    >
-                        <span className="material-symbols-outlined text-[18px] align-middle mr-2">credit_card</span>
-                        Billing
                     </button>
                 </div>
 
@@ -485,20 +505,6 @@ export default function ProfilePage() {
                                     </Link>
                                 </div>
                             </div>
-
-                            {/* Upgrade Card */}
-                            <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-purple-600 via-app-primary to-blue-600 p-6 text-white">
-                                <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-16 -mt-16"></div>
-                                <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full blur-xl -ml-12 -mb-12"></div>
-                                <div className="relative z-10">
-                                    <span className="material-symbols-outlined text-4xl mb-3">diamond</span>
-                                    <h4 className="font-bold text-xl mb-2">Upgrade to Pro</h4>
-                                    <p className="text-sm text-white/80 mb-4">Get unlimited AI analyses, priority support & more templates.</p>
-                                    <button className="w-full py-2.5 bg-white text-app-primary font-semibold rounded-lg hover:bg-white/90 transition-colors">
-                                        Upgrade Now - ₹499/mo
-                                    </button>
-                                </div>
-                            </div>
                         </div>
                     </div>
                 )}
@@ -540,62 +546,6 @@ export default function ProfilePage() {
                                 <h4 className="font-medium text-red-600 mb-3">Danger Zone</h4>
                                 <button className="px-4 py-2 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
                                     Delete Account
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {activeTab === 'billing' && (
-                    <div className="max-w-4xl">
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                            {/* Free Plan */}
-                            <div className="bg-white dark:bg-[#1a2235] rounded-xl border border-slate-200 dark:border-slate-700 p-6">
-                                <div className="flex items-center justify-between mb-4">
-                                    <h4 className="font-bold text-lg">Free</h4>
-                                    <span className="px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-semibold rounded">Current</span>
-                                </div>
-                                <p className="text-3xl font-bold mb-4">₹0<span className="text-sm font-normal text-slate-500">/month</span></p>
-                                <ul className="space-y-2 text-sm text-slate-600 dark:text-slate-400 mb-6">
-                                    <li className="flex items-center gap-2"><span className="material-symbols-outlined text-green-500 text-[16px]">check</span> 5 Resumes</li>
-                                    <li className="flex items-center gap-2"><span className="material-symbols-outlined text-green-500 text-[16px]">check</span> Unlimited Simple Analyses</li>
-                                    <li className="flex items-center gap-2"><span className="material-symbols-outlined text-green-500 text-[16px]">check</span> 3 Deep Analyses/day</li>
-                                    <li className="flex items-center gap-2"><span className="material-symbols-outlined text-green-500 text-[16px]">check</span> 2 Templates</li>
-                                </ul>
-                                <button disabled className="w-full py-2 bg-slate-100 dark:bg-slate-800 text-slate-500 font-semibold rounded-lg cursor-not-allowed">
-                                    Current Plan
-                                </button>
-                            </div>
-
-                            {/* Pro Plan */}
-                            <div className="relative bg-gradient-to-br from-app-primary to-purple-600 rounded-xl p-6 text-white overflow-hidden">
-                                <div className="absolute top-0 right-0 px-3 py-1 bg-yellow-400 text-yellow-900 text-xs font-bold rounded-bl-lg">POPULAR</div>
-                                <h4 className="font-bold text-lg mb-4">Pro</h4>
-                                <p className="text-3xl font-bold mb-4">₹499<span className="text-sm font-normal text-white/70">/month</span></p>
-                                <ul className="space-y-2 text-sm text-white/90 mb-6">
-                                    <li className="flex items-center gap-2"><span className="material-symbols-outlined text-[16px]">check</span> Unlimited Resumes</li>
-                                    <li className="flex items-center gap-2"><span className="material-symbols-outlined text-[16px]">check</span> Unlimited Analyses</li>
-                                    <li className="flex items-center gap-2"><span className="material-symbols-outlined text-[16px]">check</span> All Templates</li>
-                                    <li className="flex items-center gap-2"><span className="material-symbols-outlined text-[16px]">check</span> Priority Support</li>
-                                    <li className="flex items-center gap-2"><span className="material-symbols-outlined text-[16px]">check</span> Export to DOCX</li>
-                                </ul>
-                                <button className="w-full py-2 bg-white text-app-primary font-semibold rounded-lg hover:bg-white/90 transition-colors">
-                                    Upgrade to Pro
-                                </button>
-                            </div>
-
-                            {/* Enterprise Plan */}
-                            <div className="bg-white dark:bg-[#1a2235] rounded-xl border border-slate-200 dark:border-slate-700 p-6">
-                                <h4 className="font-bold text-lg mb-4">Enterprise</h4>
-                                <p className="text-3xl font-bold mb-4">Custom</p>
-                                <ul className="space-y-2 text-sm text-slate-600 dark:text-slate-400 mb-6">
-                                    <li className="flex items-center gap-2"><span className="material-symbols-outlined text-green-500 text-[16px]">check</span> Everything in Pro</li>
-                                    <li className="flex items-center gap-2"><span className="material-symbols-outlined text-green-500 text-[16px]">check</span> Custom Branding</li>
-                                    <li className="flex items-center gap-2"><span className="material-symbols-outlined text-green-500 text-[16px]">check</span> API Access</li>
-                                    <li className="flex items-center gap-2"><span className="material-symbols-outlined text-green-500 text-[16px]">check</span> Dedicated Support</li>
-                                </ul>
-                                <button className="w-full py-2 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 font-semibold rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
-                                    Contact Sales
                                 </button>
                             </div>
                         </div>
