@@ -8,230 +8,331 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
 // Pre-defined job templates for quick selection
 const JOB_TEMPLATES = [
+    // ======= INTERNSHIP ROLES =======
     {
-        id: 'sde',
-        title: 'Software Development Engineer (SDE)',
+        id: 'sde_intern',
+        title: '🎓 SDE Intern',
         icon: '💻',
-        description: `Software Development Engineer (SDE)
+        description: `SDE Intern Role
 
-About the Role:
-We are looking for a talented Software Development Engineer to join our team. You will be working on building scalable, high-performance applications.
+What's Expected:
+- Good understanding of Data Structures & Algorithms
+- Proficiency in C++/Java/Python
+- Basic knowledge of one web framework
+- Personal projects on GitHub
+- Problem-solving skills (LeetCode/CodeChef)
 
-Requirements:
-- Bachelor's degree in Computer Science or related field
-- 2+ years of experience in software development
-- Strong proficiency in at least one programming language (JavaScript, Python, Java, C++)
-- Experience with data structures and algorithms
-- Familiarity with system design and architecture
-- Experience with REST APIs and microservices
-- Knowledge of databases (SQL and NoSQL)
-- Experience with Git and version control
-- Understanding of CI/CD pipelines
-- Strong problem-solving skills
-
-Nice to Have:
-- Experience with cloud platforms (AWS, GCP, Azure)
-- Familiarity with Docker and Kubernetes
-- Contributions to open source projects
-- Competitive programming experience`
+Skills That Help:
+- Competitive Programming profile
+- Hackathon experience
+- Open source contributions
+- Basic system design knowledge`
     },
     {
-        id: 'frontend',
-        title: 'Frontend Developer',
+        id: 'frontend_intern',
+        title: '🎓 Frontend Intern',
         icon: '🎨',
-        description: `Frontend Developer
+        description: `Frontend Development Intern Role
 
-About the Role:
-We are seeking a skilled Frontend Developer to create amazing user experiences for our web applications.
+What's Expected:
+- HTML, CSS, JavaScript fundamentals
+- React/Vue/Angular basics
+- Responsive design understanding
+- At least 2-3 frontend projects
+- Git basics
 
-Requirements:
-- 2+ years of experience in frontend development
-- Strong proficiency in React, Vue, or Angular
-- Expert knowledge of JavaScript/TypeScript
-- Deep understanding of HTML5 and CSS3
-- Experience with responsive design and mobile-first development
-- Familiarity with state management (Redux, Zustand, MobX)
-- Knowledge of build tools (Webpack, Vite)
-- Experience with testing frameworks (Jest, Cypress)
-- Understanding of web accessibility (WCAG) and SEO best practices
-- Experience with CSS frameworks (Tailwind, Bootstrap, Material-UI)
-
-Nice to Have:
-- Experience with Next.js or similar frameworks
-- Knowledge of design systems
-- Familiarity with Figma or design tools
-- Performance optimization experience
-- Experience with PWA development`
+Skills That Help:
+- Tailwind CSS / Material-UI
+- Portfolio website
+- Figma basics
+- TypeScript knowledge`
     },
     {
-        id: 'backend',
-        title: 'Backend Developer',
+        id: 'backend_intern',
+        title: '🎓 Backend Intern',
         icon: '⚙️',
-        description: `Backend Developer
+        description: `Backend Development Intern Role
 
-About the Role:
-We are looking for a Backend Developer to build robust, scalable server-side applications and APIs.
+What's Expected:
+- Node.js/Python/Java knowledge
+- REST API understanding
+- Database basics (MongoDB/MySQL)
+- At least 1-2 backend projects
+- Authentication concepts
 
-Requirements:
-- 2+ years of backend development experience
-- Strong proficiency in Node.js, Python, Java, or Go
-- Experience with RESTful API design and development
-- Knowledge of databases (PostgreSQL, MySQL, MongoDB, Redis)
-- Understanding of authentication and authorization (OAuth, JWT)
-- Experience with microservices architecture
-- Familiarity with Docker and containerization
-- Knowledge of message queues (RabbitMQ, Kafka)
-- Experience with caching strategies
-- Understanding of security best practices
-
-Nice to Have:
-- Experience with GraphQL
-- Knowledge of cloud services (AWS, GCP, Azure)
-- Experience with serverless architecture
-- Understanding of event-driven architecture
-- Database optimization and query tuning`
+Skills That Help:
+- Docker basics
+- Deployed projects
+- API documentation experience`
     },
     {
-        id: 'fullstack',
-        title: 'Full Stack Developer',
+        id: 'fullstack_intern',
+        title: '🎓 Full Stack Intern',
         icon: '🔧',
-        description: `Full Stack Developer
+        description: `Full Stack Intern Role
 
-About the Role:
-We need a versatile Full Stack Developer who can work on both frontend and backend technologies.
+What's Expected:
+- Frontend: React/HTML/CSS/JS
+- Backend: Node.js/Express or Django
+- Database: MongoDB/MySQL
+- 2-3 full-stack projects (MERN preferred)
+- Git version control
 
-Requirements:
-- 3+ years of full stack development experience
-- Frontend: React, Vue, or Angular with TypeScript
-- Backend: Node.js, Python, or Java
-- Experience with REST APIs and GraphQL
-- Strong database skills (PostgreSQL, MongoDB)
-- Understanding of system design principles
-- Experience with Git and version control
-- Knowledge of Docker and deployment pipelines
-- Familiarity with cloud platforms (AWS/GCP/Azure)
-- Strong debugging and problem-solving skills
-
-Nice to Have:
-- Experience with Next.js or similar frameworks
-- Knowledge of Kubernetes
-- CI/CD pipeline setup experience
-- Performance optimization skills
-- Experience with testing (unit, integration, e2e)`
+Skills That Help:
+- Deployed apps on Vercel/Railway
+- API integration experience
+- Basic DevOps knowledge`
     },
     {
-        id: 'devops',
-        title: 'DevOps Engineer',
-        icon: '🚀',
-        description: `DevOps Engineer
-
-About the Role:
-We are hiring a DevOps Engineer to build and maintain our infrastructure, CI/CD pipelines, and ensure system reliability.
-
-Requirements:
-- 2+ years of DevOps experience
-- Strong knowledge of cloud platforms (AWS, GCP, or Azure)
-- Experience with Docker and Kubernetes
-- Proficiency in CI/CD tools (Jenkins, GitHub Actions, GitLab CI)
-- Infrastructure as Code (Terraform, Pulumi, CloudFormation)
-- Configuration management (Ansible, Chef, Puppet)
-- Strong Linux/Unix administration skills
-- Experience with monitoring and logging (Prometheus, Grafana, ELK)
-- Shell scripting and automation
-- Understanding of networking and security
-
-Nice to Have:
-- Kubernetes certifications (CKA, CKAD)
-- Cloud certifications (AWS Solutions Architect, GCP Professional)
-- Experience with service mesh (Istio)
-- Cost optimization experience
-- Disaster recovery planning`
-    },
-    {
-        id: 'data_scientist',
-        title: 'Data Scientist',
-        icon: '📊',
-        description: `Data Scientist
-
-About the Role:
-We are looking for a Data Scientist to extract insights from data and build predictive models.
-
-Requirements:
-- Master's or PhD in Computer Science, Statistics, or related field
-- Strong proficiency in Python (pandas, numpy, scikit-learn)
-- Experience with machine learning algorithms and techniques
-- Deep understanding of statistics and probability
-- Experience with data visualization (Matplotlib, Seaborn, Tableau)
-- Knowledge of SQL and database querying
-- Experience with Jupyter notebooks
-- Understanding of A/B testing and hypothesis testing
-- Feature engineering and data preprocessing skills
-- Strong communication skills for presenting findings
-
-Nice to Have:
-- Deep learning experience (TensorFlow, PyTorch)
-- NLP or computer vision experience
-- Kaggle competitions or publications
-- Big data tools (Spark, Hadoop)
-- Experience with cloud ML services (SageMaker, Vertex AI)`
-    },
-    {
-        id: 'ml_engineer',
-        title: 'Machine Learning Engineer',
+        id: 'ml_intern',
+        title: '🎓 ML/Data Science Intern',
         icon: '🤖',
-        description: `Machine Learning Engineer
+        description: `ML / Data Science Intern Role
 
-About the Role:
-We are seeking a Machine Learning Engineer to develop and deploy ML models at scale.
+What's Expected:
+- Python (pandas, numpy, sklearn)
+- Basic ML algorithms
+- Jupyter notebook projects
+- Statistics fundamentals
+- SQL basics
 
-Requirements:
-- 2+ years of ML engineering experience
-- Strong proficiency in Python
-- Experience with deep learning frameworks (TensorFlow, PyTorch)
-- Model deployment and serving experience
-- Understanding of MLOps best practices
-- Experience with feature engineering and data pipelines
-- Knowledge of cloud ML platforms (AWS SageMaker, GCP Vertex AI)
-- Docker and Kubernetes for ML workloads
-- Model monitoring and performance tracking
-- Experience with distributed training
+Skills That Help:
+- Kaggle participation
+- Deep learning (TensorFlow/PyTorch)
+- Research projects
+- Data visualization skills`
+    },
+    // ======= CAMPUS PLACEMENT ROLES =======
+    {
+        id: 'sde_placement',
+        title: '🏢 SDE - Campus Placement',
+        icon: '💼',
+        description: `SDE Campus Placement Role
 
-Nice to Have:
-- NLP or Computer Vision specialization
-- Experience with transformers and LLMs
-- MLflow, Kubeflow, or similar MLOps tools
-- Real-time inference optimization
-- Published papers or research experience`
+What Companies Look For:
+- Strong DSA skills (must for interviews)
+- Good CGPA (7.5+ usually required)
+- Proficiency in C++/Java/Python
+- System design basics
+- 3-4 solid projects
+
+Skills That Help:
+- Competitive programming rating
+- Internship experience
+- Open source contributions
+- Leadership/POR experience`
     },
     {
-        id: 'product_manager',
-        title: 'Product Manager',
+        id: 'frontend_placement',
+        title: '🏢 Frontend - Campus Placement',
+        icon: '🎯',
+        description: `Frontend Developer Campus Placement
+
+What Companies Look For:
+- React/Angular/Vue expertise
+- JavaScript/TypeScript proficiency
+- Responsive design skills
+- State management (Redux/Zustand)
+- Good looking portfolio
+
+Skills That Help:
+- CSS animations & transitions
+- Performance optimization
+- Testing (Jest/Cypress)
+- Next.js experience`
+    },
+    {
+        id: 'backend_placement',
+        title: '🏢 Backend - Campus Placement',
+        icon: '⚡',
+        description: `Backend Developer Campus Placement
+
+What Companies Look For:
+- Node.js/Java/Python backend frameworks
+- Database design skills
+- REST API architecture
+- Authentication/Authorization
+- System design basics
+
+Skills That Help:
+- Microservices concepts
+- Caching strategies
+- Message queues basics
+- Docker/Kubernetes`
+    },
+    {
+        id: 'data_analyst',
+        title: '🏢 Data Analyst - Placement',
+        icon: '📊',
+        description: `Data Analyst Campus Placement
+
+What Companies Look For:
+- SQL proficiency (most important)
+- Python/R for analysis
+- Excel & data visualization
+- Statistics knowledge
+- Business acumen
+
+Skills That Help:
+- Tableau/Power BI
+- Case study experience
+- Finance/domain knowledge`
+    },
+    // ======= SPECIAL ROLES =======
+    {
+        id: 'open_source',
+        title: '🌐 GSoC / Open Source',
+        icon: '🌍',
+        description: `GSoC / Open Source Programs
+
+What Organizations Look For:
+- Active GitHub profile
+- Previous open source contributions
+- Merged Pull Requests
+- Good communication in issues
+- Documentation skills
+
+Strong Indicators:
+- Previous GSoC/LFX selection
+- Maintained projects with stars
+- Technical blog posts
+- Community involvement`
+    },
+    {
+        id: 'research_intern',
+        title: '🔬 Research Intern',
+        icon: '📚',
+        description: `Research Internship
+
+What Professors Look For:
+- Strong CGPA (8.5+ preferred)
+- Research interest in specific area
+- Academic coursework depth
+- Technical writing skills
+- Literature review capability
+
+Skills That Help:
+- Published papers
+- ML/Systems knowledge
+- Strong recommendation letters`
+    },
+    {
+        id: 'hackathon',
+        title: '🏆 Hackathon Profile',
+        icon: '⚡',
+        description: `Hackathon Team Profile
+
+What Teams Look For:
+- Rapid prototyping skills
+- Full-stack capability
+- Creative problem solving
+- Team collaboration
+- Presentation skills
+
+Strong Indicators:
+- Previous hackathon wins
+- Quick MVP building
+- Diverse tech stack knowledge`
+    },
+    // ======= OFF-CAMPUS / STARTUP ROLES =======
+    {
+        id: 'startup_sde',
+        title: '🚀 Startup SDE (Off-Campus)',
+        icon: '🔥',
+        description: `Startup Software Engineer Role
+
+What Startups Look For:
+- Can build end-to-end features
+- Self-motivated & fast learner
+- Comfortable with ambiguity
+- Strong project portfolio
+- Hustle mentality
+
+Key Skills:
+- Full-stack development
+- Rapid prototyping
+- API integrations
+- Cloud deployment (Vercel/Railway/AWS)
+- Startup experience is a plus`
+    },
+    {
+        id: 'product_company',
+        title: '🏛️ Product Company SDE',
+        icon: '🎯',
+        description: `Product Company SDE (FAANG/Unicorn)
+
+Interview Focus:
+- DSA (most important - LeetCode Medium/Hard)
+- System Design (for SDE-2+)
+- Behavioral questions
+- Clean code & problem solving
+
+Strong Profile:
+- CP rating (Codeforces 1400+, CodeChef 4*)
+- Strong projects with scale
+- Internship at known company
+- Open source contributions`
+    },
+    {
+        id: 'service_company',
+        title: '🏢 Service Company SDE',
         icon: '📋',
-        description: `Product Manager
+        description: `Service/Mass Hiring Company
 
-About the Role:
-We are looking for a Product Manager to drive product strategy and execution.
+What They Look For:
+- Aptitude & logical reasoning
+- Basic coding skills
+- Communication skills
+- Good academics (60%+ usually)
+- Domain knowledge
 
-Requirements:
-- 3+ years of product management experience
-- Strong understanding of product development lifecycle
-- Experience with Agile/Scrum methodologies
-- Excellent stakeholder management skills
-- Data-driven decision making
-- Experience with user research and customer interviews
-- Proficiency in product analytics tools
-- Strong communication and presentation skills
-- Experience writing PRDs and specifications
-- Understanding of UX/UI principles
+Focus Areas:
+- Basic DSA (Arrays, Strings, Sorting)
+- SQL queries
+- Core CS (OS, DBMS, CN)
+- Aptitude preparation`
+    },
+    {
+        id: 'freelance',
+        title: '💼 Freelance Developer',
+        icon: '🌐',
+        description: `Freelance/Contract Developer
 
-Nice to Have:
-- Technical background or coding experience
-- MBA or business degree
-- Experience with A/B testing
-- Previous startup experience
-- Industry domain expertise`
+What Clients Look For:
+- Strong portfolio with live projects
+- Client testimonials
+- Communication skills
+- Meeting deadlines
+- Diverse tech stack
+
+Platforms:
+- Upwork, Fiverr, Toptal profiles
+- Personal portfolio website
+- LinkedIn presence
+- GitHub with starred projects`
+    },
+    {
+        id: 'devrel',
+        title: '🎤 DevRel / Community',
+        icon: '📢',
+        description: `Developer Relations / Community
+
+What Companies Look For:
+- Technical blog posts
+- Conference talks / workshops
+- Community contributions
+- Social media presence
+- Teaching ability
+
+Strong Indicators:
+- YouTube/Twitch content
+- Twitter/LinkedIn followers
+- Open source advocacy
+- Documentation writing`
     }
 ];
+
+
 
 // Simple analysis result type - matches new backend response
 interface SimpleAnalysisResult {
@@ -323,6 +424,7 @@ export default function AnalyzerPage() {
     const [deepResult, setDeepResult] = useState<DeepAnalysisResult | null>(null);
     const [isAiPowered, setIsAiPowered] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [selectedRoleId, setSelectedRoleId] = useState<string>('sde_intern'); // Default to SDE Intern
 
     // PDF upload states
     const [isUploading, setIsUploading] = useState(false);
@@ -419,7 +521,7 @@ export default function AnalyzerPage() {
             const response = await fetch(`${API_URL}${endpoint}`, {
                 method: 'POST',
                 headers,
-                body: JSON.stringify({ jobDescription, resumeText }),
+                body: JSON.stringify({ jobDescription, resumeText, selectedRole: selectedRoleId }),
             });
 
             const data = await response.json();
@@ -535,6 +637,7 @@ export default function AnalyzerPage() {
                                             const selectedRole = JOB_TEMPLATES.find(j => j.id === e.target.value);
                                             if (selectedRole) {
                                                 setJobDescription(selectedRole.description);
+                                                setSelectedRoleId(selectedRole.id); // Track selected role
                                             }
                                         }}
                                         defaultValue=""
@@ -735,14 +838,23 @@ export default function AnalyzerPage() {
                                                     <div className="bg-[#f8f9fc] dark:bg-[#101622] rounded-lg p-3 border border-[#e7ebf3] dark:border-gray-800">
                                                         <p className="text-xs text-[#4c669a] dark:text-gray-400 mb-1">Skills Matched</p>
                                                         <p className="text-lg font-bold text-[#0d121b] dark:text-white">
-                                                            {simpleResult?.stats?.matchedCount ?? simpleResult?.keywords?.matched?.length ?? 0}/
-                                                            {(simpleResult?.stats?.jobKeywordsFound ?? ((simpleResult?.keywords?.matched?.length ?? 0) + (simpleResult?.keywords?.missing?.length ?? 0))) || 1}
+                                                            {/* For deep analysis, use AI strongMatches; for simple use keywords.matched */}
+                                                            {deepResult?.ai?.keywordOptimization?.strongMatches?.length ??
+                                                                simpleResult?.keywords?.matched?.length ??
+                                                                currentResult.matchedKeywords?.length ?? 0}/
+                                                            {(deepResult?.ai?.keywordOptimization?.strongMatches?.length ?? 0) +
+                                                                (deepResult?.ai?.keywordOptimization?.suggestedAdditions?.length ?? 0) ||
+                                                                simpleResult?.stats?.jobKeywordsFound ||
+                                                                ((simpleResult?.keywords?.matched?.length ?? 0) + (simpleResult?.keywords?.missing?.length ?? 0)) || 1}
                                                         </p>
                                                     </div>
                                                     <div className="bg-[#f8f9fc] dark:bg-[#101622] rounded-lg p-3 border border-[#e7ebf3] dark:border-gray-800">
                                                         <p className="text-xs text-[#4c669a] dark:text-gray-400 mb-1">Missing</p>
                                                         <p className="text-lg font-bold text-red-500">
-                                                            {simpleResult?.stats?.missingCount ?? simpleResult?.keywords?.missing?.length ?? currentResult.missingKeywords?.length ?? 0}
+                                                            {/* For deep analysis, use AI suggestedAdditions */}
+                                                            {deepResult?.ai?.keywordOptimization?.suggestedAdditions?.length ??
+                                                                simpleResult?.keywords?.missing?.length ??
+                                                                currentResult.missingKeywords?.length ?? 0}
                                                         </p>
                                                     </div>
                                                 </div>

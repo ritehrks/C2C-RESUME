@@ -14,6 +14,11 @@ export declare function runDeepAnalysis(resumeText: string, selectedRole: string
     error: string;
 }>;
 export interface DeepAnalysisResult extends SimpleAnalysisResult {
+    overallAssessment?: string;
+    strengths?: string[];
+    improvements?: string[];
+    atsIssues?: string[];
+    competitiveEdge?: string;
     aiSuggestions: string[];
     aiRewrites: Array<{
         original: string;

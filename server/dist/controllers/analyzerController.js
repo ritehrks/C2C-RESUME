@@ -106,6 +106,12 @@ const TOOLS_PRACTICES = [
     'documentation', 'api documentation', 'swagger', 'openapi', 'postman', 'insomnia',
     'debugging', 'profiling', 'performance optimization', 'refactoring',
     'figma', 'sketch', 'adobe xd', 'ui/ux', 'wireframe', 'prototype',
+    // Competitive Programming & Student-focused
+    'leetcode', 'codeforces', 'codechef', 'hackerrank', 'hackerearth', 'atcoder', 'topcoder',
+    'competitive programming', 'dsa', 'data structures', 'algorithms', 'problem solving',
+    'hackathon', 'gsoc', 'google summer of code', 'lfx', 'open source',
+    'oops', 'oop', 'object oriented', 'dbms', 'operating system', 'os', 'computer networks', 'cn',
+    'projects', 'personal projects', 'academic projects', 'cgpa', 'gpa',
 ];
 const SOFT_SKILLS = [
     'communication', 'teamwork', 'collaboration', 'leadership', 'problem solving', 'problem-solving',
@@ -275,7 +281,7 @@ exports.analyzerController = {
     // POST /api/analyze/simple - Run simple analysis (FREE, unlimited)
     runSimpleAnalysis: async (req, res) => {
         try {
-            const { resumeText, jobDescription } = req.body;
+            const { resumeText, jobDescription, selectedRole } = req.body;
             if (!resumeText || !jobDescription) {
                 return res.status(400).json({
                     success: false,
@@ -285,7 +291,40 @@ exports.analyzerController = {
             console.log('📊 Running improved simple analysis...');
             // Extract keywords with categories
             const resumeKeywordsWithCats = extractKeywordsWithCategories(resumeText);
-            const jobKeywordsWithCats = extractKeywordsWithCategories(jobDescription);
+            let jobKeywordsWithCats = extractKeywordsWithCategories(jobDescription);
+            // FALLBACK: If job description has few keywords (just role title), use role-specific keywords
+            // Student-focused keywords for BTech students (internships + placements)
+            const ROLE_KEYWORDS = {
+                // INTERN ROLES
+                'sde_intern': ['data structures', 'algorithms', 'c++', 'python', 'java', 'javascript', 'leetcode', 'codeforces', 'git', 'problem solving', 'projects', 'hackathon'],
+                'frontend_intern': ['html', 'css', 'javascript', 'react', 'tailwind', 'responsive design', 'git', 'projects', 'portfolio', 'figma'],
+                'backend_intern': ['node.js', 'express', 'python', 'django', 'flask', 'mongodb', 'mysql', 'rest api', 'authentication', 'git', 'projects'],
+                'fullstack_intern': ['react', 'node.js', 'mongodb', 'express', 'html', 'css', 'javascript', 'rest api', 'git', 'mern', 'full stack', 'projects'],
+                'ml_intern': ['python', 'pandas', 'numpy', 'machine learning', 'sklearn', 'jupyter', 'kaggle', 'sql', 'statistics', 'tensorflow'],
+                // PLACEMENT ROLES
+                'sde_placement': ['data structures', 'algorithms', 'c++', 'java', 'python', 'system design', 'oops', 'dbms', 'os', 'cgpa', 'projects', 'internship', 'competitive programming'],
+                'frontend_placement': ['react', 'javascript', 'typescript', 'html', 'css', 'redux', 'next.js', 'tailwind', 'portfolio', 'responsive', 'testing', 'performance'],
+                'backend_placement': ['node.js', 'java', 'python', 'rest api', 'mongodb', 'mysql', 'system design', 'authentication', 'docker', 'microservices'],
+                'data_analyst': ['sql', 'python', 'excel', 'tableau', 'statistics', 'data visualization', 'pandas', 'analysis', 'power bi', 'business'],
+                // SPECIAL ROLES
+                'open_source': ['github', 'open source', 'pull request', 'contributions', 'gsoc', 'lfx', 'git', 'documentation', 'community'],
+                'research_intern': ['research', 'cgpa', 'publications', 'machine learning', 'deep learning', 'thesis', 'paper', 'academic'],
+                'hackathon': ['hackathon', 'prototype', 'mvp', 'team project', 'presentation', 'innovation', 'problem solving', 'github'],
+                // OFF-CAMPUS / STARTUP ROLES
+                'startup_sde': ['full stack', 'react', 'node.js', 'mongodb', 'projects', 'deployment', 'vercel', 'api', 'agile', 'startup', 'fast learner'],
+                'product_company': ['data structures', 'algorithms', 'system design', 'leetcode', 'codeforces', 'competitive programming', 'clean code', 'scalable', 'internship', 'open source'],
+                'service_company': ['sql', 'dbms', 'os', 'oops', 'aptitude', 'communication', 'basic dsa', 'c++', 'java', 'python', 'cgpa'],
+                'freelance': ['portfolio', 'projects', 'full stack', 'react', 'node.js', 'deployment', 'client', 'communication', 'github', 'responsive'],
+                'devrel': ['github', 'blog', 'documentation', 'open source', 'community', 'presentation', 'social media', 'technical writing', 'youtube', 'twitter'],
+            };
+            // If we found very few keywords in job description, use role fallback
+            if (jobKeywordsWithCats.length < 3 && selectedRole) {
+                const roleKeywords = ROLE_KEYWORDS[selectedRole] || [];
+                if (roleKeywords.length > 0) {
+                    console.log(`   ⚠️ Job description too short, using ${selectedRole} role keywords (${roleKeywords.length})`);
+                    jobKeywordsWithCats = roleKeywords.map(kw => ({ keyword: kw, category: 'Role Requirements' }));
+                }
+            }
             const resumeKeywords = resumeKeywordsWithCats.map(k => k.keyword);
             const jobKeywords = jobKeywordsWithCats.map(k => k.keyword);
             // Calculate match
@@ -468,7 +507,7 @@ exports.analyzerController = {
     // POST /api/analyze/deep - Run deep analysis with Gemini AI
     runDeepAnalysis: async (req, res) => {
         try {
-            const { resumeText, jobDescription } = req.body;
+            const { resumeText, jobDescription, selectedRole } = req.body;
             if (!resumeText || !jobDescription) {
                 return res.status(400).json({
                     success: false,
@@ -476,12 +515,45 @@ exports.analyzerController = {
                 });
             }
             console.log('🤖 Running deep AI analysis with Gemini...');
+            // ROLE-BASED KEYWORD FALLBACK - Student focused (internships + placements)
+            const ROLE_KEYWORDS = {
+                // INTERN ROLES
+                'sde_intern': ['data structures', 'algorithms', 'c++', 'python', 'java', 'javascript', 'leetcode', 'codeforces', 'git', 'problem solving', 'projects', 'hackathon'],
+                'frontend_intern': ['html', 'css', 'javascript', 'react', 'tailwind', 'responsive design', 'git', 'projects', 'portfolio', 'figma'],
+                'backend_intern': ['node.js', 'express', 'python', 'django', 'flask', 'mongodb', 'mysql', 'rest api', 'authentication', 'git', 'projects'],
+                'fullstack_intern': ['react', 'node.js', 'mongodb', 'express', 'html', 'css', 'javascript', 'rest api', 'git', 'mern', 'full stack', 'projects'],
+                'ml_intern': ['python', 'pandas', 'numpy', 'machine learning', 'sklearn', 'jupyter', 'kaggle', 'sql', 'statistics', 'tensorflow'],
+                // PLACEMENT ROLES
+                'sde_placement': ['data structures', 'algorithms', 'c++', 'java', 'python', 'system design', 'oops', 'dbms', 'os', 'cgpa', 'projects', 'internship', 'competitive programming'],
+                'frontend_placement': ['react', 'javascript', 'typescript', 'html', 'css', 'redux', 'next.js', 'tailwind', 'portfolio', 'responsive', 'testing', 'performance'],
+                'backend_placement': ['node.js', 'java', 'python', 'rest api', 'mongodb', 'mysql', 'system design', 'authentication', 'docker', 'microservices'],
+                'data_analyst': ['sql', 'python', 'excel', 'tableau', 'statistics', 'data visualization', 'pandas', 'analysis', 'power bi', 'business'],
+                // SPECIAL ROLES
+                'open_source': ['github', 'open source', 'pull request', 'contributions', 'gsoc', 'lfx', 'git', 'documentation', 'community'],
+                'research_intern': ['research', 'cgpa', 'publications', 'machine learning', 'deep learning', 'thesis', 'paper', 'academic'],
+                'hackathon': ['hackathon', 'prototype', 'mvp', 'team project', 'presentation', 'innovation', 'problem solving', 'github'],
+                // OFF-CAMPUS / STARTUP ROLES
+                'startup_sde': ['full stack', 'react', 'node.js', 'mongodb', 'projects', 'deployment', 'vercel', 'api', 'agile', 'startup', 'fast learner'],
+                'product_company': ['data structures', 'algorithms', 'system design', 'leetcode', 'codeforces', 'competitive programming', 'clean code', 'scalable', 'internship', 'open source'],
+                'service_company': ['sql', 'dbms', 'os', 'oops', 'aptitude', 'communication', 'basic dsa', 'c++', 'java', 'python', 'cgpa'],
+                'freelance': ['portfolio', 'projects', 'full stack', 'react', 'node.js', 'deployment', 'client', 'communication', 'github', 'responsive'],
+                'devrel': ['github', 'blog', 'documentation', 'open source', 'community', 'presentation', 'social media', 'technical writing', 'youtube', 'twitter'],
+            };
+            // Extract keywords from job description
+            let jobKeywords = extractKeywords(jobDescription);
+            // Fallback to role keywords if job description has few keywords
+            if (jobKeywords.length < 3 && selectedRole) {
+                const roleKeywords = ROLE_KEYWORDS[selectedRole] || [];
+                if (roleKeywords.length > 0) {
+                    console.log(`   ⚠️ Deep: Using ${selectedRole} role keywords (${roleKeywords.length})`);
+                    jobKeywords = roleKeywords;
+                }
+            }
             // Check if API key is configured
             if (!process.env.GOOGLE_API_KEY) {
                 console.log('⚠️ GOOGLE_API_KEY not set, returning fallback analysis');
                 // Run simple analysis as fallback
                 const resumeKeywords = extractKeywords(resumeText);
-                const jobKeywords = extractKeywords(jobDescription);
                 const { matched: matchedKeywords, missing: missingKeywords, percentage: matchPercentage } = calculateMatch(resumeKeywords, jobKeywords);
                 return res.json({
                     success: true,
@@ -506,7 +578,6 @@ exports.analyzerController = {
             const aiAnalysis = await runDeepAnalysisWithGemini(resumeText, jobDescription);
             // Also run simple analysis for stats
             const resumeKeywords = extractKeywords(resumeText);
-            const jobKeywords = extractKeywords(jobDescription);
             const { matched: matchedKeywords, missing: missingKeywords, percentage: matchPercentage } = calculateMatch(resumeKeywords, jobKeywords);
             const actionVerbs = analyzeActionVerbs(resumeText);
             console.log('✅ AI Deep analysis complete');
@@ -545,11 +616,16 @@ exports.analyzerController = {
             catch (saveError) {
                 console.log('   ⚠️ Could not save analysis to database:', saveError);
             }
+            // Use AI-provided score if available, fallback to keyword matching
+            const aiScore = aiAnalysis?.resumeScore || matchPercentage;
             res.json({
                 success: true,
                 isAiPowered: true,
                 analysis: {
-                    matchPercentage,
+                    matchPercentage: aiScore, // Use AI score for deep analysis
+                    keywordMatchPercentage: matchPercentage, // Keep keyword match for reference
+                    scoreBreakdown: aiAnalysis?.scoreBreakdown,
+                    scoreJustification: aiAnalysis?.scoreJustification,
                     matchedKeywords,
                     missingKeywords,
                     stats: {

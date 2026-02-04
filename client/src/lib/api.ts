@@ -101,11 +101,25 @@ interface DeleteResponse extends ApiResponse<void> {
     deletedId: string;
 }
 
+// Helper to get auth headers
+const getAuthHeaders = (): Record<string, string> => {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+    const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+    };
+    if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+    }
+    return headers;
+};
+
 // API Functions
 export const resumeApi = {
     // Get all resumes (for dashboard)
     getAll: async (): Promise<ResumesResponse> => {
-        const response = await fetch(`${API_URL}/api/resumes`);
+        const response = await fetch(`${API_URL}/api/resumes`, {
+            headers: getAuthHeaders(),
+        });
         if (!response.ok) {
             throw new Error('Failed to fetch resumes');
         }
@@ -114,18 +128,20 @@ export const resumeApi = {
 
     // Get single resume by ID
     getOne: async (id: string): Promise<ResumeResponse> => {
-        const response = await fetch(`${API_URL}/api/resumes/${id}`);
+        const response = await fetch(`${API_URL}/api/resumes/${id}`, {
+            headers: getAuthHeaders(),
+        });
         if (!response.ok) {
             throw new Error('Failed to fetch resume');
         }
         return response.json();
     },
 
-    // Create new resume
+    // Create new resume (requires auth)
     create: async (data: { name: string; content?: ResumeContent; templateId?: string }): Promise<CreateUpdateResponse> => {
         const response = await fetch(`${API_URL}/api/resumes`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: getAuthHeaders(),
             body: JSON.stringify(data),
         });
         if (!response.ok) {
@@ -135,11 +151,11 @@ export const resumeApi = {
         return response.json();
     },
 
-    // Update existing resume
+    // Update existing resume (requires auth)
     update: async (id: string, data: Partial<Resume>): Promise<CreateUpdateResponse> => {
         const response = await fetch(`${API_URL}/api/resumes/${id}`, {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
+            headers: getAuthHeaders(),
             body: JSON.stringify(data),
         });
         if (!response.ok) {
@@ -149,10 +165,11 @@ export const resumeApi = {
         return response.json();
     },
 
-    // Delete resume
+    // Delete resume (requires auth)
     delete: async (id: string): Promise<DeleteResponse> => {
         const response = await fetch(`${API_URL}/api/resumes/${id}`, {
             method: 'DELETE',
+            headers: getAuthHeaders(),
         });
         if (!response.ok) {
             const error = await response.json();

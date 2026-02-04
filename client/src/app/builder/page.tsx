@@ -1,10 +1,12 @@
 "use client";
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, Suspense, useRef } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { resumeApi } from '@/lib/api';
+import { jsPDF } from 'jspdf';
+import html2canvas from 'html2canvas';
 
 // Types for resume data
 interface Experience {
@@ -146,6 +148,21 @@ function BuilderContent() {
     useEffect(() => {
         if (editId) {
             loadResume(editId);
+        } else {
+            // Check for unsaved resume data (after login redirect)
+            const unsavedResume = localStorage.getItem('unsaved_resume');
+            if (unsavedResume) {
+                try {
+                    const { resumeData: savedData, resumeName: savedName, selectedTemplate: savedTemplate } = JSON.parse(unsavedResume);
+                    if (savedData) setResumeData(savedData);
+                    if (savedName) setResumeName(savedName);
+                    if (savedTemplate) setSelectedTemplate(savedTemplate);
+                    localStorage.removeItem('unsaved_resume');
+                    console.log('📋 Restored unsaved resume data');
+                } catch (e) {
+                    console.warn('Could not restore unsaved resume');
+                }
+            }
         }
     }, [editId]);
 
@@ -239,6 +256,22 @@ function BuilderContent() {
     };
 
     const handleSave = async () => {
+        // Check if user is logged in
+        const token = localStorage.getItem('token');
+        if (!token) {
+            const confirmLogin = confirm('You need to login to save your resume. Would you like to login now?\n\n(You can still download the PDF without logging in)');
+            if (confirmLogin) {
+                // Store current resume data in localStorage before redirecting
+                localStorage.setItem('unsaved_resume', JSON.stringify({
+                    resumeData,
+                    resumeName,
+                    selectedTemplate
+                }));
+                window.location.href = '/login?redirect=/builder';
+            }
+            return;
+        }
+
         try {
             setIsSaving(true);
             setSaveStatus('saving');
@@ -412,38 +445,136 @@ function BuilderContent() {
     };
 
     const [isGenerating, setIsGenerating] = useState(false);
+    const resumePreviewRef = useRef<HTMLDivElement>(null);
+
+    // Helper to convert any CSS color string to HEX/RGB using browser's native engine
+    // This handles lab(), oklch(), and other modern color formats that html2canvas doesn't understand
+    const normalizeColor = (color: string): string => {
+        if (!color || color === 'transparent') return color;
+        if (color.includes('lab(') || color.includes('lch(') || color.includes('oklch(')) {
+            const ctx = document.createElement('canvas').getContext('2d');
+            if (ctx) {
+                ctx.fillStyle = color;
+                return ctx.fillStyle; // Returns computed hex/rgb
+            }
+        }
+        return color;
+    };
+
+    // Client-side PDF generation using html2canvas + jsPDF
+    const generateClientPDF = async (): Promise<Blob> => {
+        // Find the preview element
+        const previewElement = document.querySelector('.resume-preview-content') as HTMLElement;
+        if (!previewElement) {
+            throw new Error('Resume preview not found');
+        }
+
+        // Clone the element to avoid modifying the original
+        const clonedElement = previewElement.cloneNode(true) as HTMLElement;
+        clonedElement.style.transform = 'none'; // Reset any zoom transform
+        clonedElement.style.position = 'absolute';
+        clonedElement.style.left = '-9999px';
+        clonedElement.style.top = '0';
+        document.body.appendChild(clonedElement);
+
+        try {
+            // Capture the preview as canvas with robust color handling
+            const canvas = await html2canvas(clonedElement, {
+                scale: 2,
+                useCORS: true,
+                logging: false,
+                backgroundColor: '#ffffff',
+                // Pre-process cloned styles to ensure no modern colors exist
+                onclone: (document, element) => {
+                    const allElements = element.querySelectorAll('*');
+                    allElements.forEach((el) => {
+                        const htmlEl = el as HTMLElement;
+                        const style = window.getComputedStyle(htmlEl);
+
+                        // Check and normalize colors if they use modern syntax
+                        if (style.color && (style.color.includes('lab') || style.color.includes('lch') || style.color.includes('oklch'))) {
+                            htmlEl.style.color = normalizeColor(style.color);
+                        }
+                        if (style.backgroundColor && (style.backgroundColor.includes('lab') || style.backgroundColor.includes('lch') || style.backgroundColor.includes('oklch'))) {
+                            htmlEl.style.backgroundColor = normalizeColor(style.backgroundColor);
+                        }
+                        if (style.borderColor && (style.borderColor.includes('lab') || style.borderColor.includes('lch') || style.borderColor.includes('oklch'))) {
+                            htmlEl.style.borderColor = normalizeColor(style.borderColor);
+                        }
+                    });
+                },
+            });
+
+            // Create PDF
+            const imgData = canvas.toDataURL('image/png');
+            const pdf = new jsPDF({
+                orientation: 'portrait',
+                unit: 'mm',
+                format: 'a4',
+            });
+
+            const imgWidth = 210; // A4 width in mm
+            const pageHeight = 297; // A4 height in mm
+            const imgHeight = (canvas.height * imgWidth) / canvas.width;
+            let heightLeft = imgHeight;
+            let position = 0;
+
+            pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+            heightLeft -= pageHeight;
+
+            while (heightLeft > 0) {
+                position = heightLeft - imgHeight;
+                pdf.addPage();
+                pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                heightLeft -= pageHeight;
+            }
+
+            return pdf.output('blob');
+        } finally {
+            // Clean up the cloned element
+            if (document.body.contains(clonedElement)) {
+                document.body.removeChild(clonedElement);
+            }
+        }
+    };
 
     const handleDownloadPDF = async () => {
         setIsGenerating(true);
         try {
             const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
-            const response = await fetch(`${API_URL}/api/resumes/generate-pdf`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    ...resumeData,
-                    templateName: selectedTemplate,
-                }),
-            });
+            // Try server-side generation first
+            try {
+                const response = await fetch(`${API_URL}/api/resumes/generate-pdf`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        ...resumeData,
+                        templateName: selectedTemplate,
+                    }),
+                });
 
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error || 'Failed to generate PDF');
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = `${resumeData.name.replace(/\s+/g, '_')}_Resume.pdf`;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    window.URL.revokeObjectURL(url);
+                    return;
+                }
+            } catch (serverError) {
+                console.warn('Server PDF generation failed, using browser print dialog');
             }
 
-            // Get the PDF blob and trigger download
-            const blob = await response.blob();
-            const url = window.URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = `${resumeData.name.replace(/\s+/g, '_')}_Resume.pdf`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            window.URL.revokeObjectURL(url);
+            // Fallback: Use browser's native print dialog
+            // This is the most reliable method as it uses the browser's own rendering
+            handlePrintResume();
 
         } catch (error: any) {
             console.error('PDF generation error:', error);
@@ -451,6 +582,63 @@ function BuilderContent() {
         } finally {
             setIsGenerating(false);
         }
+    };
+
+    // Browser print function - reliable fallback
+    const handlePrintResume = () => {
+        const previewElement = document.querySelector('.resume-preview-content') as HTMLElement;
+        if (!previewElement) {
+            alert('Resume preview not found');
+            return;
+        }
+
+        // Create a new window with just the resume content
+        const printWindow = window.open('', '_blank');
+        if (!printWindow) {
+            alert('Please allow popups to print the resume');
+            return;
+        }
+
+        // Write the resume HTML with print-optimized styles
+        printWindow.document.write(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>${resumeData.name} - Resume</title>
+                <style>
+                    @page { 
+                        size: A4; 
+                        margin: 0; 
+                    }
+                    * { 
+                        box-sizing: border-box;
+                        -webkit-print-color-adjust: exact !important;
+                        print-color-adjust: exact !important;
+                    }
+                    body { 
+                        margin: 0; 
+                        padding: 12mm;
+                        font-family: 'Times New Roman', serif;
+                        background: white;
+                        color: black;
+                    }
+                    ${previewElement.querySelector('style')?.textContent || ''}
+                </style>
+            </head>
+            <body>
+                ${previewElement.innerHTML}
+                <script>
+                    window.onload = function() {
+                        window.print();
+                        window.onafterprint = function() {
+                            window.close();
+                        };
+                    };
+                </script>
+            </body>
+            </html>
+        `);
+        printWindow.document.close();
     };
 
     // PDF Preview state and functions
@@ -463,27 +651,34 @@ function BuilderContent() {
         try {
             const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
-            const response = await fetch(`${API_URL}/api/resumes/generate-pdf`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    ...resumeData,
-                    templateName: selectedTemplate,
-                }),
-            });
+            // Try server-side generation first
+            try {
+                const response = await fetch(`${API_URL}/api/resumes/generate-pdf`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        ...resumeData,
+                        templateName: selectedTemplate,
+                    }),
+                });
 
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error || 'Failed to generate PDF');
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    setPreviewUrl(url);
+                    setShowPreview(true);
+                    return;
+                }
+            } catch (serverError) {
+                console.warn('Server PDF preview failed, using print dialog');
             }
 
-            // Get the PDF blob and create a URL for preview
-            const blob = await response.blob();
-            const url = window.URL.createObjectURL(blob);
-            setPreviewUrl(url);
-            setShowPreview(true);
+            // Fallback: Use browser's native print for preview
+            // This opens print dialog which shows preview
+            handlePrintResume();
+
         } catch (error: any) {
             console.error('PDF preview error:', error);
             alert(`Failed to generate preview: ${error.message}`);
@@ -966,7 +1161,7 @@ function BuilderContent() {
                     </div>
                     <div className="flex-1 overflow-y-auto p-8 bg-gray-100/50 dark:bg-[#0b0f17] flex justify-center items-start">
                         <div
-                            className="bg-white text-black w-[210mm] min-h-[297mm] shadow-[0_8px_30px_rgb(0,0,0,0.12)] relative flex flex-col shrink-0 transition-transform origin-top transform p-[12mm]"
+                            className="resume-preview-content bg-white text-black w-[210mm] min-h-[297mm] shadow-[0_8px_30px_rgb(0,0,0,0.12)] relative flex flex-col shrink-0 transition-transform origin-top transform p-[12mm]"
                             style={{ transform: `scale(${zoom / 100})` }}
                         >
                             {/* MNIT Resume Preview */}

@@ -309,15 +309,35 @@ export async function generatePdf(resumeData: ResumeData, templateName: string =
 
     console.log('📄 Rendered LaTeX template, calling API...');
 
+    // Prepare resources array
+    const resources: any[] = [
+        {
+            main: true,
+            content: latexContent,
+        },
+    ];
+
+    // For MNIT template, include the logo image
+    if (templateName === 'mnit_resume') {
+        try {
+            const logoPath = path.join(__dirname, 'templates', 'images.jpg');
+            const logoBuffer = fs.readFileSync(logoPath);
+            const logoBase64 = logoBuffer.toString('base64');
+            resources.push({
+                path: 'logo.jpg',
+                content: logoBase64,
+                encoding: 'base64',
+            });
+            console.log('🖼️ Logo image included in PDF generation');
+        } catch (error) {
+            console.warn('⚠️ Could not load logo image:', error);
+        }
+    }
+
     // Prepare API request
     const requestBody = {
         compiler: 'pdflatex',
-        resources: [
-            {
-                main: true,
-                content: latexContent,
-            },
-        ],
+        resources: resources,
     };
 
     // Call LaTeX-On-HTTP API with retry logic and 30s timeout

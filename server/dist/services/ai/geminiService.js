@@ -24,41 +24,74 @@ async function runDeepAnalysisWithGemini(resumeText, jobDescription) {
         day: 'numeric'
     });
     const currentYear = now.getFullYear();
-    const prompt = `You are an expert ATS (Applicant Tracking System) specialist and career coach. Analyze the following resume against the job description and provide detailed, actionable feedback.
+    const prompt = `You are an expert ATS (Applicant Tracking System) specialist and career coach specializing in helping BTech students with their resumes.
+
+**TARGET AUDIENCE - VERY IMPORTANT:**
+- This resume belongs to a BTech/B.E. STUDENT (typically 2nd, 3rd, or final year)
+- They are applying for INTERNSHIPS or CAMPUS PLACEMENTS, NOT full-time jobs with years of experience
+- Do NOT expect or ask for "years of professional experience" - they are students!
+- Projects, hackathons, competitive programming, and academic achievements are their main showcase
+- CGPA matters for students (8.0+ is good)
+- College clubs, PORs (Positions of Responsibility), and extracurriculars are relevant
+
+**WHAT MATTERS FOR STUDENTS:**
+- 👨‍💻 Personal/Academic Projects (most important!)
+- 🏆 Competitive Programming (LeetCode, Codeforces, CodeChef ratings)
+- 🎯 Hackathon participation and wins
+- 🌐 Open source contributions (GitHub, GSoC)
+- 📚 Relevant coursework (DSA, DBMS, OS, CN, OOPs)
+- 📊 CGPA (especially if > 8.0)
+- 🏅 Technical achievements and certifications
 
 **IMPORTANT CONTEXT:**
 - Today's date is: ${currentDate}
 - Current year is: ${currentYear}
-- Dates from ${currentYear - 1} (${currentYear - 1}) and earlier are in the PAST, not the future
-- Do NOT flag recent dates (2024, 2025, early 2026) as "future-dated" or inconsistent
+- Do NOT flag recent dates as "future-dated"
 
-**Job Description:**
+**PDF EXTRACTION NOTE:**
+- Resume text was auto-extracted from PDF - ignore any special character artifacts
+- Focus on CONTENT, KEYWORDS, and SKILLS - not formatting
+
+**Role/Internship Description:**
 ${jobDescription}
 
-**Resume:**
+**Student's Resume:**
 ${resumeText}
 
-Please provide a comprehensive analysis in the following JSON format. Be specific, actionable, and constructive:
+Provide a comprehensive analysis tailored for a BTECH STUDENT in JSON format:
 
 {
-    "overallAssessment": "A 2-3 sentence summary of how well this resume matches the job",
-    "strengthsAnalysis": ["List 3-5 specific strengths of this resume for this role"],
-    "improvementAreas": ["List 3-5 specific areas that need improvement"],
+    "resumeScore": 75,
+    "scoreBreakdown": {
+        "projectsAndExperience": 80,
+        "technicalSkills": 70,
+        "achievements": 65,
+        "presentation": 75
+    },
+    "scoreJustification": "Brief explanation of why you gave this score. Be fair - most good student resumes should score 60-85.",
+    "overallAssessment": "2-3 sentences on how well this STUDENT resume matches the internship/role. Consider their projects, skills, and learning potential.",
+    "strengthsAnalysis": ["List 3-5 strengths. Focus on: strong projects, CP ratings, hackathons, relevant skills, good CGPA, open source, etc."],
+    "improvementAreas": ["List 3-5 areas for improvement. DO NOT suggest adding 'years of experience'. Instead suggest: more projects, adding CP profiles, quantifying project impact, etc."],
     "keywordOptimization": {
-        "strongMatches": ["Keywords from the job that are well-represented in the resume"],
-        "suggestedAdditions": ["Important keywords from the job that should be added to the resume"],
-        "contextTips": ["Tips on how to naturally incorporate missing keywords"]
+        "strongMatches": ["Skills/keywords from the role that student has demonstrated"],
+        "suggestedAdditions": ["Important technical skills they should add or learn"],
+        "contextTips": ["How to naturally add these through projects or learning"]
     },
     "contentSuggestions": {
-        "summary": "Suggestion for a powerful professional summary tailored to this role",
-        "experience": "How to better present work experience for this role",
-        "skills": "How to optimize the skills section",
-        "achievements": "How to quantify and highlight achievements"
+        "summary": "A student-appropriate objective/summary (not a professional summary with career highlights)",
+        "experience": "How to better present projects and internships (if any)",
+        "skills": "How to organize technical skills for ATS",
+        "achievements": "How to highlight hackathons, CP achievements, academic awards"
     },
-    "atsOptimization": ["5 specific tips to improve ATS parsing and ranking"],
-    "competitiveEdge": "What would make this candidate stand out from other applicants",
-    "actionPlan": ["Ordered list of 5 immediate actions to improve this resume"]
+    "atsOptimization": ["5 tips to improve ATS ranking - focus on keywords, project descriptions, skills section. Remember this is for a student."],
+    "competitiveEdge": "What makes this student stand out? (projects, CP rating, open source, unique skills)",
+    "actionPlan": ["5 immediate actions. Examples: 'Add LeetCode profile link', 'Quantify project impact', 'Add hackathon achievements', 'Include CGPA if above 8', etc."]
 }
+
+IMPORTANT SCORING GUIDELINES:
+- resumeScore should be 0-100, representing how strong this student's resume is for the target role
+- Be realistic: Average good student resume = 65-75, Exceptional = 80-90, Poor = below 50
+- Score breakdown should reflect: projects quality, skills relevance, achievements, and formatting
 
 Return ONLY valid JSON, no additional text or markdown formatting.`;
     try {

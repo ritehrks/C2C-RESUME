@@ -1,4 +1,12 @@
 export interface DeepAnalysisResult {
+    resumeScore: number;
+    scoreBreakdown: {
+        projectsAndExperience: number;
+        technicalSkills: number;
+        achievements: number;
+        presentation: number;
+    };
+    scoreJustification: string;
     overallAssessment: string;
     strengthsAnalysis: string[];
     improvementAreas: string[];
