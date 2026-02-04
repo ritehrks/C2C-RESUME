@@ -22,6 +22,7 @@ interface Project {
     description: string;
     dates: string;
     technologies: string;
+    link: string;
     items: string[];
 }
 
@@ -108,6 +109,7 @@ const defaultResumeData: ResumeData = {
             description: "A brief description of what the project does",
             dates: "Jan 2024 - Mar 2024",
             technologies: "React, Node.js, MongoDB",
+            link: "",
             items: ["Implemented user authentication and authorization", "Built responsive UI with React and Tailwind CSS"]
         }
     ],
@@ -223,6 +225,7 @@ function BuilderContent() {
                             description: proj.description || '',
                             dates: '', // Not in content model
                             technologies: proj.techStack?.join(', ') || '',
+                            link: proj.link || proj.github || '',
                             items: proj.bullets || [''],
                         })) || defaultResumeData.projects,
 
@@ -389,7 +392,7 @@ function BuilderContent() {
     const addProject = () => {
         setResumeData(prev => ({
             ...prev,
-            projects: [...prev.projects, { name: "", description: "", dates: "", technologies: "", items: [""] }]
+            projects: [...prev.projects, { name: "", description: "", dates: "", technologies: "", link: "", items: [""] }]
         }));
     };
 
@@ -442,6 +445,47 @@ function BuilderContent() {
             ...prev,
             achievements: prev.achievements.filter((_, i) => i !== index)
         }));
+    };
+
+    // Move up/down helper functions for section reordering
+    const moveExperience = (index: number, direction: 'up' | 'down') => {
+        setResumeData(prev => {
+            const newExperiences = [...prev.experiences];
+            const newIndex = direction === 'up' ? index - 1 : index + 1;
+            if (newIndex < 0 || newIndex >= newExperiences.length) return prev;
+            [newExperiences[index], newExperiences[newIndex]] = [newExperiences[newIndex], newExperiences[index]];
+            return { ...prev, experiences: newExperiences };
+        });
+    };
+
+    const moveProject = (index: number, direction: 'up' | 'down') => {
+        setResumeData(prev => {
+            const newProjects = [...prev.projects];
+            const newIndex = direction === 'up' ? index - 1 : index + 1;
+            if (newIndex < 0 || newIndex >= newProjects.length) return prev;
+            [newProjects[index], newProjects[newIndex]] = [newProjects[newIndex], newProjects[index]];
+            return { ...prev, projects: newProjects };
+        });
+    };
+
+    const movePosition = (index: number, direction: 'up' | 'down') => {
+        setResumeData(prev => {
+            const newPositions = [...prev.positions];
+            const newIndex = direction === 'up' ? index - 1 : index + 1;
+            if (newIndex < 0 || newIndex >= newPositions.length) return prev;
+            [newPositions[index], newPositions[newIndex]] = [newPositions[newIndex], newPositions[index]];
+            return { ...prev, positions: newPositions };
+        });
+    };
+
+    const moveAchievement = (index: number, direction: 'up' | 'down') => {
+        setResumeData(prev => {
+            const newAchievements = [...prev.achievements];
+            const newIndex = direction === 'up' ? index - 1 : index + 1;
+            if (newIndex < 0 || newIndex >= newAchievements.length) return prev;
+            [newAchievements[index], newAchievements[newIndex]] = [newAchievements[newIndex], newAchievements[index]];
+            return { ...prev, achievements: newAchievements };
+        });
     };
 
     const [isGenerating, setIsGenerating] = useState(false);
@@ -584,7 +628,7 @@ function BuilderContent() {
         }
     };
 
-    // Browser print function - reliable fallback
+    // Browser print function - copies EXACT visual appearance
     const handlePrintResume = () => {
         const previewElement = document.querySelector('.resume-preview-content') as HTMLElement;
         if (!previewElement) {
@@ -592,14 +636,55 @@ function BuilderContent() {
             return;
         }
 
-        // Create a new window with just the resume content
+        // Collect ALL stylesheets from the page
+        let allStyles = '';
+        const styleSheets = document.styleSheets;
+        for (let i = 0; i < styleSheets.length; i++) {
+            try {
+                const rules = styleSheets[i].cssRules || styleSheets[i].rules;
+                if (rules) {
+                    for (let j = 0; j < rules.length; j++) {
+                        allStyles += rules[j].cssText + '\n';
+                    }
+                }
+            } catch (e) {
+                // Cross-origin stylesheets may throw, skip them
+                console.warn('Could not access stylesheet:', e);
+            }
+        }
+
+        // Clone the element and inline all computed styles
+        const clonedElement = previewElement.cloneNode(true) as HTMLElement;
+
+        // Function to inline computed styles
+        const inlineStyles = (original: Element, clone: Element) => {
+            const originalEl = original as HTMLElement;
+            const cloneEl = clone as HTMLElement;
+            const computed = window.getComputedStyle(originalEl);
+
+            // Copy important visual styles
+            cloneEl.style.cssText = computed.cssText;
+
+            // Recursively process children
+            const originalChildren = original.children;
+            const cloneChildren = clone.children;
+            for (let i = 0; i < originalChildren.length; i++) {
+                if (cloneChildren[i]) {
+                    inlineStyles(originalChildren[i], cloneChildren[i]);
+                }
+            }
+        };
+
+        inlineStyles(previewElement, clonedElement);
+
+        // Create a new window with exact copy
         const printWindow = window.open('', '_blank');
         if (!printWindow) {
             alert('Please allow popups to print the resume');
             return;
         }
 
-        // Write the resume HTML with print-optimized styles
+        // Write with all styles
         printWindow.document.write(`
             <!DOCTYPE html>
             <html>
@@ -617,22 +702,30 @@ function BuilderContent() {
                     }
                     body { 
                         margin: 0; 
-                        padding: 12mm;
-                        font-family: 'Times New Roman', serif;
+                        padding: 0;
                         background: white;
-                        color: black;
                     }
-                    ${previewElement.querySelector('style')?.textContent || ''}
+                    .resume-container {
+                        width: 210mm;
+                        min-height: 297mm;
+                        margin: 0 auto;
+                        background: white;
+                    }
+                    ${allStyles}
                 </style>
             </head>
             <body>
-                ${previewElement.innerHTML}
+                <div class="resume-container">
+                    ${clonedElement.outerHTML}
+                </div>
                 <script>
                     window.onload = function() {
-                        window.print();
-                        window.onafterprint = function() {
-                            window.close();
-                        };
+                        setTimeout(function() {
+                            window.print();
+                            window.onafterprint = function() {
+                                window.close();
+                            };
+                        }, 500);
                     };
                 </script>
             </body>
@@ -973,7 +1066,11 @@ function BuilderContent() {
                                         <div key={index} className="p-3 bg-gray-50 dark:bg-gray-800/50 rounded-md border border-gray-100 dark:border-gray-700/50">
                                             <div className="flex justify-between items-start mb-2">
                                                 <span className="text-xs font-semibold text-app-primary">Experience {index + 1}</span>
-                                                <button onClick={() => removeExperience(index)} className="text-gray-400 hover:text-red-500"><span className="material-symbols-outlined text-[18px]">delete</span></button>
+                                                <div className="flex items-center gap-1">
+                                                    <button onClick={() => moveExperience(index, 'up')} disabled={index === 0} className={`text-gray-400 hover:text-app-primary ${index === 0 ? 'opacity-30 cursor-not-allowed' : ''}`} title="Move Up"><span className="material-symbols-outlined text-[16px]">arrow_upward</span></button>
+                                                    <button onClick={() => moveExperience(index, 'down')} disabled={index === resumeData.experiences.length - 1} className={`text-gray-400 hover:text-app-primary ${index === resumeData.experiences.length - 1 ? 'opacity-30 cursor-not-allowed' : ''}`} title="Move Down"><span className="material-symbols-outlined text-[16px]">arrow_downward</span></button>
+                                                    <button onClick={() => removeExperience(index)} className="text-gray-400 hover:text-red-500" title="Delete"><span className="material-symbols-outlined text-[18px]">delete</span></button>
+                                                </div>
                                             </div>
                                             <div className="flex flex-col gap-2">
                                                 <input className="form-input w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-[#1a202c] text-sm h-9 px-3 dark:text-white" placeholder="Company Name" type="text" value={exp.company} onChange={(e) => updateExperience(index, 'company', e.target.value)} />
@@ -1008,7 +1105,11 @@ function BuilderContent() {
                                         <div key={index} className="p-3 bg-gray-50 dark:bg-gray-800/50 rounded-md border border-gray-100 dark:border-gray-700/50">
                                             <div className="flex justify-between items-start mb-2">
                                                 <span className="text-xs font-semibold text-app-primary">Project {index + 1}</span>
-                                                <button onClick={() => removeProject(index)} className="text-gray-400 hover:text-red-500"><span className="material-symbols-outlined text-[18px]">delete</span></button>
+                                                <div className="flex items-center gap-1">
+                                                    <button onClick={() => moveProject(index, 'up')} disabled={index === 0} className={`text-gray-400 hover:text-app-primary ${index === 0 ? 'opacity-30 cursor-not-allowed' : ''}`} title="Move Up"><span className="material-symbols-outlined text-[16px]">arrow_upward</span></button>
+                                                    <button onClick={() => moveProject(index, 'down')} disabled={index === resumeData.projects.length - 1} className={`text-gray-400 hover:text-app-primary ${index === resumeData.projects.length - 1 ? 'opacity-30 cursor-not-allowed' : ''}`} title="Move Down"><span className="material-symbols-outlined text-[16px]">arrow_downward</span></button>
+                                                    <button onClick={() => removeProject(index)} className="text-gray-400 hover:text-red-500" title="Delete"><span className="material-symbols-outlined text-[18px]">delete</span></button>
+                                                </div>
                                             </div>
                                             <div className="flex flex-col gap-2">
                                                 <input className="form-input w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-[#1a202c] text-sm h-9 px-3 dark:text-white" placeholder="Project Name" type="text" value={project.name} onChange={(e) => updateProject(index, 'name', e.target.value)} />
@@ -1017,6 +1118,7 @@ function BuilderContent() {
                                                     <input className="form-input w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-[#1a202c] text-sm h-9 px-3 dark:text-white" placeholder="Dates" type="text" value={project.dates} onChange={(e) => updateProject(index, 'dates', e.target.value)} />
                                                     <input className="form-input w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-[#1a202c] text-sm h-9 px-3 dark:text-white" placeholder="Technologies" type="text" value={project.technologies} onChange={(e) => updateProject(index, 'technologies', e.target.value)} />
                                                 </div>
+                                                <input className="form-input w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-[#1a202c] text-sm h-9 px-3 dark:text-white" placeholder="GitHub/Demo Link (optional)" type="url" value={project.link} onChange={(e) => updateProject(index, 'link', e.target.value)} />
                                                 <textarea className="form-textarea w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-[#1a202c] text-sm p-3 dark:text-white min-h-[80px]" placeholder="• Key points (one per line)" value={project.items.join('\n')} onChange={(e) => updateProject(index, 'items', e.target.value.split('\n'))} />
                                             </div>
                                         </div>
@@ -1084,7 +1186,11 @@ function BuilderContent() {
                                         <div key={index} className="p-3 bg-gray-50 dark:bg-gray-800/50 rounded-md border border-gray-100 dark:border-gray-700/50">
                                             <div className="flex justify-between items-start mb-2">
                                                 <span className="text-xs font-semibold text-app-primary">Position {index + 1}</span>
-                                                <button onClick={() => removePosition(index)} className="text-gray-400 hover:text-red-500"><span className="material-symbols-outlined text-[18px]">delete</span></button>
+                                                <div className="flex items-center gap-1">
+                                                    <button onClick={() => movePosition(index, 'up')} disabled={index === 0} className={`text-gray-400 hover:text-app-primary ${index === 0 ? 'opacity-30 cursor-not-allowed' : ''}`} title="Move Up"><span className="material-symbols-outlined text-[16px]">arrow_upward</span></button>
+                                                    <button onClick={() => movePosition(index, 'down')} disabled={index === resumeData.positions.length - 1} className={`text-gray-400 hover:text-app-primary ${index === resumeData.positions.length - 1 ? 'opacity-30 cursor-not-allowed' : ''}`} title="Move Down"><span className="material-symbols-outlined text-[16px]">arrow_downward</span></button>
+                                                    <button onClick={() => removePosition(index)} className="text-gray-400 hover:text-red-500" title="Delete"><span className="material-symbols-outlined text-[18px]">delete</span></button>
+                                                </div>
                                             </div>
                                             <div className="flex flex-col gap-2">
                                                 <input className="form-input w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-[#1a202c] text-sm h-9 px-3 dark:text-white" placeholder="Position Title" type="text" value={pos.title} onChange={(e) => updatePosition(index, 'title', e.target.value)} />
@@ -1115,7 +1221,11 @@ function BuilderContent() {
                                         <div key={index} className="p-3 bg-gray-50 dark:bg-gray-800/50 rounded-md border border-gray-100 dark:border-gray-700/50">
                                             <div className="flex justify-between items-start mb-2">
                                                 <span className="text-xs font-semibold text-app-primary">Achievement {index + 1}</span>
-                                                <button onClick={() => removeAchievement(index)} className="text-gray-400 hover:text-red-500"><span className="material-symbols-outlined text-[18px]">delete</span></button>
+                                                <div className="flex items-center gap-1">
+                                                    <button onClick={() => moveAchievement(index, 'up')} disabled={index === 0} className={`text-gray-400 hover:text-app-primary ${index === 0 ? 'opacity-30 cursor-not-allowed' : ''}`} title="Move Up"><span className="material-symbols-outlined text-[16px]">arrow_upward</span></button>
+                                                    <button onClick={() => moveAchievement(index, 'down')} disabled={index === resumeData.achievements.length - 1} className={`text-gray-400 hover:text-app-primary ${index === resumeData.achievements.length - 1 ? 'opacity-30 cursor-not-allowed' : ''}`} title="Move Down"><span className="material-symbols-outlined text-[16px]">arrow_downward</span></button>
+                                                    <button onClick={() => removeAchievement(index)} className="text-gray-400 hover:text-red-500" title="Delete"><span className="material-symbols-outlined text-[18px]">delete</span></button>
+                                                </div>
                                             </div>
                                             <div className="flex flex-col gap-2">
                                                 <input className="form-input w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-[#1a202c] text-sm h-9 px-3 dark:text-white" placeholder="Achievement Title" type="text" value={ach.title} onChange={(e) => updateAchievement(index, 'title', e.target.value)} />
@@ -1246,7 +1356,14 @@ function BuilderContent() {
                                     {resumeData.projects.map((project, index) => (
                                         <div key={index} className="mb-2">
                                             <div className="flex justify-between text-sm">
-                                                <p className="font-semibold">{project.name}</p>
+                                                <p className="font-semibold">
+                                                    {project.name}
+                                                    {project.link && (
+                                                        <a href={project.link} target="_blank" rel="noopener noreferrer" className="ml-2 text-blue-600 hover:text-blue-800 font-normal text-xs">
+                                                            [GitHub/Demo ↗]
+                                                        </a>
+                                                    )}
+                                                </p>
                                                 <p className="text-gray-600">{project.dates}</p>
                                             </div>
                                             <p className="text-sm text-gray-600 italic">{project.description}</p>

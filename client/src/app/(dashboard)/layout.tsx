@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import ProtectedRoute from '@/components/ProtectedRoute';
 
@@ -43,9 +44,7 @@ export default function DashboardLayout({
                 <aside className="w-64 flex flex-col bg-white dark:bg-[#1a2235] border-r border-slate-200 dark:border-slate-800 flex-shrink-0 z-20">
                     <div className="h-16 flex items-center px-6 border-b border-slate-100 dark:border-slate-800">
                         <Link href="/" className="flex items-center gap-3 group">
-                            <div className="bg-app-primary p-2 rounded-lg group-hover:scale-105 transition-transform">
-                                <span className="material-symbols-outlined text-white text-xl">description</span>
-                            </div>
+                            <Image src="/logo-v2.png" alt="C2C Logo" width={40} height={40} className="rounded-lg group-hover:scale-105 transition-transform" />
                             <span className="text-lg font-bold">C2C Resume</span>
                         </Link>
                     </div>
@@ -56,8 +55,8 @@ export default function DashboardLayout({
                                 key={item.href}
                                 href={item.href}
                                 className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${item.active
-                                        ? 'bg-app-primary/10 text-app-primary'
-                                        : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                                    ? 'bg-app-primary/10 text-app-primary'
+                                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
                                     }`}
                             >
                                 <span className="material-symbols-outlined">{item.icon}</span>
