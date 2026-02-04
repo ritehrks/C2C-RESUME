@@ -13,10 +13,14 @@ import statsRoutes from './routes/stats.js';
 import { connectDB } from './config/database.js';
 import { seedAdminUser } from './controllers/index.js';
 
+// Import keepalive service
+import { startKeepAlive } from './services/keepalive.js';
+
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+const API_URL = process.env.API_URL || `http://localhost:${PORT}`;
 
 // Middleware
 app.use(cors({
@@ -32,12 +36,21 @@ app.use('/api/analyze', analyzerRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/stats', statsRoutes);
 
-// Health check
+// Health check endpoints (for keepalive and monitoring)
 app.get('/health', (req, res) => {
     res.json({
         status: 'ok',
         timestamp: new Date().toISOString(),
         message: 'C2C Resume Server is running 🚀'
+    });
+});
+
+app.get('/api/health', (req, res) => {
+    res.json({
+        status: 'ok',
+        timestamp: new Date().toISOString(),
+        uptime: process.uptime(),
+        message: 'C2C Resume API is healthy ✅'
     });
 });
 
@@ -51,11 +64,13 @@ if (require.main === module) {
             console.log(`🚀 C2C Resume Server running on http://localhost:${PORT}`);
             console.log(`📋 API Endpoints:`);
             console.log(`   - GET  /health`);
-            console.log(`   - POST /api/auth/login`);
-            console.log(`   - POST /api/auth/register`);
+            console.log(`   - GET  /api/health`);
+            console.log(`   - POST /api/auth/google`);
             console.log(`   - GET/POST/PUT/DELETE /api/resumes`);
-            console.log(`   - POST /api/resumes/generate-pdf`);
             console.log(`   - POST /api/analyze/simple`);
+
+            // Start keepalive service for Render
+            startKeepAlive(API_URL);
         });
     });
 }

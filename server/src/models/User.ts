@@ -8,6 +8,9 @@ export interface IUser extends Document {
     name: string;
     password?: string;
     profileImage?: string;
+    googleId?: string;
+    isEmailVerified: boolean;
+    isActive: boolean;
     authProvider: 'google' | 'local';
     role: 'user' | 'admin';
     masterProfile: {
@@ -40,10 +43,13 @@ export interface IUser extends Document {
 
 const userSchema = new Schema<IUser>(
     {
-        email: { type: String, required: true, unique: true },
+        email: { type: String, required: true, unique: true, lowercase: true },
         name: { type: String, required: true },
         password: { type: String },
         profileImage: String,
+        googleId: { type: String, unique: true, sparse: true },
+        isEmailVerified: { type: Boolean, default: false },
+        isActive: { type: Boolean, default: true },
         authProvider: { type: String, enum: ['google', 'local'], default: 'google' },
         role: { type: String, enum: ['user', 'admin'], default: 'user' },
         masterProfile: {

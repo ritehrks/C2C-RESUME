@@ -1,29 +1,44 @@
 // Auth Controller
-// Google OAuth and Email/Password authentication with JWT tokens
+// Google OAuth with NIT-only domain validation and JWT tokens
 
 import { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
+import { OAuth2Client } from 'google-auth-library';
 import { User } from '../models/User.js';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'c2c-resume-secret-key-change-in-production';
 const JWT_EXPIRY = '7d';
+
+// Initialize Google OAuth client
+const googleClient = new OAuth2Client();
+
+// ⭐ MNIT DOMAIN CONFIGURATION - Only MNIT emails allowed
+const ALLOWED_DOMAIN = 'mnit.ac.in';
 
 // Helper function to generate JWT token
 const generateToken = (userId: string, email: string): string => {
     return jwt.sign({ userId, email }, JWT_SECRET, { expiresIn: JWT_EXPIRY });
 };
 
+// Helper function to validate MNIT email domain
+const isValidMNITEmail = (email: string): boolean => {
+    const emailDomain = email.toLowerCase().split('@')[1];
+    return emailDomain === ALLOWED_DOMAIN;
+};
+
 // Development mode: Create/return a mock user without OAuth
 const getDevUser = async () => {
     // Find or create a development user
-    let user = await User.findOne({ email: 'dev@c2c.mnit.ac.in' });
+    let user = await User.findOne({ email: 'dev@mnit.ac.in' });
 
     if (!user) {
         user = new User({
-            email: 'dev@c2c.mnit.ac.in',
+            email: 'dev@mnit.ac.in',
             name: 'Dev User',
             authProvider: 'google',
+            isEmailVerified: true,
+            isActive: true,
             masterProfile: {
                 personalInfo: {
                     phone: '+91 9876543210',
@@ -53,7 +68,163 @@ const getDevUser = async () => {
 };
 
 export const authController = {
-    // GET /api/auth/google - Initiate Google OAuth (Dev mode: skip OAuth)
+    /**
+     * POST /api/auth/google
+     * ⭐ MAIN GOOGLE AUTH ENDPOINT - Verifies Google ID token and validates NIT domain
+     * 
+     * This endpoint receives the Google ID token from the frontend (@react-oauth/google),
+     * verifies it, checks if the email is from an NIT domain, and creates/updates the user.
+     */
+    googleAuthCallback: async (req: Request, res: Response) => {
+        try {
+            const { credential } = req.body;
+
+            if (!credential) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Google credential token is required"
+                });
+            }
+
+            // STEP 1: Verify the Google ID token
+            let ticket;
+            try {
+                ticket = await googleClient.verifyIdToken({
+                    idToken: credential,
+                    audience: process.env.GOOGLE_CLIENT_ID
+                });
+            } catch (verifyError) {
+                console.error('❌ Token verification failed:', verifyError);
+                return res.status(401).json({
+                    success: false,
+                    message: "Invalid Google token. Please try again."
+                });
+            }
+
+            // STEP 2: Get user info from the verified token
+            const payload = ticket.getPayload();
+            if (!payload) {
+                return res.status(401).json({
+                    success: false,
+                    message: "Could not retrieve user information from Google token"
+                });
+            }
+
+            const { email, name, picture, email_verified, sub: googleId } = payload;
+
+            if (!email) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Email not found in Google account"
+                });
+            }
+
+            if (!email_verified) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Your Google account email is not verified. Please verify your email first."
+                });
+            }
+
+            // ⭐ STEP 3: CRITICAL - Validate MNIT email domain
+            const emailLower = email.toLowerCase();
+            const emailDomain = emailLower.split('@')[1];
+
+            if (!isValidMNITEmail(emailLower)) {
+                console.log(`🚫 Login rejected for non-MNIT email: ${emailLower}`);
+                return res.status(403).json({
+                    success: false,
+                    message: "Only MNIT email addresses (@mnit.ac.in) are allowed to login. Please use your official MNIT email.",
+                    domain: emailDomain,
+                    allowedDomain: ALLOWED_DOMAIN
+                });
+            }
+
+            // STEP 4: Find or create user
+            let user = await User.findOne({ email: emailLower });
+            let isNewUser = false;
+
+            if (!user) {
+                // Create new user
+                isNewUser = true;
+                user = new User({
+                    email: emailLower,
+                    name: name || 'NIT User',
+                    googleId: googleId,
+                    profileImage: picture,
+                    isEmailVerified: true,
+                    isActive: true,
+                    authProvider: 'google',
+                    role: 'user',
+                    masterProfile: {
+                        personalInfo: {},
+                        education: [],
+                        skills: { languages: [], frameworks: [], tools: [], databases: [] },
+                    },
+                });
+                await user.save();
+                console.log(`✅ New NIT user registered: ${emailLower}`);
+            } else {
+                // Update existing user with Google info if needed
+                let needsSave = false;
+
+                if (!user.googleId && googleId) {
+                    user.googleId = googleId;
+                    needsSave = true;
+                }
+                if (!user.profileImage && picture) {
+                    user.profileImage = picture;
+                    needsSave = true;
+                }
+                if (!user.isEmailVerified) {
+                    user.isEmailVerified = true;
+                    needsSave = true;
+                }
+                if (name && user.name !== name) {
+                    user.name = name;
+                    needsSave = true;
+                }
+
+                if (needsSave) await user.save();
+                console.log(`✅ NIT user logged in: ${emailLower}`);
+            }
+
+            // Check if user is active
+            if (!user.isActive) {
+                return res.status(403).json({
+                    success: false,
+                    message: "Your account has been deactivated. Please contact support."
+                });
+            }
+
+            // STEP 5: Generate JWT token
+            const token = generateToken(user._id.toString(), user.email);
+
+            // STEP 6: Return success response
+            res.json({
+                success: true,
+                message: isNewUser ? "Account created successfully! Welcome to C2C Resume Platform." : "Login successful. Welcome back!",
+                isNewUser,
+                token,
+                user: {
+                    id: user._id,
+                    name: user.name,
+                    email: user.email,
+                    profileImage: user.profileImage,
+                    role: user.role,
+                    isEmailVerified: user.isEmailVerified,
+                }
+            });
+        } catch (error: any) {
+            console.error("❌ Google authentication error:", error);
+            res.status(500).json({
+                success: false,
+                message: "Authentication failed. Please try again."
+            });
+        }
+    },
+
+    // GET /api/auth/google - Legacy redirect flow (for backward compatibility)
     googleAuth: async (req: Request, res: Response) => {
         try {
             // In development, we'll create/use a mock user
@@ -74,7 +245,7 @@ export const authController = {
                     },
                 });
             } else {
-                // Production: redirect to Google OAuth
+                // Production: redirect to Google OAuth (legacy flow)
                 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
                 const REDIRECT_URI = `${process.env.API_URL}/api/auth/callback`;
                 const scope = 'email profile';
@@ -85,7 +256,8 @@ export const authController = {
                     `response_type=code&` +
                     `scope=${scope}&` +
                     `access_type=offline&` +
-                    `prompt=consent`;
+                    `prompt=consent&` +
+                    `hd=mnit.ac.in`; // Hint for NIT domain
 
                 res.redirect(authUrl);
             }
@@ -95,7 +267,7 @@ export const authController = {
         }
     },
 
-    // GET /api/auth/callback - Google OAuth callback
+    // GET /api/auth/callback - Google OAuth callback (legacy redirect flow)
     googleCallback: async (req: Request, res: Response) => {
         try {
             const { code } = req.query;
@@ -134,15 +306,23 @@ export const authController = {
 
             const googleUser = await userInfoResponse.json() as { email: string; name: string; picture?: string };
 
+            // ⭐ Validate MNIT domain for redirect flow too
+            if (!isValidMNITEmail(googleUser.email)) {
+                const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:3000';
+                return res.redirect(`${CLIENT_URL}/login?error=Only @mnit.ac.in emails are allowed`);
+            }
+
             // Find or create user in database
-            let user = await User.findOne({ email: googleUser.email });
+            let user = await User.findOne({ email: googleUser.email.toLowerCase() });
 
             if (!user) {
                 user = new User({
-                    email: googleUser.email,
+                    email: googleUser.email.toLowerCase(),
                     name: googleUser.name,
                     profileImage: googleUser.picture,
                     authProvider: 'google',
+                    isEmailVerified: true,
+                    isActive: true,
                     masterProfile: {
                         personalInfo: {},
                         education: [],
@@ -150,7 +330,7 @@ export const authController = {
                     },
                 });
                 await user.save();
-                console.log(`✅ New user registered: ${user.email}`);
+                console.log(`✅ New NIT user registered: ${user.email}`);
             }
 
             // Generate JWT token
@@ -198,10 +378,14 @@ export const authController = {
 
             try {
                 const decoded = jwt.verify(token, JWT_SECRET) as { userId: string; email: string };
-                const user = await User.findById(decoded.userId).select('-__v');
+                const user = await User.findById(decoded.userId).select('-__v -password');
 
                 if (!user) {
                     return res.status(404).json({ success: false, error: 'User not found' });
+                }
+
+                if (!user.isActive) {
+                    return res.status(403).json({ success: false, error: 'Account deactivated' });
                 }
 
                 res.json({
@@ -211,6 +395,7 @@ export const authController = {
                         email: user.email,
                         name: user.name,
                         profileImage: user.profileImage,
+                        role: user.role,
                         masterProfile: user.masterProfile,
                     },
                 });
@@ -271,8 +456,9 @@ export const authController = {
         }
     },
 
-    // POST /api/auth/login - Email/Password login
+    // POST /api/auth/login - Email/Password login (disabled for NIT-only system)
     login: async (req: Request, res: Response) => {
+        // Only allow admin login via email/password
         try {
             const { email, password } = req.body;
 
@@ -287,9 +473,17 @@ export const authController = {
                 return res.status(401).json({ success: false, error: 'Invalid email or password' });
             }
 
-            // Check if user has a password (local auth)
+            // Check if user is admin (only admins can use password login)
+            if (user.role !== 'admin') {
+                return res.status(403).json({
+                    success: false,
+                    error: 'Please use Google Sign-In with your NIT email address'
+                });
+            }
+
+            // Check if user has a password
             if (!user.password) {
-                return res.status(401).json({ success: false, error: 'This account uses Google login' });
+                return res.status(401).json({ success: false, error: 'This account uses Google login only' });
             }
 
             // Verify password
@@ -303,7 +497,7 @@ export const authController = {
 
             res.json({
                 success: true,
-                message: 'Login successful',
+                message: 'Admin login successful',
                 token,
                 user: {
                     id: user._id,
@@ -319,72 +513,21 @@ export const authController = {
         }
     },
 
-    // POST /api/auth/register - User registration
+    // POST /api/auth/register - User registration (disabled for NIT-only system)
     register: async (req: Request, res: Response) => {
-        try {
-            const { email, password, name } = req.body;
-
-            if (!email || !password || !name) {
-                return res.status(400).json({ success: false, error: 'Email, password, and name are required' });
-            }
-
-            if (password.length < 6) {
-                return res.status(400).json({ success: false, error: 'Password must be at least 6 characters' });
-            }
-
-            // Check if user exists
-            const existingUser = await User.findOne({ email: email.toLowerCase() });
-            if (existingUser) {
-                return res.status(409).json({ success: false, error: 'User already exists' });
-            }
-
-            // Hash password
-            const salt = await bcrypt.genSalt(10);
-            const hashedPassword = await bcrypt.hash(password, salt);
-
-            // Create new user
-            const user = new User({
-                email: email.toLowerCase(),
-                name,
-                password: hashedPassword,
-                authProvider: 'local',
-                role: 'user',
-                masterProfile: {
-                    personalInfo: {},
-                    education: [],
-                    skills: { languages: [], frameworks: [], tools: [], databases: [] },
-                },
-            });
-
-            await user.save();
-            console.log(`✅ New user registered: ${user.email}`);
-
-            // Generate token
-            const token = generateToken(user._id.toString(), user.email);
-
-            res.status(201).json({
-                success: true,
-                message: 'Registration successful',
-                token,
-                user: {
-                    id: user._id,
-                    email: user.email,
-                    name: user.name,
-                    role: user.role,
-                },
-            });
-        } catch (error: any) {
-            console.error('❌ Register error:', error);
-            res.status(500).json({ success: false, error: 'Registration failed' });
-        }
+        // Registration is disabled - users must use Google Sign-In with NIT email
+        return res.status(403).json({
+            success: false,
+            error: 'Registration is disabled. Please use Google Sign-In with your NIT email address.'
+        });
     },
 };
 
 // Seed admin user on server start
 export const seedAdminUser = async () => {
     try {
-        const adminEmail = 'ritesh@123';
-        const adminPassword = '12345678';
+        const adminEmail = 'admin@c2c.internal';
+        const adminPassword = process.env.ADMIN_PASSWORD || 'admin123456';
 
         const existingAdmin = await User.findOne({ email: adminEmail });
 
@@ -394,10 +537,12 @@ export const seedAdminUser = async () => {
 
             const adminUser = new User({
                 email: adminEmail,
-                name: 'Ritesh Admin',
+                name: 'C2C Admin',
                 password: hashedPassword,
                 authProvider: 'local',
                 role: 'admin',
+                isEmailVerified: true,
+                isActive: true,
                 masterProfile: {
                     personalInfo: {},
                     education: [],
@@ -406,7 +551,7 @@ export const seedAdminUser = async () => {
             });
 
             await adminUser.save();
-            console.log('🔐 Admin user created: ritesh@123 / 12345678');
+            console.log('🔐 Admin user created');
         } else {
             console.log('🔐 Admin user already exists');
         }

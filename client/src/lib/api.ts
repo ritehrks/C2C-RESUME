@@ -181,6 +181,21 @@ export const resumeApi = {
 
 // Auth API Functions
 export const authApi = {
+    // Google OAuth login (NIT-only)
+    googleAuth: async (credential: string) => {
+        const response = await fetch(`${API_URL}/api/auth/google`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ credential }),
+        });
+        const data = await response.json();
+        if (!response.ok) {
+            throw new Error(data.message || data.error || 'Google authentication failed');
+        }
+        return data;
+    },
+
+    // Admin login only (password-based)
     login: async (email: string, password: string) => {
         const response = await fetch(`${API_URL}/api/auth/login`, {
             method: 'POST',
