@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
-import { courseApi } from '@/lib/api';
+import { eventApi } from '@/lib/api';
 
 const categoryConfig: Record<string, { label: string; icon: string; color: string; bg: string }> = {
     'programming': { label: 'Programming', icon: 'code', color: 'text-purple-600 dark:text-purple-400', bg: 'bg-purple-50 dark:bg-purple-900/20' },
@@ -32,6 +32,7 @@ interface CourseDetail {
     endDate: string;
     maxStudents: number;
     enrolledCount: number;
+    enrolledStudents?: string[];
     isEnrolled: boolean;
     isPublished: boolean;
     createdBy?: { name: string; email: string };
@@ -56,9 +57,9 @@ export default function CourseDetailPage() {
         try {
             setIsLoading(true);
             const token = localStorage.getItem('token');
-            const data = await courseApi.getCourseById(courseId, token || undefined);
+            const data = await eventApi.getCourseById(courseId, token || undefined);
             if (data.success) {
-                setCourse(data.course);
+                setCourse(data.event);
             } else {
                 setError(data.error || 'Course not found');
             }
@@ -78,7 +79,7 @@ export default function CourseDetailPage() {
         try {
             setIsEnrolling(true);
             setError('');
-            const data = await courseApi.enrollInCourse(courseId, token);
+            const data = await eventApi.enrollInCourse(courseId, token);
             if (data.success) {
                 setSuccessMsg('Successfully enrolled! 🎉');
                 setCourse(prev => prev ? { ...prev, isEnrolled: true, enrolledCount: data.enrolledCount } : null);
@@ -98,7 +99,7 @@ export default function CourseDetailPage() {
         try {
             setIsEnrolling(true);
             setError('');
-            const data = await courseApi.unenrollFromCourse(courseId, token);
+            const data = await eventApi.unenrollFromCourse(courseId, token);
             if (data.success) {
                 setSuccessMsg('Successfully unenrolled');
                 setCourse(prev => prev ? { ...prev, isEnrolled: false, enrolledCount: data.enrolledCount } : null);
@@ -143,9 +144,9 @@ export default function CourseDetailPage() {
     if (!course) return null;
 
     const catConf = categoryConfig[course.category] || categoryConfig.other;
-    const spotsLeft = course.maxStudents - course.enrolledCount;
+    const spotsLeft = (course.maxStudents || 50) - (course.enrolledCount || 0);
     const isFull = spotsLeft <= 0 && !course.isEnrolled;
-    const progressPct = Math.min((course.enrolledCount / course.maxStudents) * 100, 100);
+    const progressPct = Math.min(((course.enrolledCount || 0) / (course.maxStudents || 50)) * 100, 100);
 
     return (
         <div className="p-4 sm:p-6 lg:p-8 max-w-4xl mx-auto space-y-6">
@@ -170,16 +171,20 @@ export default function CourseDetailPage() {
                     </span>
                     <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white">{course.title}</h1>
                     <div className="flex flex-wrap items-center gap-4 text-sm text-slate-600 dark:text-slate-300">
-                        <div className="flex items-center gap-1.5">
-                            <div className="w-8 h-8 rounded-full bg-app-primary/20 flex items-center justify-center">
-                                <span className="text-sm font-bold text-app-primary">{course.instructor.charAt(0).toUpperCase()}</span>
+                        {course.instructor && (
+                            <div className="flex items-center gap-1.5">
+                                <div className="w-8 h-8 rounded-full bg-app-primary/20 flex items-center justify-center">
+                                    <span className="text-sm font-bold text-app-primary">{course.instructor.charAt(0).toUpperCase()}</span>
+                                </div>
+                                <span className="font-medium">{course.instructor}</span>
                             </div>
-                            <span className="font-medium">{course.instructor}</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                            <span className="material-symbols-outlined text-[18px]">calendar_today</span>
-                            {formatDate(course.startDate)} — {formatDate(course.endDate)}
-                        </div>
+                        )}
+                        {course.startDate && course.endDate && (
+                            <div className="flex items-center gap-1">
+                                <span className="material-symbols-outlined text-[18px]">calendar_today</span>
+                                {formatDate(course.startDate)} — {formatDate(course.endDate)}
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
@@ -216,7 +221,7 @@ export default function CourseDetailPage() {
                             <span className="material-symbols-outlined text-app-primary">schedule</span>
                             Class Schedule
                         </h2>
-                        {course.schedule.length > 0 ? (
+                        {course.schedule && course.schedule.length > 0 ? (
                             <div className="space-y-3">
                                 {course.schedule.map((s, i) => (
                                     <div
@@ -249,25 +254,31 @@ export default function CourseDetailPage() {
                     <div className="bg-white dark:bg-[#151c2c] rounded-xl border border-slate-200 dark:border-slate-800 p-6 space-y-4 sticky top-24">
                         <h3 className="font-semibold text-slate-900 dark:text-white">Enrollment</h3>
 
-                        {/* Progress Bar */}
-                        <div>
-                            <div className="flex justify-between text-xs text-slate-500 dark:text-slate-400 mb-1.5">
-                                <span>{course.enrolledCount} enrolled</span>
-                                <span>{course.maxStudents} max</span>
+                        {/* Enrolled Count */}
+                        <div className="flex items-center gap-3 p-3 rounded-lg bg-app-primary/5 dark:bg-app-primary/10 border border-app-primary/20">
+                            <span className="material-symbols-outlined text-app-primary text-[28px]">group</span>
+                            <div>
+                                <p className="text-2xl font-bold text-slate-900 dark:text-white">{course.enrolledCount || 0}</p>
+                                <p className="text-xs text-slate-500 dark:text-slate-400">enrolled</p>
                             </div>
-                            <div className="h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                                <div
-                                    className={`h-full rounded-full transition-all duration-500 ${progressPct > 80 ? 'bg-red-500' : progressPct > 50 ? 'bg-amber-500' : 'bg-app-primary'
-                                        }`}
-                                    style={{ width: `${progressPct}%` }}
-                                />
-                            </div>
-                            {spotsLeft > 0 && (
-                                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                                    {spotsLeft} spot{spotsLeft !== 1 ? 's' : ''} remaining
-                                </p>
-                            )}
                         </div>
+
+                        {/* Enrolled Students List */}
+                        {course.enrolledStudents && course.enrolledStudents.length > 0 && (
+                            <div>
+                                <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-2">Participants</p>
+                                <div className="space-y-1.5 max-h-48 overflow-y-auto">
+                                    {course.enrolledStudents.map((email: string, i: number) => (
+                                        <div key={i} className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800/50 text-sm">
+                                            <div className="w-6 h-6 rounded-full bg-app-primary/10 flex items-center justify-center flex-shrink-0">
+                                                <span className="text-[10px] font-bold text-app-primary">{email.charAt(0).toUpperCase()}</span>
+                                            </div>
+                                            <span className="text-slate-700 dark:text-slate-300 truncate">{email}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
 
                         {/* Enroll / Unenroll Button */}
                         {course.isEnrolled ? (
@@ -308,20 +319,24 @@ export default function CourseDetailPage() {
 
                         {/* Quick Stats */}
                         <div className="pt-4 border-t border-slate-100 dark:border-slate-800 space-y-3 text-sm">
-                            <div className="flex items-center gap-3 text-slate-600 dark:text-slate-400">
-                                <span className="material-symbols-outlined text-[20px]">calendar_today</span>
-                                <div>
-                                    <p className="font-medium text-slate-900 dark:text-white">Duration</p>
-                                    <p className="text-xs">{formatDate(course.startDate)} — {formatDate(course.endDate)}</p>
+                            {course.startDate && course.endDate && (
+                                <div className="flex items-center gap-3 text-slate-600 dark:text-slate-400">
+                                    <span className="material-symbols-outlined text-[20px]">calendar_today</span>
+                                    <div>
+                                        <p className="font-medium text-slate-900 dark:text-white">Duration</p>
+                                        <p className="text-xs">{formatDate(course.startDate)} — {formatDate(course.endDate)}</p>
+                                    </div>
                                 </div>
-                            </div>
-                            <div className="flex items-center gap-3 text-slate-600 dark:text-slate-400">
-                                <span className="material-symbols-outlined text-[20px]">event_repeat</span>
-                                <div>
-                                    <p className="font-medium text-slate-900 dark:text-white">Classes per week</p>
-                                    <p className="text-xs">{course.schedule.length} session{course.schedule.length !== 1 ? 's' : ''}</p>
+                            )}
+                            {course.schedule && (
+                                <div className="flex items-center gap-3 text-slate-600 dark:text-slate-400">
+                                    <span className="material-symbols-outlined text-[20px]">event_repeat</span>
+                                    <div>
+                                        <p className="font-medium text-slate-900 dark:text-white">Classes per week</p>
+                                        <p className="text-xs">{course.schedule.length} session{course.schedule.length !== 1 ? 's' : ''}</p>
+                                    </div>
                                 </div>
-                            </div>
+                            )}
                             {course.createdBy && (
                                 <div className="flex items-center gap-3 text-slate-600 dark:text-slate-400">
                                     <span className="material-symbols-outlined text-[20px]">admin_panel_settings</span>

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import AdminSidebar from '@/components/AdminSidebar';
-import { courseApi } from '@/lib/api';
+import { eventApi } from '@/lib/api';
 
 const categoryOptions = [
     { value: 'programming', label: 'Programming' },
@@ -69,9 +69,9 @@ export default function AdminCoursesPage() {
     const fetchCourses = async (token: string) => {
         try {
             setIsLoading(true);
-            const data = await courseApi.getAllCourses(token);
+            const data = await eventApi.getAllCourses(token);
             if (data.success) {
-                setCourses(data.courses);
+                setCourses(data.events);
             } else {
                 setError(data.error || 'Failed to load courses');
             }
@@ -93,9 +93,9 @@ export default function AdminCoursesPage() {
 
             let data;
             if (editingId) {
-                data = await courseApi.updateCourse(token, editingId, form);
+                data = await eventApi.updateCourse(token, editingId, form);
             } else {
-                data = await courseApi.createCourse(token, form);
+                data = await eventApi.createCourse(token, { ...form, isPublished: true });
             }
 
             if (data.success) {
@@ -131,7 +131,7 @@ export default function AdminCoursesPage() {
         const token = localStorage.getItem('token');
         if (!token) return;
         try {
-            const data = await courseApi.deleteCourse(token, id);
+            const data = await eventApi.deleteCourse(token, id);
             if (data.success) {
                 setDeleteConfirmId(null);
                 fetchCourses(token);
@@ -147,7 +147,7 @@ export default function AdminCoursesPage() {
         const token = localStorage.getItem('token');
         if (!token) return;
         try {
-            const data = await courseApi.togglePublish(token, id);
+            const data = await eventApi.togglePublish(token, id);
             if (data.success) {
                 setCourses(prev => prev.map(c =>
                     c._id === id ? { ...c, isPublished: data.isPublished } : c
@@ -419,8 +419,8 @@ export default function AdminCoursesPage() {
                                                 <div className="flex items-center gap-2 mb-1">
                                                     <h4 className="text-base font-semibold text-[#0d121b] dark:text-white truncate">{course.title}</h4>
                                                     <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${course.isPublished
-                                                            ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                                                            : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
+                                                        ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                                                        : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
                                                         }`}>
                                                         {course.isPublished ? 'Published' : 'Draft'}
                                                     </span>
@@ -449,8 +449,8 @@ export default function AdminCoursesPage() {
                                                 <button
                                                     onClick={() => handleTogglePublish(course._id)}
                                                     className={`p-2 rounded-lg transition-colors ${course.isPublished
-                                                            ? 'text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20'
-                                                            : 'text-[#4c669a] hover:bg-gray-100 dark:hover:bg-gray-800'
+                                                        ? 'text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20'
+                                                        : 'text-[#4c669a] hover:bg-gray-100 dark:hover:bg-gray-800'
                                                         }`}
                                                     title={course.isPublished ? 'Unpublish' : 'Publish'}
                                                 >

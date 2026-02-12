@@ -2,10 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { contestApi } from '@/lib/api';
+import { eventApi } from '@/lib/api';
 
 // Event type config for icon + colors
 const eventTypeConfig: Record<string, { icon: string; bgLight: string; bgDark: string; text: string; textDark: string }> = {
+    contest: { icon: 'emoji_events', bgLight: 'bg-amber-50', bgDark: 'dark:bg-amber-900/20', text: 'text-amber-600', textDark: 'dark:text-amber-400' },
+    course: { icon: 'menu_book', bgLight: 'bg-indigo-50', bgDark: 'dark:bg-indigo-900/20', text: 'text-indigo-600', textDark: 'dark:text-indigo-400' },
     coding_contest: { icon: 'code', bgLight: 'bg-purple-50', bgDark: 'dark:bg-purple-900/20', text: 'text-purple-600', textDark: 'dark:text-purple-400' },
     workshop: { icon: 'terminal', bgLight: 'bg-blue-50', bgDark: 'dark:bg-blue-900/20', text: 'text-primary', textDark: 'dark:text-blue-400' },
     hackathon: { icon: 'rocket_launch', bgLight: 'bg-orange-50', bgDark: 'dark:bg-orange-900/20', text: 'text-orange-600', textDark: 'dark:text-orange-400' },
@@ -15,6 +17,8 @@ const eventTypeConfig: Record<string, { icon: string; bgLight: string; bgDark: s
 };
 
 const typeLabels: Record<string, string> = {
+    contest: 'Contest',
+    course: 'Course',
     coding_contest: 'Contest',
     workshop: 'Workshop',
     hackathon: 'Hackathon',
@@ -65,7 +69,7 @@ export default function MyAttendancePage() {
     const fetchAttendance = async (token: string) => {
         try {
             setIsLoading(true);
-            const data = await contestApi.getMyAttendance(token);
+            const data = await eventApi.getMyAttendance(token);
             if (data.success) {
                 setAttendance(data.attendance);
                 setStats(data.stats);

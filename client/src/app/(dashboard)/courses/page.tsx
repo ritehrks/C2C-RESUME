@@ -3,27 +3,29 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { courseApi } from '@/lib/api';
+import { eventApi } from '@/lib/api';
 
 const categoryConfig: Record<string, { label: string; icon: string; color: string; bg: string }> = {
-    'programming': { label: 'Programming', icon: 'code', color: 'text-purple-600 dark:text-purple-400', bg: 'bg-purple-50 dark:bg-purple-900/20' },
-    'web-dev': { label: 'Web Dev', icon: 'language', color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-50 dark:bg-blue-900/20' },
-    'data-science': { label: 'Data Science', icon: 'bar_chart', color: 'text-green-600 dark:text-green-400', bg: 'bg-green-50 dark:bg-green-900/20' },
-    'ai-ml': { label: 'AI / ML', icon: 'psychology', color: 'text-pink-600 dark:text-pink-400', bg: 'bg-pink-50 dark:bg-pink-900/20' },
-    'design': { label: 'Design', icon: 'palette', color: 'text-orange-600 dark:text-orange-400', bg: 'bg-orange-50 dark:bg-orange-900/20' },
-    'dsa': { label: 'DSA', icon: 'data_object', color: 'text-indigo-600 dark:text-indigo-400', bg: 'bg-indigo-50 dark:bg-indigo-900/20' },
-    'other': { label: 'Other', icon: 'school', color: 'text-slate-600 dark:text-slate-400', bg: 'bg-slate-50 dark:bg-slate-800' },
+    'contest': { label: 'Contest', icon: 'emoji_events', color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-50 dark:bg-amber-900/20' },
+    'course': { label: 'Course', icon: 'menu_book', color: 'text-indigo-600 dark:text-indigo-400', bg: 'bg-indigo-50 dark:bg-indigo-900/20' },
+    'coding_contest': { label: 'Coding Contest', icon: 'code', color: 'text-purple-600 dark:text-purple-400', bg: 'bg-purple-50 dark:bg-purple-900/20' },
+    'workshop': { label: 'Workshop', icon: 'construction', color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-50 dark:bg-blue-900/20' },
+    'hackathon': { label: 'Hackathon', icon: 'rocket_launch', color: 'text-orange-600 dark:text-orange-400', bg: 'bg-orange-50 dark:bg-orange-900/20' },
+    'meeting': { label: 'Meeting', icon: 'groups', color: 'text-green-600 dark:text-green-400', bg: 'bg-green-50 dark:bg-green-900/20' },
+    'seminar': { label: 'Seminar', icon: 'school', color: 'text-pink-600 dark:text-pink-400', bg: 'bg-pink-50 dark:bg-pink-900/20' },
+    'other': { label: 'Other', icon: 'event', color: 'text-slate-600 dark:text-slate-400', bg: 'bg-slate-50 dark:bg-slate-800' },
 };
 
 const categories = [
-    { key: 'all', label: 'All Courses', icon: 'apps' },
-    { key: 'programming', label: 'Programming', icon: 'code' },
-    { key: 'web-dev', label: 'Web Dev', icon: 'language' },
-    { key: 'data-science', label: 'Data Science', icon: 'bar_chart' },
-    { key: 'ai-ml', label: 'AI / ML', icon: 'psychology' },
-    { key: 'design', label: 'Design', icon: 'palette' },
-    { key: 'dsa', label: 'DSA', icon: 'data_object' },
-    { key: 'other', label: 'Other', icon: 'school' },
+    { key: 'all', label: 'All Events', icon: 'apps' },
+    { key: 'contest', label: 'Contest', icon: 'emoji_events' },
+    { key: 'course', label: 'Course', icon: 'menu_book' },
+    { key: 'coding_contest', label: 'Coding Contest', icon: 'code' },
+    { key: 'workshop', label: 'Workshop', icon: 'construction' },
+    { key: 'hackathon', label: 'Hackathon', icon: 'rocket_launch' },
+    { key: 'meeting', label: 'Meeting', icon: 'groups' },
+    { key: 'seminar', label: 'Seminar', icon: 'school' },
+    { key: 'other', label: 'Other', icon: 'event' },
 ];
 
 interface CourseItem {
@@ -62,9 +64,9 @@ export default function ExploreCourses() {
     const fetchCourses = async () => {
         try {
             setIsLoading(true);
-            const data = await courseApi.getPublishedCourses(activeCategory, searchDebounce);
+            const data = await eventApi.getPublishedCourses(activeCategory, searchDebounce);
             if (data.success) {
-                setCourses(data.courses);
+                setCourses(data.events);
             } else {
                 setError(data.error || 'Failed to load courses');
             }
@@ -87,10 +89,10 @@ export default function ExploreCourses() {
             <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <h1 className="text-2xl lg:text-3xl font-bold text-slate-900 dark:text-white tracking-tight">
-                        Explore Courses
+                        Explore Events
                     </h1>
                     <p className="text-slate-500 dark:text-slate-400 mt-1">
-                        Browse and enroll in courses offered by your institution.
+                        Browse and enroll in events offered by your institution.
                     </p>
                 </div>
                 <Link
@@ -113,7 +115,7 @@ export default function ExploreCourses() {
                         type="text"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder="Search courses, instructors..."
+                        placeholder="Search events, instructors..."
                         className="block w-full pl-10 pr-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-[#151c2c] text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-app-primary/50 focus:border-app-primary text-sm transition-all"
                     />
                 </div>
@@ -125,8 +127,8 @@ export default function ExploreCourses() {
                             key={cat.key}
                             onClick={() => setActiveCategory(cat.key)}
                             className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all ${activeCategory === cat.key
-                                    ? 'bg-app-primary text-white shadow-md shadow-app-primary/30'
-                                    : 'bg-white dark:bg-[#151c2c] text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700 hover:border-app-primary/50 hover:text-app-primary'
+                                ? 'bg-app-primary text-white shadow-md shadow-app-primary/30'
+                                : 'bg-white dark:bg-[#151c2c] text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700 hover:border-app-primary/50 hover:text-app-primary'
                                 }`}
                         >
                             <span className="material-symbols-outlined text-[18px]">{cat.icon}</span>
@@ -147,24 +149,24 @@ export default function ExploreCourses() {
                 <div className="flex items-center justify-center py-20">
                     <div className="flex flex-col items-center gap-4">
                         <span className="material-symbols-outlined animate-spin text-4xl text-primary">progress_activity</span>
-                        <p className="text-slate-500 dark:text-slate-400">Loading courses...</p>
+                        <p className="text-slate-500 dark:text-slate-400">Loading events...</p>
                     </div>
                 </div>
             ) : courses.length === 0 ? (
                 <div className="bg-white dark:bg-[#151c2c] rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm p-12 text-center">
-                    <span className="material-symbols-outlined text-6xl text-slate-300 dark:text-slate-600 mb-4 block">school</span>
-                    <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-2">No Courses Available</h3>
+                    <span className="material-symbols-outlined text-6xl text-slate-300 dark:text-slate-600 mb-4 block">event</span>
+                    <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-2">No Events Available</h3>
                     <p className="text-slate-500 dark:text-slate-400 max-w-md mx-auto">
                         {searchQuery || activeCategory !== 'all'
-                            ? 'No courses match your filter. Try a different category or search term.'
-                            : 'New courses will appear here once they are published.'}
+                            ? 'No events match your filter. Try a different category or search term.'
+                            : 'New events will appear here once they are published.'}
                     </p>
                 </div>
             ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                     {courses.map((course) => {
                         const catConf = getCatConfig(course.category);
-                        const spotsLeft = course.maxStudents - course.enrolledCount;
+                        const spotsLeft = (course.maxStudents || 50) - (course.enrolledCount || 0);
                         const isFull = spotsLeft <= 0;
 
 
@@ -207,15 +209,17 @@ export default function ExploreCourses() {
                                     </div>
 
                                     {/* Instructor */}
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-7 h-7 rounded-full bg-app-primary/10 flex items-center justify-center">
-                                            <span className="text-xs font-bold text-app-primary">{course.instructor.charAt(0).toUpperCase()}</span>
+                                    {course.instructor && (
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-7 h-7 rounded-full bg-app-primary/10 flex items-center justify-center">
+                                                <span className="text-xs font-bold text-app-primary">{course.instructor.charAt(0).toUpperCase()}</span>
+                                            </div>
+                                            <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{course.instructor}</span>
                                         </div>
-                                        <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{course.instructor}</span>
-                                    </div>
+                                    )}
 
                                     {/* Schedule preview */}
-                                    {course.schedule.length > 0 && (
+                                    {course.schedule && course.schedule.length > 0 && (
                                         <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
                                             <span className="material-symbols-outlined text-[16px]">schedule</span>
                                             {course.schedule.slice(0, 2).map(s => s.day).join(', ')}
@@ -227,11 +231,11 @@ export default function ExploreCourses() {
                                     <div className="pt-3 border-t border-slate-100 dark:border-slate-800/50 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
                                         <div className="flex items-center gap-1">
                                             <span className="material-symbols-outlined text-[16px]">group</span>
-                                            <span>{course.enrolledCount}/{course.maxStudents} enrolled</span>
+                                            <span>{course.enrolledCount || 0}/{course.maxStudents || '∞'} enrolled</span>
                                         </div>
                                         <div className="flex items-center gap-1">
                                             <span className="material-symbols-outlined text-[16px]">calendar_today</span>
-                                            <span>{formatDate(course.startDate)}</span>
+                                            <span>{course.startDate ? formatDate(course.startDate) : 'TBD'}</span>
                                         </div>
                                     </div>
                                 </div>

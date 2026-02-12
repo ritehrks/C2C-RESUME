@@ -1,4 +1,4 @@
-// API Service for Resume operations
+﻿// API Service for Resume operations
 // Centralized API calls to the backend
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
@@ -281,30 +281,30 @@ export const statsApi = {
     },
 };
 
-// Contest API for attendance system
-export const contestApi = {
-    // ==================== ADMIN: Contest Management ====================
+// Unified Event API (replaces contestApi + courseApi)
+export const eventApi = {
+    // ==================== ADMIN: Event Management ====================
 
     getAllContests: async (token: string, filters?: { status?: string; type?: string }) => {
         const params = new URLSearchParams();
         if (filters?.status) params.append('status', filters.status);
         if (filters?.type) params.append('type', filters.type);
 
-        const response = await fetch(`${API_URL}/api/contests?${params}`, {
+        const response = await fetch(`${API_URL}/api/events?${params}`, {
             headers: { Authorization: `Bearer ${token}` },
         });
         return response.json();
     },
 
     getContest: async (token: string, id: string) => {
-        const response = await fetch(`${API_URL}/api/contests/${id}`, {
+        const response = await fetch(`${API_URL}/api/events/${id}`, {
             headers: { Authorization: `Bearer ${token}` },
         });
         return response.json();
     },
 
     createContest: async (token: string, contestData: any) => {
-        const response = await fetch(`${API_URL}/api/contests`, {
+        const response = await fetch(`${API_URL}/api/events`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -316,7 +316,7 @@ export const contestApi = {
     },
 
     updateContest: async (token: string, id: string, contestData: any) => {
-        const response = await fetch(`${API_URL}/api/contests/${id}`, {
+        const response = await fetch(`${API_URL}/api/events/${id}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -328,7 +328,7 @@ export const contestApi = {
     },
 
     deleteContest: async (token: string, id: string) => {
-        const response = await fetch(`${API_URL}/api/contests/${id}`, {
+        const response = await fetch(`${API_URL}/api/events/${id}`, {
             method: 'DELETE',
             headers: { Authorization: `Bearer ${token}` },
         });
@@ -336,7 +336,7 @@ export const contestApi = {
     },
 
     toggleContestStatus: async (token: string, id: string) => {
-        const response = await fetch(`${API_URL}/api/contests/${id}/toggle`, {
+        const response = await fetch(`${API_URL}/api/events/${id}/toggle`, {
             method: 'PATCH',
             headers: { Authorization: `Bearer ${token}` },
         });
@@ -344,7 +344,7 @@ export const contestApi = {
     },
 
     regenerateQRToken: async (token: string, id: string) => {
-        const response = await fetch(`${API_URL}/api/contests/${id}/regenerate-qr`, {
+        const response = await fetch(`${API_URL}/api/events/${id}/regenerate-qr`, {
             method: 'POST',
             headers: { Authorization: `Bearer ${token}` },
         });
@@ -358,19 +358,18 @@ export const contestApi = {
         if (sort) params.append('sort', sort);
         if (order) params.append('order', order);
 
-        const response = await fetch(`${API_URL}/api/contests/${id}/attendance?${params}`, {
+        const response = await fetch(`${API_URL}/api/events/${id}/attendance?${params}`, {
             headers: { Authorization: `Bearer ${token}` },
         });
         return response.json();
     },
 
     exportAttendanceCSV: (token: string, id: string) => {
-        // Returns URL for downloading CSV
-        return `${API_URL}/api/contests/${id}/attendance/export?token=${encodeURIComponent(token)}`;
+        return `${API_URL}/api/events/${id}/attendance/export?token=${encodeURIComponent(token)}`;
     },
 
     deleteAttendanceRecord: async (token: string, contestId: string, attendanceId: string) => {
-        const response = await fetch(`${API_URL}/api/contests/${contestId}/attendance/${attendanceId}`, {
+        const response = await fetch(`${API_URL}/api/events/${contestId}/attendance/${attendanceId}`, {
             method: 'DELETE',
             headers: { Authorization: `Bearer ${token}` },
         });
@@ -380,7 +379,7 @@ export const contestApi = {
     // ==================== PUBLIC: Attendance Marking ====================
 
     getContestByToken: async (qrToken: string) => {
-        const response = await fetch(`${API_URL}/api/contests/public/${qrToken}`);
+        const response = await fetch(`${API_URL}/api/events/public/token/${qrToken}`);
         return response.json();
     },
 
@@ -394,7 +393,7 @@ export const contestApi = {
         longitude?: number;
         locationAccuracy?: number;
     }) => {
-        const response = await fetch(`${API_URL}/api/contests/public/${qrToken}/mark`, {
+        const response = await fetch(`${API_URL}/api/events/public/token/${qrToken}/mark`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(attendanceData),
@@ -407,42 +406,40 @@ export const contestApi = {
         if (email) params.append('email', email);
         if (studentId) params.append('studentId', studentId);
 
-        const response = await fetch(`${API_URL}/api/contests/public/${qrToken}/check?${params}`);
+        const response = await fetch(`${API_URL}/api/events/public/token/${qrToken}/check?${params}`);
         return response.json();
     },
 
     // ==================== STUDENT: Attendance History ====================
 
     getMyAttendance: async (token: string) => {
-        const response = await fetch(`${API_URL}/api/contests/my-attendance`, {
+        const response = await fetch(`${API_URL}/api/events/my-attendance`, {
             headers: { Authorization: `Bearer ${token}` },
         });
         return response.json();
     },
-};
 
-// ==================== COURSE API ====================
+    // ==================== PUBLIC: Browse Events ====================
 
-export const courseApi = {
-    // Public
     getPublishedCourses: async (category?: string, search?: string) => {
         const params = new URLSearchParams();
         if (category && category !== 'all') params.append('category', category);
         if (search) params.append('search', search);
-        const response = await fetch(`${API_URL}/api/courses/public?${params}`);
+        const response = await fetch(`${API_URL}/api/events/public?${params}`);
         return response.json();
     },
 
     getCourseById: async (id: string, token?: string) => {
         const headers: any = {};
         if (token) headers.Authorization = `Bearer ${token}`;
-        const response = await fetch(`${API_URL}/api/courses/public/${id}`, { headers });
+        const response = await fetch(`${API_URL}/api/events/public/${id}`, { headers });
         return response.json();
     },
 
-    // Student
+    // ==================== STUDENT: Enrollment ====================
+
     enrollInCourse: async (id: string, token: string) => {
-        const response = await fetch(`${API_URL}/api/courses/${id}/enroll`, {
+        const response = await fetch(`${API_URL}/api/events/${id}/enroll`, {
             method: 'POST',
             headers: { Authorization: `Bearer ${token}` },
         });
@@ -450,7 +447,7 @@ export const courseApi = {
     },
 
     unenrollFromCourse: async (id: string, token: string) => {
-        const response = await fetch(`${API_URL}/api/courses/${id}/enroll`, {
+        const response = await fetch(`${API_URL}/api/events/${id}/enroll`, {
             method: 'DELETE',
             headers: { Authorization: `Bearer ${token}` },
         });
@@ -458,22 +455,23 @@ export const courseApi = {
     },
 
     getMyEnrollments: async (token: string) => {
-        const response = await fetch(`${API_URL}/api/courses/my-enrollments`, {
+        const response = await fetch(`${API_URL}/api/events/my-enrollments`, {
             headers: { Authorization: `Bearer ${token}` },
         });
         return response.json();
     },
 
-    // Admin
+    // ==================== ADMIN: Course-like Management ====================
+
     getAllCourses: async (token: string) => {
-        const response = await fetch(`${API_URL}/api/courses`, {
+        const response = await fetch(`${API_URL}/api/events`, {
             headers: { Authorization: `Bearer ${token}` },
         });
         return response.json();
     },
 
     createCourse: async (token: string, courseData: any) => {
-        const response = await fetch(`${API_URL}/api/courses`, {
+        const response = await fetch(`${API_URL}/api/events`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -485,7 +483,7 @@ export const courseApi = {
     },
 
     updateCourse: async (token: string, id: string, courseData: any) => {
-        const response = await fetch(`${API_URL}/api/courses/${id}`, {
+        const response = await fetch(`${API_URL}/api/events/${id}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -497,7 +495,7 @@ export const courseApi = {
     },
 
     deleteCourse: async (token: string, id: string) => {
-        const response = await fetch(`${API_URL}/api/courses/${id}`, {
+        const response = await fetch(`${API_URL}/api/events/${id}`, {
             method: 'DELETE',
             headers: { Authorization: `Bearer ${token}` },
         });
@@ -505,7 +503,7 @@ export const courseApi = {
     },
 
     togglePublish: async (token: string, id: string) => {
-        const response = await fetch(`${API_URL}/api/courses/${id}/toggle`, {
+        const response = await fetch(`${API_URL}/api/events/${id}/publish`, {
             method: 'PATCH',
             headers: { Authorization: `Bearer ${token}` },
         });

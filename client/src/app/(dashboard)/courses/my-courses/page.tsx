@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { courseApi } from '@/lib/api';
+import { eventApi } from '@/lib/api';
 
 const categoryConfig: Record<string, { label: string; icon: string; color: string; bg: string }> = {
     'programming': { label: 'Programming', icon: 'code', color: 'text-purple-600 dark:text-purple-400', bg: 'bg-purple-50 dark:bg-purple-900/20' },
@@ -41,9 +41,9 @@ export default function MyEnrollmentsPage() {
     const fetchEnrollments = async (token: string) => {
         try {
             setIsLoading(true);
-            const data = await courseApi.getMyEnrollments(token);
+            const data = await eventApi.getMyEnrollments(token);
             if (data.success) {
-                setCourses(data.courses);
+                setCourses(data.events);
             } else {
                 setError(data.error || 'Failed to load enrollments');
             }
@@ -137,18 +137,20 @@ export default function MyEnrollmentsPage() {
                                     <h3 className="text-base font-semibold text-slate-900 dark:text-white group-hover:text-app-primary transition-colors line-clamp-1">
                                         {course.title}
                                     </h3>
-                                    <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
-                                        <span className="material-symbols-outlined text-[14px]">person</span>
-                                        {course.instructor}
-                                    </div>
-                                    {course.schedule.length > 0 && (
+                                    {course.instructor && (
+                                        <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+                                            <span className="material-symbols-outlined text-[14px]">person</span>
+                                            {course.instructor}
+                                        </div>
+                                    )}
+                                    {course.schedule && course.schedule.length > 0 && (
                                         <div className="flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400">
                                             <span className="material-symbols-outlined text-[14px]">schedule</span>
                                             {course.schedule.map(s => s.day).join(', ')}
                                         </div>
                                     )}
                                     <div className="pt-2 border-t border-slate-100 dark:border-slate-800/50 text-xs text-slate-500 dark:text-slate-400">
-                                        {formatDate(course.startDate)} — {formatDate(course.endDate)}
+                                        {course.startDate && course.endDate ? `${formatDate(course.startDate)} — ${formatDate(course.endDate)}` : 'Date TBD'}
                                     </div>
                                 </div>
                             </Link>

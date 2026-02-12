@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { GoogleLogin, GoogleOAuthProvider } from '@react-oauth/google';
-import { contestApi } from '@/lib/api';
+import { eventApi } from '@/lib/api';
 
 const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '';
 
@@ -84,10 +84,10 @@ function AttendancePageContent() {
 
     const fetchContest = async () => {
         try {
-            const data = await contestApi.getContestByToken(token);
+            const data = await eventApi.getContestByToken(token);
 
             if (data.success) {
-                setContest(data.contest);
+                setContest(data.event);
                 setStep('login');
             } else {
                 setError(data.error || 'Contest not found');
@@ -122,7 +122,7 @@ function AttendancePageContent() {
             }
 
             // Check if already marked
-            const checkResult = await contestApi.checkAttendance(token, email);
+            const checkResult = await eventApi.checkAttendance(token, email);
             if (checkResult.alreadyMarked) {
                 setSuccess(`You have already marked attendance at ${new Date(checkResult.attendance.markedAt).toLocaleString()}`);
                 setStep('success');
@@ -219,7 +219,7 @@ function AttendancePageContent() {
                 locationAccuracy: location?.accuracy,
             };
 
-            const result = await contestApi.markAttendance(token, attendanceData);
+            const result = await eventApi.markAttendance(token, attendanceData);
 
             if (result.success) {
                 setSuccess(result.message);

@@ -30,7 +30,7 @@ export default function AdminSidebar() {
 
     const navItems = [
         { href: '/admin', icon: 'dashboard', label: 'Overview', exact: true },
-        { href: '/admin/contests', icon: 'event', label: 'Contests & Events' },
+        { href: '/admin/contests', icon: 'event', label: 'Events & Attendance' },
         { href: '/admin/courses', icon: 'menu_book', label: 'Manage Courses' },
         { href: '/admin/users', icon: 'group', label: 'User Management' },
         { href: '/admin/analytics', icon: 'analytics', label: 'Analytics' },

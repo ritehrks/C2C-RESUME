@@ -41,10 +41,10 @@ export default function DashboardLayout({
         { name: 'My Resumes', href: '/dashboard', icon: 'folder_open', active: pathname === '/dashboard' },
         { name: 'ATS Analyzer', href: '/analyzer', icon: 'analytics', active: pathname === '/analyzer' },
         { name: 'Profile', href: '/profile', icon: 'person', active: pathname === '/profile' },
-        { name: 'Explore Courses', href: '/courses', icon: 'school', active: pathname.startsWith('/courses') },
+        { name: 'Events & Courses', href: '/courses', icon: 'school', active: pathname.startsWith('/courses') },
         { name: 'My Attendance', href: '/attendance', icon: 'event_available', active: pathname === '/attendance' },
         ...(displayRole === 'Admin' ? [
-            { name: 'QR Attendance', href: '/admin/contests', icon: 'qr_code_scanner', active: pathname.startsWith('/admin/contests') },
+            { name: 'Manage Events', href: '/admin/contests', icon: 'qr_code_scanner', active: pathname.startsWith('/admin/contests') },
             { name: 'Manage Courses', href: '/admin/courses', icon: 'menu_book', active: pathname === '/admin/courses' },
         ] : []),
     ];

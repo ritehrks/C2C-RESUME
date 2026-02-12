@@ -3,11 +3,13 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import AdminSidebar from '@/components/AdminSidebar';
-import { contestApi } from '@/lib/api';
+import { eventApi } from '@/lib/api';
 import { QRCodeSVG } from 'qrcode.react';
 
 // Contest type configuration
 const contestTypes = [
+    { value: 'contest', label: 'Contest', icon: 'emoji_events', color: 'bg-amber-500', gradient: 'from-amber-500/10 to-yellow-500/10', textColor: 'text-amber-600' },
+    { value: 'course', label: 'Course', icon: 'menu_book', color: 'bg-indigo-500', gradient: 'from-indigo-500/10 to-blue-500/10', textColor: 'text-indigo-600' },
     { value: 'coding_contest', label: 'Coding Contest', icon: 'code', color: 'bg-purple-500', gradient: 'from-purple-500/10 to-indigo-500/10', textColor: 'text-purple-600' },
     { value: 'workshop', label: 'Workshop', icon: 'school', color: 'bg-blue-500', gradient: 'from-blue-500/10 to-cyan-500/10', textColor: 'text-blue-600' },
     { value: 'hackathon', label: 'Hackathon', icon: 'rocket_launch', color: 'bg-orange-500', gradient: 'from-orange-500/10 to-red-500/10', textColor: 'text-orange-600' },
@@ -62,6 +64,7 @@ export default function AdminContestsPage() {
         startTime: '',
         endTime: '',
         maxParticipants: '',
+        link: '',
         requiresGPS: false,
         venueLatitude: '',
         venueLongitude: '',
@@ -92,13 +95,13 @@ export default function AdminContestsPage() {
     const fetchContests = async (authToken: string) => {
         try {
             setIsLoading(true);
-            const data = await contestApi.getAllContests(authToken, {
+            const data = await eventApi.getAllContests(authToken, {
                 status: filter.status !== 'all' ? filter.status : undefined,
                 type: filter.type !== 'all' ? filter.type : undefined,
             });
 
             if (data.success) {
-                setContests(data.contests);
+                setContests(data.events);
             }
         } catch (error) {
             console.error('Failed to fetch contests:', error);
@@ -124,6 +127,7 @@ export default function AdminContestsPage() {
             startTime: '',
             endTime: '',
             maxParticipants: '',
+            link: '',
             requiresGPS: false,
             venueLatitude: '',
             venueLongitude: '',
@@ -149,6 +153,7 @@ export default function AdminContestsPage() {
             startTime: contest.startTime,
             endTime: contest.endTime,
             maxParticipants: '',
+            link: (contest as any).link || '',
             requiresGPS: contest.requiresGPS,
             venueLatitude: contest.venueLatitude?.toString() || '',
             venueLongitude: contest.venueLongitude?.toString() || '',
@@ -165,6 +170,9 @@ export default function AdminContestsPage() {
         try {
             const payload = {
                 ...formData,
+                category: formData.type,
+                link: formData.link || undefined,
+                isPublished: true,
                 maxParticipants: formData.maxParticipants ? parseInt(formData.maxParticipants) : undefined,
                 venueLatitude: formData.venueLatitude ? parseFloat(formData.venueLatitude) : undefined,
                 venueLongitude: formData.venueLongitude ? parseFloat(formData.venueLongitude) : undefined,
@@ -173,9 +181,9 @@ export default function AdminContestsPage() {
 
             let result;
             if (editingContest) {
-                result = await contestApi.updateContest(token, editingContest._id, payload);
+                result = await eventApi.updateContest(token, editingContest._id, payload);
             } else {
-                result = await contestApi.createContest(token, payload);
+                result = await eventApi.createContest(token, payload);
             }
 
             if (result.success) {
@@ -198,7 +206,7 @@ export default function AdminContestsPage() {
         }
 
         try {
-            const result = await contestApi.deleteContest(token, contest._id);
+            const result = await eventApi.deleteContest(token, contest._id);
             if (result.success) {
                 fetchContests(token);
             }
@@ -209,7 +217,7 @@ export default function AdminContestsPage() {
 
     const handleToggleStatus = async (contest: Contest) => {
         try {
-            const result = await contestApi.toggleContestStatus(token, contest._id);
+            const result = await eventApi.toggleContestStatus(token, contest._id);
             if (result.success) {
                 fetchContests(token);
             }
@@ -602,6 +610,21 @@ export default function AdminContestsPage() {
                                     className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#2d3748] text-[#0d121b] dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#1152d4]/50 resize-none h-20"
                                     placeholder="Brief description of the event..."
                                 />
+                            </div>
+
+                            {/* External Link */}
+                            <div>
+                                <label className="block text-sm font-medium text-[#0d121b] dark:text-white mb-1.5">
+                                    External Link <span className="text-[#4c669a] text-xs">(Optional)</span>
+                                </label>
+                                <input
+                                    type="url"
+                                    value={formData.link}
+                                    onChange={(e) => setFormData(prev => ({ ...prev, link: e.target.value }))}
+                                    className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#2d3748] text-[#0d121b] dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#1152d4]/50"
+                                    placeholder="https://contest-link.com/participate"
+                                />
+                                <p className="text-xs text-[#4c669a] mt-1">Add an external URL for contest/course participation</p>
                             </div>
 
                             {/* GPS Toggle */}

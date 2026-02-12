@@ -4,11 +4,13 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import AdminSidebar from '@/components/AdminSidebar';
-import { contestApi } from '@/lib/api';
+import { eventApi } from '@/lib/api';
 import { QRCodeSVG } from 'qrcode.react';
 
 // Contest type configuration
 const contestTypes: Record<string, { label: string; icon: string; color: string }> = {
+    contest: { label: 'Contest', icon: 'emoji_events', color: 'bg-amber-500' },
+    course: { label: 'Course', icon: 'menu_book', color: 'bg-indigo-500' },
     coding_contest: { label: 'Coding Contest', icon: 'code', color: 'bg-purple-500' },
     workshop: { label: 'Workshop', icon: 'school', color: 'bg-blue-500' },
     hackathon: { label: 'Hackathon', icon: 'rocket_launch', color: 'bg-orange-500' },
@@ -30,6 +32,8 @@ interface Contest {
     requiresGPS: boolean;
     qrToken: string;
     attendanceCount: number;
+    enrolledStudents?: string[];
+    enrolledCount?: number;
     createdAt: string;
 }
 
@@ -94,12 +98,12 @@ export default function ContestDetailPage() {
         try {
             setIsLoading(true);
 
-            const contestData = await contestApi.getContest(authToken, contestId);
+            const contestData = await eventApi.getContest(authToken, contestId);
             if (contestData.success) {
-                setContest(contestData.contest);
+                setContest(contestData.event);
             }
 
-            const attendanceData = await contestApi.getContestAttendance(authToken, contestId, sortBy, sortOrder);
+            const attendanceData = await eventApi.getContestAttendance(authToken, contestId, sortBy, sortOrder);
             if (attendanceData.success) {
                 setAttendance(attendanceData.attendance);
             }
@@ -119,7 +123,7 @@ export default function ContestDetailPage() {
     const fetchAttendance = async () => {
         if (!token) return;
         try {
-            const data = await contestApi.getContestAttendance(token, contestId, sortBy, sortOrder);
+            const data = await eventApi.getContestAttendance(token, contestId, sortBy, sortOrder);
             if (data.success) {
                 setAttendance(data.attendance);
             }
@@ -132,7 +136,7 @@ export default function ContestDetailPage() {
         if (!confirm(`Remove attendance record for "${name}"?`)) return;
 
         try {
-            const result = await contestApi.deleteAttendanceRecord(token, contestId, attendanceId);
+            const result = await eventApi.deleteAttendanceRecord(token, contestId, attendanceId);
             if (result.success) {
                 fetchAttendance();
             }
@@ -158,6 +162,25 @@ export default function ContestDetailPage() {
                 window.URL.revokeObjectURL(url);
                 a.remove();
             });
+    };
+
+    const handleExportEnrolled = () => {
+        if (!contest?.enrolledStudents || contest.enrolledStudents.length === 0) {
+            alert('No enrolled students to export');
+            return;
+        }
+        const csvHeader = 'S.No,Email\n';
+        const csvRows = contest.enrolledStudents.map((email, i) => `${i + 1},${email}`).join('\n');
+        const csvContent = csvHeader + csvRows;
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${contest.title.replace(/[^a-z0-9]/gi, '_')}_enrolled_students.csv`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        a.remove();
     };
 
     const toggleSort = (field: string) => {
@@ -338,7 +361,14 @@ export default function ContestDetailPage() {
                                     className="flex items-center gap-2 px-4 py-2 bg-green-100 dark:bg-green-900/30 text-green-600 rounded-lg font-medium hover:bg-green-200 dark:hover:bg-green-900/50 transition-colors"
                                 >
                                     <span className="material-symbols-outlined text-lg">download</span>
-                                    Export CSV
+                                    Export Attendance
+                                </button>
+                                <button
+                                    onClick={handleExportEnrolled}
+                                    className="flex items-center gap-2 px-4 py-2 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 rounded-lg font-medium hover:bg-indigo-200 dark:hover:bg-indigo-900/50 transition-colors"
+                                >
+                                    <span className="material-symbols-outlined text-lg">table_view</span>
+                                    Export Enrolled
                                 </button>
                             </div>
                         </div>
