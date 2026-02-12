@@ -716,8 +716,8 @@ export default function AdminContestsPage() {
 
             {/* QR Code Modal */}
             {showQRModal && selectedContest && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white dark:bg-[#1a2233] rounded-2xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowQRModal(false)}>
+                    <div className="bg-white dark:bg-[#1a2233] rounded-2xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
                         <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between sticky top-0 bg-white dark:bg-[#1a2233] z-10">
                             <h3 className="text-lg font-bold text-[#0d121b] dark:text-white">QR Code</h3>
                             <button
@@ -878,8 +878,8 @@ export default function AdminContestsPage() {
                                                             } catch (err) { console.error(err); }
                                                         }}
                                                         className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${(selectedContest.gpsRadius || 100) === r
-                                                                ? 'bg-[#1152d4] text-white'
-                                                                : 'bg-gray-100 dark:bg-gray-800 text-[#4c669a] hover:bg-[#1152d4]/10 hover:text-[#1152d4]'
+                                                            ? 'bg-[#1152d4] text-white'
+                                                            : 'bg-gray-100 dark:bg-gray-800 text-[#4c669a] hover:bg-[#1152d4]/10 hover:text-[#1152d4]'
                                                             }`}
                                                     >
                                                         {r}m

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import ProtectedRoute from '@/components/ProtectedRoute';
 
 interface UserData {
@@ -18,6 +18,7 @@ export default function DashboardLayout({
     children: React.ReactNode;
 }) {
     const pathname = usePathname();
+    const router = useRouter();
     const [userData, setUserData] = useState<UserData | null>(null);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
@@ -98,10 +99,17 @@ export default function DashboardLayout({
                         ))}
 
                         <div className="pt-4 mt-4 border-t border-slate-100 dark:border-slate-800">
-                            <a href="#" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
-                                <span className="material-symbols-outlined">settings</span>
-                                <span className="text-sm font-medium">Settings</span>
-                            </a>
+                            <button
+                                onClick={() => {
+                                    localStorage.removeItem('token');
+                                    localStorage.removeItem('user');
+                                    router.push('/login');
+                                }}
+                                className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-red-50 dark:hover:bg-red-900/10 hover:text-red-600 transition-colors w-full group"
+                            >
+                                <span className="material-symbols-outlined group-hover:text-red-600 transition-colors">logout</span>
+                                <span className="text-sm font-medium group-hover:text-red-600">Logout</span>
+                            </button>
                         </div>
                     </nav>
 
@@ -143,13 +151,9 @@ export default function DashboardLayout({
                             </div>
                         </div>
                         <div className="flex items-center gap-2 sm:gap-4 pl-4 shrink-0">
-                            <button className="p-2 rounded-full text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors relative">
-                                <span className="material-symbols-outlined">notifications</span>
-                                <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-[#1a2235]"></span>
-                            </button>
-                            <button className="p-2 rounded-full text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors hidden sm:block">
-                                <span className="material-symbols-outlined">help</span>
-                            </button>
+                            <Link href="/profile" className="p-2 rounded-full text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" title="Profile">
+                                <span className="material-symbols-outlined">person</span>
+                            </Link>
                         </div>
                     </header>
 
