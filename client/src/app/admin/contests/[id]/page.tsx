@@ -30,6 +30,9 @@ interface Contest {
     endTime: string;
     isActive: boolean;
     requiresGPS: boolean;
+    venueLatitude?: number;
+    venueLongitude?: number;
+    gpsRadius?: number;
     qrToken: string;
     attendanceCount: number;
     enrolledStudents?: string[];
@@ -70,6 +73,9 @@ export default function ContestDetailPage() {
     const [sortBy, setSortBy] = useState('markedAt');
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
     const [showQRModal, setShowQRModal] = useState(false);
+    const [gpsRadius, setGpsRadius] = useState(100);
+    const [isSettingLocation, setIsSettingLocation] = useState(false);
+    const [locationMsg, setLocationMsg] = useState('');
     const [searchQuery, setSearchQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState('all');
     const [branchFilter, setBranchFilter] = useState('all');
@@ -99,7 +105,8 @@ export default function ContestDetailPage() {
             setIsLoading(true);
 
             const contestData = await eventApi.getContest(authToken, contestId);
-            if (contestData.success) {
+            if (contestData.event) {
+                setGpsRadius(contestData.event.gpsRadius || 100);
                 setContest(contestData.event);
             }
 
@@ -162,6 +169,60 @@ export default function ContestDetailPage() {
                 window.URL.revokeObjectURL(url);
                 a.remove();
             });
+    };
+
+    const handleSetLocation = async () => {
+        if (!navigator.geolocation) {
+            setLocationMsg('Geolocation not supported by your browser');
+            return;
+        }
+        setIsSettingLocation(true);
+        setLocationMsg('');
+        navigator.geolocation.getCurrentPosition(
+            async (position) => {
+                try {
+                    const result = await eventApi.updateContest(token, contestId, {
+                        venueLatitude: position.coords.latitude,
+                        venueLongitude: position.coords.longitude,
+                    });
+                    if (result.success) {
+                        setContest(prev => prev ? { ...prev, venueLatitude: position.coords.latitude, venueLongitude: position.coords.longitude } : prev);
+                        setLocationMsg('✅ Location set successfully!');
+                    } else {
+                        setLocationMsg('❌ Failed to save location');
+                    }
+                } catch { setLocationMsg('❌ Error saving location'); }
+                setIsSettingLocation(false);
+            },
+            (error) => {
+                setLocationMsg(`❌ GPS error: ${error.message}`);
+                setIsSettingLocation(false);
+            },
+            { enableHighAccuracy: true, timeout: 10000 }
+        );
+    };
+
+    const handleResetLocation = async () => {
+        try {
+            const result = await eventApi.updateContest(token, contestId, {
+                venueLatitude: null,
+                venueLongitude: null,
+            });
+            if (result.success) {
+                setContest(prev => prev ? { ...prev, venueLatitude: undefined, venueLongitude: undefined } : prev);
+                setLocationMsg('✅ Location reset');
+            }
+        } catch { setLocationMsg('❌ Error resetting location'); }
+    };
+
+    const handleUpdateRadius = async () => {
+        try {
+            const result = await eventApi.updateContest(token, contestId, { gpsRadius });
+            if (result.success) {
+                setContest(prev => prev ? { ...prev, gpsRadius } : prev);
+                setLocationMsg(`✅ Radius updated to ${gpsRadius}m`);
+            }
+        } catch { setLocationMsg('❌ Error updating radius'); }
     };
 
     const handleExportEnrolled = () => {
@@ -693,6 +754,80 @@ export default function ContestDetailPage() {
                                     Copy Link
                                 </button>
                             </div>
+
+                            {/* Divider */}
+                            <div className="border-t border-gray-200 dark:border-gray-700 my-4" />
+
+                            {/* GPS Location Controls */}
+                            <div className="text-left space-y-3">
+                                <h4 className="text-sm font-semibold text-[#0d121b] dark:text-white flex items-center gap-2">
+                                    <span className="material-symbols-outlined text-base">location_on</span>
+                                    Venue GPS Location
+                                </h4>
+                                <div className="text-xs text-[#4c669a] bg-gray-50 dark:bg-gray-800/50 rounded-lg p-3">
+                                    {contest.venueLatitude && contest.venueLongitude ? (
+                                        <div className="flex items-center gap-2">
+                                            <span className="material-symbols-outlined text-green-500 text-base">check_circle</span>
+                                            <span>Lat: {contest.venueLatitude.toFixed(6)}, Lng: {contest.venueLongitude.toFixed(6)}</span>
+                                        </div>
+                                    ) : (
+                                        <div className="flex items-center gap-2">
+                                            <span className="material-symbols-outlined text-amber-500 text-base">warning</span>
+                                            <span>No venue location set — GPS validation disabled</span>
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={handleSetLocation}
+                                        disabled={isSettingLocation}
+                                        className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-lg text-xs font-medium hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors disabled:opacity-50"
+                                    >
+                                        <span className="material-symbols-outlined text-sm">{isSettingLocation ? 'progress_activity' : 'my_location'}</span>
+                                        {isSettingLocation ? 'Getting GPS...' : 'Set My Location'}
+                                    </button>
+                                    <button
+                                        onClick={handleResetLocation}
+                                        className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg text-xs font-medium hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors"
+                                    >
+                                        <span className="material-symbols-outlined text-sm">location_off</span>
+                                        Reset Location
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* GPS Radius Slider */}
+                            <div className="text-left space-y-3">
+                                <h4 className="text-sm font-semibold text-[#0d121b] dark:text-white flex items-center gap-2">
+                                    <span className="material-symbols-outlined text-base">radar</span>
+                                    GPS Radius: <span className="text-app-primary">{gpsRadius}m</span>
+                                </h4>
+                                <div className="flex items-center gap-3">
+                                    <span className="text-[10px] text-[#4c669a] w-8">50m</span>
+                                    <input
+                                        type="range"
+                                        min={50}
+                                        max={500}
+                                        step={10}
+                                        value={gpsRadius}
+                                        onChange={(e) => setGpsRadius(parseInt(e.target.value))}
+                                        className="flex-1 accent-[#1152d4] h-2 rounded-lg cursor-pointer"
+                                    />
+                                    <span className="text-[10px] text-[#4c669a] w-10">500m</span>
+                                </div>
+                                <button
+                                    onClick={handleUpdateRadius}
+                                    className="w-full flex items-center justify-center gap-1.5 py-2 bg-[#1152d4]/10 text-[#1152d4] rounded-lg text-xs font-medium hover:bg-[#1152d4]/20 transition-colors"
+                                >
+                                    <span className="material-symbols-outlined text-sm">save</span>
+                                    Update Radius
+                                </button>
+                            </div>
+
+                            {/* Status Message */}
+                            {locationMsg && (
+                                <p className="text-xs text-center text-[#4c669a] mt-2">{locationMsg}</p>
+                            )}
                         </div>
                     </div>
                 </div>
