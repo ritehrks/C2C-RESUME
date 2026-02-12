@@ -153,7 +153,7 @@ export default function ContestDetailPage() {
     };
 
     const handleExportCSV = () => {
-        const url = `${API_URL}/api/contests/${contestId}/attendance/export`;
+        const url = `${API_URL}/api/events/${contestId}/attendance/export`;
 
         fetch(url, {
             headers: { Authorization: `Bearer ${token}` }
@@ -226,6 +226,7 @@ export default function ContestDetailPage() {
     };
 
     const handleExportEnrolled = () => {
+
         if (!contest?.enrolledStudents || contest.enrolledStudents.length === 0) {
             alert('No enrolled students to export');
             return;
@@ -243,6 +244,18 @@ export default function ContestDetailPage() {
         window.URL.revokeObjectURL(url);
         a.remove();
     };
+
+    const handleToggleStatus = async () => {
+        try {
+            const result = await eventApi.toggleContestStatus(token, contestId);
+            if (result.success) {
+                setContest(prev => prev ? { ...prev, isActive: result.isActive } : prev);
+            }
+        } catch (error) {
+            console.error('Toggle status failed:', error);
+        }
+    };
+
 
     const toggleSort = (field: string) => {
         if (sortBy === field) {
@@ -402,34 +415,48 @@ export default function ContestDetailPage() {
                                     </span>
                                 </div>
                             </div>
-                            <div className="flex items-center gap-3">
+                            <div className="flex flex-wrap items-center gap-2 md:gap-3">
+                                <button
+                                    onClick={handleToggleStatus}
+                                    className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${contest.isActive
+                                            ? 'bg-red-100 dark:bg-red-900/30 text-red-600 hover:bg-red-200 dark:hover:bg-red-900/50'
+                                            : 'bg-green-100 dark:bg-green-900/30 text-green-600 hover:bg-green-200 dark:hover:bg-green-900/50'
+                                        }`}
+                                >
+                                    <span className="material-symbols-outlined text-lg">{contest.isActive ? 'lock' : 'lock_open'}</span>
+                                    <span className="hidden sm:inline">{contest.isActive ? 'Close Attendance' : 'Open Attendance'}</span>
+                                    <span className="sm:hidden">{contest.isActive ? 'Close' : 'Open'}</span>
+                                </button>
                                 <button
                                     onClick={() => fetchContestDetails(token)}
                                     className="flex items-center gap-2 px-4 py-2 border border-gray-200 dark:border-gray-700 text-[#4c669a] rounded-lg font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
                                 >
                                     <span className="material-symbols-outlined text-lg">refresh</span>
-                                    Refresh
+                                    <span className="hidden sm:inline">Refresh</span>
                                 </button>
                                 <button
                                     onClick={() => setShowQRModal(true)}
                                     className="flex items-center gap-2 px-4 py-2 bg-[#1152d4]/10 text-[#1152d4] rounded-lg font-medium hover:bg-[#1152d4]/20 transition-colors"
                                 >
                                     <span className="material-symbols-outlined text-lg">qr_code</span>
-                                    QR Code
+                                    <span className="hidden sm:inline">QR Code</span>
+                                    <span className="sm:hidden">QR</span>
                                 </button>
                                 <button
                                     onClick={handleExportCSV}
                                     className="flex items-center gap-2 px-4 py-2 bg-green-100 dark:bg-green-900/30 text-green-600 rounded-lg font-medium hover:bg-green-200 dark:hover:bg-green-900/50 transition-colors"
                                 >
                                     <span className="material-symbols-outlined text-lg">download</span>
-                                    Export Attendance
+                                    <span className="hidden sm:inline">Export Attendance</span>
+                                    <span className="sm:hidden">Attend.</span>
                                 </button>
                                 <button
                                     onClick={handleExportEnrolled}
                                     className="flex items-center gap-2 px-4 py-2 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 rounded-lg font-medium hover:bg-indigo-200 dark:hover:bg-indigo-900/50 transition-colors"
                                 >
                                     <span className="material-symbols-outlined text-lg">table_view</span>
-                                    Export Enrolled
+                                    <span className="hidden sm:inline">Export Enrolled</span>
+                                    <span className="sm:hidden">Enrolled</span>
                                 </button>
                             </div>
                         </div>

@@ -166,8 +166,6 @@ export default function ExploreCourses() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                     {courses.map((course) => {
                         const catConf = getCatConfig(course.category);
-                        const spotsLeft = (course.maxStudents || 50) - (course.enrolledCount || 0);
-                        const isFull = spotsLeft <= 0;
 
 
                         return (
@@ -188,13 +186,7 @@ export default function ExploreCourses() {
                                             {categoryConfig[course.category]?.label || 'Other'}
                                         </span>
                                     </div>
-                                    {isFull && (
-                                        <div className="absolute top-3 right-3">
-                                            <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-red-500 text-white">
-                                                FULL
-                                            </span>
-                                        </div>
-                                    )}
+
                                 </div>
 
                                 {/* Content */}
@@ -231,7 +223,7 @@ export default function ExploreCourses() {
                                     <div className="pt-3 border-t border-slate-100 dark:border-slate-800/50 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
                                         <div className="flex items-center gap-1">
                                             <span className="material-symbols-outlined text-[16px]">group</span>
-                                            <span>{course.enrolledCount || 0}/{course.maxStudents || '∞'} enrolled</span>
+                                            <span>{course.enrolledCount || 0} enrolled</span>
                                         </div>
                                         <div className="flex items-center gap-1">
                                             <span className="material-symbols-outlined text-[16px]">calendar_today</span>

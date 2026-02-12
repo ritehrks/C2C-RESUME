@@ -144,9 +144,6 @@ export default function CourseDetailPage() {
     if (!course) return null;
 
     const catConf = categoryConfig[course.category] || categoryConfig.other;
-    const spotsLeft = (course.maxStudents || 50) - (course.enrolledCount || 0);
-    const isFull = spotsLeft <= 0 && !course.isEnrolled;
-    const progressPct = Math.min(((course.enrolledCount || 0) / (course.maxStudents || 50)) * 100, 100);
 
     return (
         <div className="p-4 sm:p-6 lg:p-8 max-w-4xl mx-auto space-y-6">
@@ -298,7 +295,7 @@ export default function CourseDetailPage() {
                         ) : (
                             <button
                                 onClick={handleEnroll}
-                                disabled={isEnrolling || isFull}
+                                disabled={isEnrolling}
                                 className="w-full py-3 px-4 rounded-lg text-sm font-semibold bg-app-primary hover:bg-blue-700 text-white shadow-lg shadow-app-primary/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                             >
                                 {isEnrolling ? (
@@ -306,8 +303,6 @@ export default function CourseDetailPage() {
                                         <span className="material-symbols-outlined animate-spin text-[18px]">progress_activity</span>
                                         Enrolling...
                                     </>
-                                ) : isFull ? (
-                                    'Course is Full'
                                 ) : (
                                     <>
                                         <span className="material-symbols-outlined text-[18px]">how_to_reg</span>
