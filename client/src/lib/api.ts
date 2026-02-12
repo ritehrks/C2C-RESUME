@@ -410,6 +410,108 @@ export const contestApi = {
         const response = await fetch(`${API_URL}/api/contests/public/${qrToken}/check?${params}`);
         return response.json();
     },
+
+    // ==================== STUDENT: Attendance History ====================
+
+    getMyAttendance: async (token: string) => {
+        const response = await fetch(`${API_URL}/api/contests/my-attendance`, {
+            headers: { Authorization: `Bearer ${token}` },
+        });
+        return response.json();
+    },
+};
+
+// ==================== COURSE API ====================
+
+export const courseApi = {
+    // Public
+    getPublishedCourses: async (category?: string, search?: string) => {
+        const params = new URLSearchParams();
+        if (category && category !== 'all') params.append('category', category);
+        if (search) params.append('search', search);
+        const response = await fetch(`${API_URL}/api/courses/public?${params}`);
+        return response.json();
+    },
+
+    getCourseById: async (id: string, token?: string) => {
+        const headers: any = {};
+        if (token) headers.Authorization = `Bearer ${token}`;
+        const response = await fetch(`${API_URL}/api/courses/public/${id}`, { headers });
+        return response.json();
+    },
+
+    // Student
+    enrollInCourse: async (id: string, token: string) => {
+        const response = await fetch(`${API_URL}/api/courses/${id}/enroll`, {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${token}` },
+        });
+        return response.json();
+    },
+
+    unenrollFromCourse: async (id: string, token: string) => {
+        const response = await fetch(`${API_URL}/api/courses/${id}/enroll`, {
+            method: 'DELETE',
+            headers: { Authorization: `Bearer ${token}` },
+        });
+        return response.json();
+    },
+
+    getMyEnrollments: async (token: string) => {
+        const response = await fetch(`${API_URL}/api/courses/my-enrollments`, {
+            headers: { Authorization: `Bearer ${token}` },
+        });
+        return response.json();
+    },
+
+    // Admin
+    getAllCourses: async (token: string) => {
+        const response = await fetch(`${API_URL}/api/courses`, {
+            headers: { Authorization: `Bearer ${token}` },
+        });
+        return response.json();
+    },
+
+    createCourse: async (token: string, courseData: any) => {
+        const response = await fetch(`${API_URL}/api/courses`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify(courseData),
+        });
+        return response.json();
+    },
+
+    updateCourse: async (token: string, id: string, courseData: any) => {
+        const response = await fetch(`${API_URL}/api/courses/${id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify(courseData),
+        });
+        return response.json();
+    },
+
+    deleteCourse: async (token: string, id: string) => {
+        const response = await fetch(`${API_URL}/api/courses/${id}`, {
+            method: 'DELETE',
+            headers: { Authorization: `Bearer ${token}` },
+        });
+        return response.json();
+    },
+
+    togglePublish: async (token: string, id: string) => {
+        const response = await fetch(`${API_URL}/api/courses/${id}/toggle`, {
+            method: 'PATCH',
+            headers: { Authorization: `Bearer ${token}` },
+        });
+        return response.json();
+    },
 };
 
 export default resumeApi;
+

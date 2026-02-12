@@ -729,14 +729,59 @@ export default function AnalyzerPage() {
                             )}
 
                             {/* Analysis Buttons */}
-                            <div className="flex flex-col sm:flex-row gap-4">
+                            {/* Analysis Buttons */}
+                            {/* Analysis Buttons */}
+
+                            {/* Mobile View (Cards) */}
+                            <div className="flex flex-col gap-4 w-full sm:hidden">
                                 <button
                                     onClick={() => handleAnalysis('simple')}
                                     disabled={isAnalyzing}
-                                    className={`flex-1 flex items-center justify-center gap-2 rounded-xl h-14 font-bold shadow-sm transition-all ${isAnalyzing && analysisMode === 'simple'
-                                        ? 'bg-gray-400 cursor-not-allowed text-white'
-                                        : 'bg-white hover:bg-gray-50 dark:bg-[#1e2636] dark:hover:bg-[#2a3449] border border-[#cfd7e7] dark:border-gray-600 text-app-primary dark:text-blue-400'
-                                        }`}
+                                    className="flex-1 group relative overflow-hidden rounded-xl bg-white dark:bg-[#1e2636] border-2 border-app-primary dark:border-blue-500 p-4 transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/20 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    <div className="relative z-10 flex items-center justify-center gap-3">
+                                        {isAnalyzing && analysisMode === 'simple' ? (
+                                            <>
+                                                <span className="material-symbols-outlined text-2xl text-app-primary dark:text-blue-400 animate-spin">progress_activity</span>
+                                                <span className="text-lg font-bold text-app-primary dark:text-blue-400">Analyzing...</span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <span className="material-symbols-outlined text-2xl text-app-primary dark:text-blue-400 group-hover:scale-110 transition-transform">analytics</span>
+                                                <span className="text-lg font-bold text-app-primary dark:text-blue-400">Simple Analysis</span>
+                                            </>
+                                        )}
+                                    </div>
+                                </button>
+
+                                <button
+                                    onClick={() => handleAnalysis('deep')}
+                                    disabled={isAnalyzing}
+                                    className="flex-1 group relative overflow-hidden rounded-xl bg-gradient-to-r from-purple-600 to-app-primary p-4 transition-all duration-300 hover:shadow-lg hover:shadow-purple-600/30 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed text-white"
+                                >
+                                    <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+                                    <div className="relative z-10 flex items-center justify-center gap-3">
+                                        {isAnalyzing && analysisMode === 'deep' ? (
+                                            <>
+                                                <span className="material-symbols-outlined text-2xl animate-spin">progress_activity</span>
+                                                <span className="text-lg font-bold">AI Analyzing...</span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <span className="material-symbols-outlined text-2xl group-hover:rotate-12 transition-transform">auto_awesome</span>
+                                                <span className="text-lg font-bold">Deep AI Analysis</span>
+                                            </>
+                                        )}
+                                    </div>
+                                </button>
+                            </div>
+
+                            {/* Desktop View (Original Pills) */}
+                            <div className="hidden sm:flex flex-row gap-4 w-full justify-center">
+                                <button
+                                    onClick={() => handleAnalysis('simple')}
+                                    disabled={isAnalyzing}
+                                    className={`px-8 py-3 rounded-full border-2 border-app-primary dark:border-blue-500 text-app-primary dark:text-blue-400 font-bold hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed ${isAnalyzing && analysisMode === 'simple' ? 'bg-gray-100 cursor-not-allowed' : ''}`}
                                 >
                                     {isAnalyzing && analysisMode === 'simple' ? (
                                         <>
@@ -753,10 +798,7 @@ export default function AnalyzerPage() {
                                 <button
                                     onClick={() => handleAnalysis('deep')}
                                     disabled={isAnalyzing}
-                                    className={`flex-1 flex items-center justify-center gap-2 rounded-xl h-14 font-bold shadow-lg transition-all ${isAnalyzing && analysisMode === 'deep'
-                                        ? 'bg-gray-400 cursor-not-allowed text-white'
-                                        : 'bg-gradient-to-r from-purple-600 to-app-primary hover:from-purple-700 hover:to-blue-700 text-white shadow-purple-500/20'
-                                        }`}
+                                    className={`px-8 py-3 rounded-full bg-gradient-to-r from-purple-600 to-app-primary text-white font-bold hover:shadow-lg hover:shadow-purple-500/25 transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed ${isAnalyzing && analysisMode === 'deep' ? 'opacity-70 cursor-not-allowed' : ''}`}
                                 >
                                     {isAnalyzing && analysisMode === 'deep' ? (
                                         <>
@@ -772,8 +814,9 @@ export default function AnalyzerPage() {
                                 </button>
                             </div>
 
-                            <p className="text-xs text-center text-slate-500 dark:text-slate-400">
-                                🚀 Deep Analysis uses Gemini AI for comprehensive insights
+                            <p className="text-xs text-center text-slate-500 dark:text-slate-400 flex items-center justify-center gap-1.5 mt-2">
+                                <span className="material-symbols-outlined text-sm text-purple-500">rocket_launch</span>
+                                <span>Deep Analysis uses Gemini AI for comprehensive insights</span>
                             </p>
                         </div>
 

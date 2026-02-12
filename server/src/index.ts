@@ -9,6 +9,7 @@ import analyzerRoutes from './routes/analyzer.js';
 import authRoutes from './routes/auth.js';
 import statsRoutes from './routes/stats.js';
 import contestRoutes from './routes/contests.js';
+import courseRoutes from './routes/courses.js';
 
 // Import database connection and seeders
 import { connectDB } from './config/database.js';
@@ -37,6 +38,7 @@ app.use('/api/analyze', analyzerRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/stats', statsRoutes);
 app.use('/api/contests', contestRoutes);
+app.use('/api/courses', courseRoutes);
 
 // Health check endpoints (for keepalive and monitoring)
 app.get('/health', (req, res) => {

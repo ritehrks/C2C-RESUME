@@ -680,5 +680,62 @@ export const contestController = {
                 error: 'Failed to check attendance'
             });
         }
-    }
+    },
+
+    // ==================== STUDENT: My Attendance History ====================
+
+    // Get all attendance records for the logged-in user
+    async getMyAttendance(req: Request, res: Response) {
+        try {
+            const userEmail = req.user?.email;
+
+            if (!userEmail) {
+                return res.status(401).json({ success: false, error: 'Not authenticated' });
+            }
+
+            const records = await ContestAttendance.find({ email: userEmail.toLowerCase() })
+                .populate({
+                    path: 'contestId',
+                    select: 'title type venue date startTime endTime isActive description',
+                })
+                .sort({ markedAt: -1 });
+
+            // Format the response, filtering out any records with deleted contests
+            const attendance = records
+                .filter(record => record.contestId)
+                .map(record => {
+                    const contest = record.contestId as any;
+                    return {
+                        _id: record._id,
+                        eventTitle: contest.title,
+                        eventType: contest.type,
+                        eventDescription: contest.description,
+                        venue: contest.venue,
+                        eventDate: contest.date,
+                        startTime: contest.startTime,
+                        endTime: contest.endTime,
+                        status: record.status,
+                        markedAt: record.markedAt,
+                        distanceFromVenue: record.distanceFromVenue,
+                    };
+                });
+
+            // Compute stats
+            const stats = {
+                total: attendance.length,
+                present: attendance.filter(a => a.status === 'present').length,
+                late: attendance.filter(a => a.status === 'late').length,
+                locationIssue: attendance.filter(a => a.status === 'invalid_location').length,
+            };
+
+            return res.json({
+                success: true,
+                attendance,
+                stats,
+            });
+        } catch (error) {
+            console.error('Get my attendance error:', error);
+            return res.status(500).json({ success: false, error: 'Failed to fetch attendance history' });
+        }
+    },
 };

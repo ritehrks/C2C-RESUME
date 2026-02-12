@@ -49,6 +49,11 @@ interface AttendanceRecord {
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 const BASE_URL = typeof window !== 'undefined' ? window.location.origin : '';
 
+// Color map for avatars
+const avatarColors = ['bg-blue-500', 'bg-purple-500', 'bg-green-500', 'bg-orange-500', 'bg-teal-500', 'bg-pink-500', 'bg-indigo-500', 'bg-amber-500'];
+
+const ITEMS_PER_PAGE = 15;
+
 export default function ContestDetailPage() {
     const params = useParams();
     const router = useRouter();
@@ -62,6 +67,9 @@ export default function ContestDetailPage() {
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
     const [showQRModal, setShowQRModal] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
+    const [statusFilter, setStatusFilter] = useState('all');
+    const [branchFilter, setBranchFilter] = useState('all');
+    const [currentPage, setCurrentPage] = useState(1);
 
     useEffect(() => {
         const storedToken = localStorage.getItem('token');
@@ -86,13 +94,11 @@ export default function ContestDetailPage() {
         try {
             setIsLoading(true);
 
-            // Fetch contest
             const contestData = await contestApi.getContest(authToken, contestId);
             if (contestData.success) {
                 setContest(contestData.contest);
             }
 
-            // Fetch attendance
             const attendanceData = await contestApi.getContestAttendance(authToken, contestId, sortBy, sortOrder);
             if (attendanceData.success) {
                 setAttendance(attendanceData.attendance);
@@ -136,7 +142,6 @@ export default function ContestDetailPage() {
     };
 
     const handleExportCSV = () => {
-        // Create download link with auth
         const url = `${API_URL}/api/contests/${contestId}/attendance/export`;
 
         fetch(url, {
@@ -183,18 +188,33 @@ export default function ContestDetailPage() {
     const getStatusBadge = (status: string) => {
         switch (status) {
             case 'present':
-                return <span className="px-2 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 text-xs font-medium rounded">Present</span>;
+                return <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-semibold rounded-md border border-green-200 dark:border-green-800">
+                    <span className="w-1.5 h-1.5 rounded-full bg-green-500" />Present
+                </span>;
             case 'late':
-                return <span className="px-2 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 text-xs font-medium rounded">Late</span>;
+                return <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 text-xs font-semibold rounded-md border border-amber-200 dark:border-amber-800">
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />Late
+                </span>;
             case 'invalid_location':
-                return <span className="px-2 py-0.5 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 text-xs font-medium rounded">Invalid Location</span>;
+                return <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 text-xs font-semibold rounded-md border border-red-200 dark:border-red-800">
+                    <span className="w-1.5 h-1.5 rounded-full bg-red-500" />Invalid Location
+                </span>;
             default:
-                return <span className="px-2 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 text-xs font-medium rounded">{status}</span>;
+                return <span className="px-2.5 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 text-xs font-semibold rounded-md">{status}</span>;
         }
     };
 
-    // Filter attendance by search
+    // Get avatar color
+    const getAvatarColor = (name: string) => {
+        let sum = 0;
+        for (let i = 0; i < name.length; i++) sum += name.charCodeAt(i);
+        return avatarColors[sum % avatarColors.length];
+    };
+
+    // Filter attendance
     const filteredAttendance = attendance.filter(record => {
+        if (statusFilter !== 'all' && record.status !== statusFilter) return false;
+        if (branchFilter !== 'all' && record.branch !== branchFilter) return false;
         if (!searchQuery) return true;
         const query = searchQuery.toLowerCase();
         return (
@@ -204,6 +224,29 @@ export default function ContestDetailPage() {
             record.branch.toLowerCase().includes(query)
         );
     });
+
+    // Pagination
+    const totalPages = Math.ceil(filteredAttendance.length / ITEMS_PER_PAGE);
+    const paginatedAttendance = filteredAttendance.slice(
+        (currentPage - 1) * ITEMS_PER_PAGE,
+        currentPage * ITEMS_PER_PAGE
+    );
+
+    // Reset page when filters change
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchQuery, statusFilter, branchFilter]);
+
+    // Get unique branches for filter
+    const uniqueBranches = [...new Set(attendance.map(a => a.branch))].sort();
+
+    // Stats
+    const stats = {
+        total: attendance.length,
+        present: attendance.filter(a => a.status === 'present').length,
+        late: attendance.filter(a => a.status === 'late').length,
+        suspicious: attendance.filter(a => a.status === 'invalid_location').length,
+    };
 
     const typeConfig = contest ? contestTypes[contest.type] || contestTypes.other : contestTypes.other;
 
@@ -238,21 +281,26 @@ export default function ContestDetailPage() {
                 {/* Header */}
                 <header className="flex-shrink-0 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-[#1a2233]">
                     {/* Breadcrumb */}
-                    <div className="px-6 md:px-8 py-3 border-b border-gray-100 dark:border-gray-800">
+                    <nav className="px-6 md:px-8 py-3 border-b border-gray-100 dark:border-gray-800">
                         <div className="flex items-center gap-2 text-sm">
-                            <Link href="/admin/contests" className="text-[#4c669a] hover:text-[#1152d4]">Contests</Link>
-                            <span className="text-[#4c669a]">/</span>
+                            <Link href="/admin/contests" className="text-[#4c669a] hover:text-[#1152d4] transition-colors">Contests</Link>
+                            <span className="material-symbols-outlined text-[#4c669a] text-base">chevron_right</span>
                             <span className="text-[#0d121b] dark:text-white font-medium">{contest.title}</span>
                         </div>
-                    </div>
+                    </nav>
 
                     {/* Contest Info */}
                     <div className="px-6 md:px-8 py-4">
                         <div className="flex flex-wrap items-start justify-between gap-4">
                             <div>
-                                <div className={`inline-flex items-center gap-1.5 px-3 py-1 ${typeConfig.color} text-white text-xs font-medium rounded-full mb-2`}>
-                                    <span className="material-symbols-outlined text-sm">{typeConfig.icon}</span>
-                                    {typeConfig.label}
+                                <div className="flex items-center gap-3 mb-2">
+                                    <div className={`inline-flex items-center gap-1.5 px-3 py-1 ${typeConfig.color} text-white text-xs font-medium rounded-full`}>
+                                        <span className="material-symbols-outlined text-sm">{typeConfig.icon}</span>
+                                        {typeConfig.label}
+                                    </div>
+                                    <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${contest.isActive ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'}`}>
+                                        {contest.isActive ? '● Active' : '○ Inactive'}
+                                    </span>
                                 </div>
                                 <h2 className="text-xl font-bold text-[#0d121b] dark:text-white mb-1">{contest.title}</h2>
                                 <div className="flex flex-wrap items-center gap-4 text-sm text-[#4c669a]">
@@ -272,6 +320,13 @@ export default function ContestDetailPage() {
                             </div>
                             <div className="flex items-center gap-3">
                                 <button
+                                    onClick={() => fetchContestDetails(token)}
+                                    className="flex items-center gap-2 px-4 py-2 border border-gray-200 dark:border-gray-700 text-[#4c669a] rounded-lg font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                                >
+                                    <span className="material-symbols-outlined text-lg">refresh</span>
+                                    Refresh
+                                </button>
+                                <button
                                     onClick={() => setShowQRModal(true)}
                                     className="flex items-center gap-2 px-4 py-2 bg-[#1152d4]/10 text-[#1152d4] rounded-lg font-medium hover:bg-[#1152d4]/20 transition-colors"
                                 >
@@ -290,153 +345,252 @@ export default function ContestDetailPage() {
                     </div>
                 </header>
 
-                {/* Stats Bar */}
-                <div className="px-6 md:px-8 py-4 bg-white dark:bg-[#1a2233] border-b border-gray-200 dark:border-gray-800 flex flex-wrap items-center gap-6">
-                    <div className="flex items-center gap-3">
-                        <div className="size-10 rounded-lg bg-[#1152d4]/10 flex items-center justify-center">
-                            <span className="material-symbols-outlined text-[#1152d4]">groups</span>
-                        </div>
-                        <div>
-                            <p className="text-2xl font-bold text-[#0d121b] dark:text-white">{attendance.length}</p>
-                            <p className="text-xs text-[#4c669a]">Total Attendees</p>
+                {/* Content area (scrollable) */}
+                <div className="flex-1 overflow-y-auto">
+                    {/* Stats Cards */}
+                    <div className="px-6 md:px-8 py-6">
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div className="bg-white dark:bg-[#1a2233] rounded-xl border border-gray-200 dark:border-gray-800 p-4 flex items-center gap-3">
+                                <div className="size-11 rounded-lg bg-[#1152d4]/10 flex items-center justify-center flex-shrink-0">
+                                    <span className="material-symbols-outlined text-[#1152d4]">groups</span>
+                                </div>
+                                <div>
+                                    <p className="text-2xl font-bold text-[#0d121b] dark:text-white">{stats.total}</p>
+                                    <p className="text-xs text-[#4c669a]">Total Registered</p>
+                                </div>
+                            </div>
+                            <div className="bg-white dark:bg-[#1a2233] rounded-xl border border-gray-200 dark:border-gray-800 p-4 flex items-center gap-3">
+                                <div className="size-11 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center flex-shrink-0">
+                                    <span className="material-symbols-outlined text-green-600">check_circle</span>
+                                </div>
+                                <div>
+                                    <p className="text-2xl font-bold text-[#0d121b] dark:text-white">{stats.present}</p>
+                                    <p className="text-xs text-[#4c669a]">Present</p>
+                                </div>
+                            </div>
+                            <div className="bg-white dark:bg-[#1a2233] rounded-xl border border-gray-200 dark:border-gray-800 p-4 flex items-center gap-3">
+                                <div className="size-11 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center flex-shrink-0">
+                                    <span className="material-symbols-outlined text-amber-600">schedule</span>
+                                </div>
+                                <div>
+                                    <p className="text-2xl font-bold text-[#0d121b] dark:text-white">{stats.late}</p>
+                                    <p className="text-xs text-[#4c669a]">Late Arrival</p>
+                                </div>
+                            </div>
+                            <div className="bg-white dark:bg-[#1a2233] rounded-xl border border-gray-200 dark:border-gray-800 p-4 flex items-center gap-3">
+                                <div className="size-11 rounded-lg bg-red-100 dark:bg-red-900/30 flex items-center justify-center flex-shrink-0">
+                                    <span className="material-symbols-outlined text-red-600">gpp_maybe</span>
+                                </div>
+                                <div>
+                                    <p className="text-2xl font-bold text-[#0d121b] dark:text-white">{stats.suspicious}</p>
+                                    <p className="text-xs text-[#4c669a]">Suspicious</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div className="flex items-center gap-3">
-                        <div className="size-10 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
-                            <span className="material-symbols-outlined text-green-600">check_circle</span>
-                        </div>
-                        <div>
-                            <p className="text-2xl font-bold text-[#0d121b] dark:text-white">
-                                {attendance.filter(a => a.status === 'present').length}
-                            </p>
-                            <p className="text-xs text-[#4c669a]">On Time</p>
-                        </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                        <div className="size-10 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
-                            <span className="material-symbols-outlined text-amber-600">schedule</span>
-                        </div>
-                        <div>
-                            <p className="text-2xl font-bold text-[#0d121b] dark:text-white">
-                                {attendance.filter(a => a.status === 'late').length}
-                            </p>
-                            <p className="text-xs text-[#4c669a]">Late</p>
-                        </div>
-                    </div>
-                    <div className={`ml-auto px-3 py-1.5 rounded-full text-sm font-medium ${contest.isActive ? 'bg-green-100 dark:bg-green-900/30 text-green-600' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'}`}>
-                        {contest.isActive ? '● Active' : '○ Inactive'}
-                    </div>
-                </div>
 
-                {/* Search & Filters */}
-                <div className="px-6 md:px-8 py-3 bg-[#f8f9fc] dark:bg-[#1a2233]/50 border-b border-gray-200 dark:border-gray-800">
-                    <div className="flex flex-wrap items-center gap-4">
-                        <div className="relative flex-1 min-w-[200px] max-w-sm">
-                            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#4c669a] text-lg">search</span>
-                            <input
-                                type="text"
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                placeholder="Search by name, ID, email..."
-                                className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#2d3748] text-[#0d121b] dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#1152d4]/50"
-                            />
-                        </div>
-                        <span className="text-sm text-[#4c669a]">
-                            Showing {filteredAttendance.length} of {attendance.length} records
-                        </span>
-                    </div>
-                </div>
+                    {/* Table Container */}
+                    <div className="px-6 md:px-8 pb-6">
+                        <div className="bg-white dark:bg-[#1a2233] rounded-xl border border-gray-200 dark:border-gray-800 overflow-hidden">
+                            {/* Table Toolbar */}
+                            <div className="px-5 py-4 border-b border-gray-100 dark:border-gray-800">
+                                <div className="flex flex-wrap items-center gap-3">
+                                    <div className="relative flex-1 min-w-[200px] max-w-sm">
+                                        <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#4c669a] text-lg">search</span>
+                                        <input
+                                            type="text"
+                                            value={searchQuery}
+                                            onChange={(e) => setSearchQuery(e.target.value)}
+                                            placeholder="Search by name, ID, email..."
+                                            className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#2d3748] text-[#0d121b] dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#1152d4]/50"
+                                        />
+                                    </div>
+                                    <select
+                                        value={statusFilter}
+                                        onChange={(e) => setStatusFilter(e.target.value)}
+                                        className="px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#2d3748] text-[#0d121b] dark:text-white text-sm"
+                                    >
+                                        <option value="all">All Status</option>
+                                        <option value="present">Present</option>
+                                        <option value="late">Late</option>
+                                        <option value="invalid_location">Invalid Location</option>
+                                    </select>
+                                    <select
+                                        value={branchFilter}
+                                        onChange={(e) => setBranchFilter(e.target.value)}
+                                        className="px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#2d3748] text-[#0d121b] dark:text-white text-sm"
+                                    >
+                                        <option value="all">All Branches</option>
+                                        {uniqueBranches.map(b => (
+                                            <option key={b} value={b}>{b}</option>
+                                        ))}
+                                    </select>
+                                    <span className="text-xs text-[#4c669a] ml-auto">
+                                        {filteredAttendance.length} of {attendance.length} records
+                                    </span>
+                                </div>
+                            </div>
 
-                {/* Attendance Table */}
-                <div className="flex-1 overflow-auto">
-                    <table className="w-full min-w-[700px]">
-                        <thead className="bg-[#f8f9fc] dark:bg-[#2d3748] sticky top-0">
-                            <tr>
-                                <th className="px-6 py-3 text-left text-xs font-semibold text-[#4c669a] uppercase tracking-wider">#</th>
-                                <th
-                                    className="px-6 py-3 text-left text-xs font-semibold text-[#4c669a] uppercase tracking-wider cursor-pointer hover:text-[#1152d4]"
-                                    onClick={() => toggleSort('name')}
-                                >
-                                    <div className="flex items-center gap-1">
-                                        Name
-                                        {sortBy === 'name' && (
-                                            <span className="material-symbols-outlined text-sm">
-                                                {sortOrder === 'asc' ? 'arrow_upward' : 'arrow_downward'}
-                                            </span>
-                                        )}
-                                    </div>
-                                </th>
-                                <th
-                                    className="px-6 py-3 text-left text-xs font-semibold text-[#4c669a] uppercase tracking-wider cursor-pointer hover:text-[#1152d4]"
-                                    onClick={() => toggleSort('studentId')}
-                                >
-                                    <div className="flex items-center gap-1">
-                                        Student ID
-                                        {sortBy === 'studentId' && (
-                                            <span className="material-symbols-outlined text-sm">
-                                                {sortOrder === 'asc' ? 'arrow_upward' : 'arrow_downward'}
-                                            </span>
-                                        )}
-                                    </div>
-                                </th>
-                                <th className="px-6 py-3 text-left text-xs font-semibold text-[#4c669a] uppercase tracking-wider">Branch</th>
-                                <th className="px-6 py-3 text-left text-xs font-semibold text-[#4c669a] uppercase tracking-wider">Year</th>
-                                <th className="px-6 py-3 text-left text-xs font-semibold text-[#4c669a] uppercase tracking-wider">Status</th>
-                                <th
-                                    className="px-6 py-3 text-left text-xs font-semibold text-[#4c669a] uppercase tracking-wider cursor-pointer hover:text-[#1152d4]"
-                                    onClick={() => toggleSort('markedAt')}
-                                >
-                                    <div className="flex items-center gap-1">
-                                        Marked At
-                                        {sortBy === 'markedAt' && (
-                                            <span className="material-symbols-outlined text-sm">
-                                                {sortOrder === 'asc' ? 'arrow_upward' : 'arrow_downward'}
-                                            </span>
-                                        )}
-                                    </div>
-                                </th>
-                                <th className="px-6 py-3 text-right text-xs font-semibold text-[#4c669a] uppercase tracking-wider">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody className="bg-white dark:bg-[#1a2233] divide-y divide-gray-100 dark:divide-gray-800">
-                            {filteredAttendance.length === 0 ? (
-                                <tr>
-                                    <td colSpan={8} className="px-6 py-12 text-center">
-                                        <span className="material-symbols-outlined text-5xl text-[#4c669a]/30 mb-3 block">inbox</span>
-                                        <p className="text-[#4c669a]">
-                                            {searchQuery ? 'No matching records found' : 'No attendance records yet'}
-                                        </p>
-                                    </td>
-                                </tr>
-                            ) : (
-                                filteredAttendance.map((record, idx) => (
-                                    <tr key={record._id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
-                                        <td className="px-6 py-4 text-sm text-[#4c669a]">{idx + 1}</td>
-                                        <td className="px-6 py-4">
-                                            <div>
-                                                <p className="text-sm font-medium text-[#0d121b] dark:text-white">{record.name}</p>
-                                                <p className="text-xs text-[#4c669a]">{record.email}</p>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4 text-sm font-mono text-[#0d121b] dark:text-white">{record.studentId}</td>
-                                        <td className="px-6 py-4 text-sm text-[#0d121b] dark:text-white">{record.branch}</td>
-                                        <td className="px-6 py-4 text-sm text-[#0d121b] dark:text-white">{record.year || '-'}</td>
-                                        <td className="px-6 py-4">{getStatusBadge(record.status)}</td>
-                                        <td className="px-6 py-4 text-sm text-[#4c669a]">{formatTime(record.markedAt)}</td>
-                                        <td className="px-6 py-4 text-right">
-                                            <button
-                                                onClick={() => handleDeleteAttendance(record._id, record.name)}
-                                                className="p-1.5 text-[#4c669a] hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
-                                                title="Remove attendance"
+                            {/* Table */}
+                            <div className="overflow-x-auto">
+                                <table className="w-full min-w-[800px]">
+                                    <thead className="bg-[#f8f9fc] dark:bg-[#2d3748]">
+                                        <tr>
+                                            <th className="px-5 py-3 text-left text-xs font-semibold text-[#4c669a] uppercase tracking-wider w-12">#</th>
+                                            <th
+                                                className="px-5 py-3 text-left text-xs font-semibold text-[#4c669a] uppercase tracking-wider cursor-pointer hover:text-[#1152d4]"
+                                                onClick={() => toggleSort('name')}
                                             >
-                                                <span className="material-symbols-outlined text-lg">delete</span>
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))
+                                                <div className="flex items-center gap-1">
+                                                    Student
+                                                    {sortBy === 'name' && (
+                                                        <span className="material-symbols-outlined text-sm">
+                                                            {sortOrder === 'asc' ? 'arrow_upward' : 'arrow_downward'}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </th>
+                                            <th
+                                                className="px-5 py-3 text-left text-xs font-semibold text-[#4c669a] uppercase tracking-wider cursor-pointer hover:text-[#1152d4]"
+                                                onClick={() => toggleSort('studentId')}
+                                            >
+                                                <div className="flex items-center gap-1">
+                                                    Student ID
+                                                    {sortBy === 'studentId' && (
+                                                        <span className="material-symbols-outlined text-sm">
+                                                            {sortOrder === 'asc' ? 'arrow_upward' : 'arrow_downward'}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </th>
+                                            <th className="px-5 py-3 text-left text-xs font-semibold text-[#4c669a] uppercase tracking-wider">Branch</th>
+                                            <th className="px-5 py-3 text-left text-xs font-semibold text-[#4c669a] uppercase tracking-wider">Status</th>
+                                            <th className="px-5 py-3 text-left text-xs font-semibold text-[#4c669a] uppercase tracking-wider">Distance</th>
+                                            <th
+                                                className="px-5 py-3 text-left text-xs font-semibold text-[#4c669a] uppercase tracking-wider cursor-pointer hover:text-[#1152d4]"
+                                                onClick={() => toggleSort('markedAt')}
+                                            >
+                                                <div className="flex items-center gap-1">
+                                                    Marked At
+                                                    {sortBy === 'markedAt' && (
+                                                        <span className="material-symbols-outlined text-sm">
+                                                            {sortOrder === 'asc' ? 'arrow_upward' : 'arrow_downward'}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </th>
+                                            <th className="px-5 py-3 text-right text-xs font-semibold text-[#4c669a] uppercase tracking-wider w-16">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+                                        {paginatedAttendance.length === 0 ? (
+                                            <tr>
+                                                <td colSpan={8} className="px-6 py-12 text-center">
+                                                    <span className="material-symbols-outlined text-5xl text-[#4c669a]/30 mb-3 block">inbox</span>
+                                                    <p className="text-[#4c669a]">
+                                                        {searchQuery || statusFilter !== 'all' || branchFilter !== 'all' ? 'No matching records found' : 'No attendance records yet'}
+                                                    </p>
+                                                </td>
+                                            </tr>
+                                        ) : (
+                                            paginatedAttendance.map((record, idx) => (
+                                                <tr
+                                                    key={record._id}
+                                                    className={`hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors ${record.status === 'invalid_location' ? 'bg-red-50/50 dark:bg-red-900/10' : ''}`}
+                                                >
+                                                    <td className="px-5 py-3.5 text-sm text-[#4c669a]">{(currentPage - 1) * ITEMS_PER_PAGE + idx + 1}</td>
+                                                    <td className="px-5 py-3.5">
+                                                        <div className="flex items-center gap-3">
+                                                            <div className={`w-8 h-8 rounded-full ${getAvatarColor(record.name)} flex items-center justify-center text-white text-xs font-bold flex-shrink-0`}>
+                                                                {record.name.charAt(0).toUpperCase()}
+                                                            </div>
+                                                            <div>
+                                                                <p className="text-sm font-medium text-[#0d121b] dark:text-white">{record.name}</p>
+                                                                <p className="text-xs text-[#4c669a]">{record.email}</p>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-5 py-3.5">
+                                                        <span className="text-sm font-mono text-[#1152d4] font-medium">{record.studentId}</span>
+                                                    </td>
+                                                    <td className="px-5 py-3.5 text-sm text-[#0d121b] dark:text-white">{record.branch}</td>
+                                                    <td className="px-5 py-3.5">{getStatusBadge(record.status)}</td>
+                                                    <td className="px-5 py-3.5 text-sm font-mono text-[#4c669a]">
+                                                        {record.distanceFromVenue !== undefined ? `${Math.round(record.distanceFromVenue)}m` : '—'}
+                                                    </td>
+                                                    <td className="px-5 py-3.5 text-sm text-[#4c669a]">{formatTime(record.markedAt)}</td>
+                                                    <td className="px-5 py-3.5 text-right">
+                                                        {record.status === 'invalid_location' ? (
+                                                            <button
+                                                                onClick={() => handleDeleteAttendance(record._id, record.name)}
+                                                                className="p-1.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
+                                                                title="Flag / Remove"
+                                                            >
+                                                                <span className="material-symbols-outlined text-lg">flag</span>
+                                                            </button>
+                                                        ) : (
+                                                            <button
+                                                                onClick={() => handleDeleteAttendance(record._id, record.name)}
+                                                                className="p-1.5 text-[#4c669a] hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
+                                                                title="Remove attendance"
+                                                            >
+                                                                <span className="material-symbols-outlined text-lg">delete</span>
+                                                            </button>
+                                                        )}
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            {/* Pagination */}
+                            {totalPages > 1 && (
+                                <div className="px-5 py-4 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between">
+                                    <p className="text-xs text-[#4c669a] hidden sm:block">
+                                        Showing {(currentPage - 1) * ITEMS_PER_PAGE + 1}–{Math.min(currentPage * ITEMS_PER_PAGE, filteredAttendance.length)} of {filteredAttendance.length}
+                                    </p>
+                                    <div className="flex items-center gap-1">
+                                        <button
+                                            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                            disabled={currentPage === 1}
+                                            className="px-3 py-1.5 text-sm rounded-lg border border-gray-200 dark:border-gray-700 text-[#4c669a] hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                                        >
+                                            Previous
+                                        </button>
+                                        {[...Array(totalPages)].map((_, i) => {
+                                            const page = i + 1;
+                                            // Show first, last, and pages near current
+                                            if (page === 1 || page === totalPages || Math.abs(page - currentPage) <= 1) {
+                                                return (
+                                                    <button
+                                                        key={page}
+                                                        onClick={() => setCurrentPage(page)}
+                                                        className={`w-8 h-8 text-sm rounded-lg font-medium transition-colors ${currentPage === page ? 'bg-[#1152d4] text-white' : 'text-[#4c669a] hover:bg-gray-50 dark:hover:bg-gray-800'}`}
+                                                    >
+                                                        {page}
+                                                    </button>
+                                                );
+                                            }
+                                            // Show ellipsis
+                                            if (Math.abs(page - currentPage) === 2) {
+                                                return <span key={page} className="text-[#4c669a] px-1">…</span>;
+                                            }
+                                            return null;
+                                        })}
+                                        <button
+                                            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                            disabled={currentPage === totalPages}
+                                            className="px-3 py-1.5 text-sm rounded-lg border border-gray-200 dark:border-gray-700 text-[#4c669a] hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                                        >
+                                            Next
+                                        </button>
+                                    </div>
+                                </div>
                             )}
-                        </tbody>
-                    </table>
+                        </div>
+                    </div>
                 </div>
             </main>
 

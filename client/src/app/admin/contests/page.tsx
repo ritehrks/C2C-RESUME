@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import AdminSidebar from '@/components/AdminSidebar';
 import { contestApi } from '@/lib/api';
@@ -8,12 +8,12 @@ import { QRCodeSVG } from 'qrcode.react';
 
 // Contest type configuration
 const contestTypes = [
-    { value: 'coding_contest', label: 'Coding Contest', icon: 'code', color: 'bg-purple-500' },
-    { value: 'workshop', label: 'Workshop', icon: 'school', color: 'bg-blue-500' },
-    { value: 'hackathon', label: 'Hackathon', icon: 'rocket_launch', color: 'bg-orange-500' },
-    { value: 'meeting', label: 'Meeting', icon: 'groups', color: 'bg-green-500' },
-    { value: 'seminar', label: 'Seminar', icon: 'mic', color: 'bg-teal-500' },
-    { value: 'other', label: 'Other Event', icon: 'event', color: 'bg-gray-500' },
+    { value: 'coding_contest', label: 'Coding Contest', icon: 'code', color: 'bg-purple-500', gradient: 'from-purple-500/10 to-indigo-500/10', textColor: 'text-purple-600' },
+    { value: 'workshop', label: 'Workshop', icon: 'school', color: 'bg-blue-500', gradient: 'from-blue-500/10 to-cyan-500/10', textColor: 'text-blue-600' },
+    { value: 'hackathon', label: 'Hackathon', icon: 'rocket_launch', color: 'bg-orange-500', gradient: 'from-orange-500/10 to-red-500/10', textColor: 'text-orange-600' },
+    { value: 'meeting', label: 'Meeting', icon: 'groups', color: 'bg-green-500', gradient: 'from-green-500/10 to-teal-500/10', textColor: 'text-green-600' },
+    { value: 'seminar', label: 'Seminar', icon: 'mic', color: 'bg-teal-500', gradient: 'from-teal-500/10 to-cyan-500/10', textColor: 'text-teal-600' },
+    { value: 'other', label: 'Other Event', icon: 'event', color: 'bg-gray-500', gradient: 'from-gray-500/10 to-slate-500/10', textColor: 'text-gray-600' },
 ];
 
 interface Contest {
@@ -44,6 +44,7 @@ export default function AdminContestsPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [contests, setContests] = useState<Contest[]>([]);
     const [filter, setFilter] = useState({ status: 'all', type: 'all' });
+    const [searchQuery, setSearchQuery] = useState('');
 
     // Modal states
     const [showCreateModal, setShowCreateModal] = useState(false);
@@ -259,6 +260,22 @@ export default function AdminContestsPage() {
         img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
     };
 
+    // Determine contest status label
+    const getStatusLabel = (contest: Contest) => {
+        const now = new Date();
+        const eventDate = new Date(contest.date);
+        if (!contest.isActive) return { label: 'Draft', color: 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300' };
+        if (eventDate < now && eventDate.toDateString() !== now.toDateString()) return { label: 'Past', color: 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300' };
+        return { label: 'Active', color: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300' };
+    };
+
+    // Filter contests by search
+    const filteredContests = contests.filter(c => {
+        if (!searchQuery) return true;
+        const q = searchQuery.toLowerCase();
+        return c.title.toLowerCase().includes(q) || c.venue.toLowerCase().includes(q);
+    });
+
     if (isLoading) {
         return (
             <div className="h-screen flex items-center justify-center bg-[#f6f6f8] dark:bg-[#101622]">
@@ -275,56 +292,71 @@ export default function AdminContestsPage() {
             <AdminSidebar />
 
             <main className="flex-1 flex flex-col h-full overflow-hidden">
-                {/* Header */}
-                <header className="h-16 flex items-center justify-between px-6 md:px-8 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-[#1a2233] flex-shrink-0">
-                    <div>
-                        <h2 className="text-lg font-bold text-[#0d121b] dark:text-white">Contests & Events</h2>
-                        <p className="text-sm text-[#4c669a]">Manage C2C club events and attendance</p>
-                    </div>
-                    <button
-                        onClick={openCreateModal}
-                        className="flex items-center gap-2 px-4 py-2 bg-[#1152d4] text-white rounded-lg font-semibold hover:bg-[#0d3fa8] transition-colors"
-                    >
-                        <span className="material-symbols-outlined text-lg">add</span>
-                        Create Event
-                    </button>
-                </header>
+                {/* Sticky Toolbar */}
+                <header className="flex-shrink-0 bg-white/80 dark:bg-[#1a2233]/80 backdrop-blur-xl border-b border-gray-200 dark:border-gray-800">
+                    <div className="px-6 md:px-8 py-4">
+                        <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
+                            <div>
+                                <h2 className="text-lg font-bold text-[#0d121b] dark:text-white">Contests & Events</h2>
+                                <p className="text-sm text-[#4c669a]">Manage C2C club events and attendance</p>
+                            </div>
+                            <button
+                                onClick={openCreateModal}
+                                className="flex items-center gap-2 px-5 py-2.5 bg-[#1152d4] text-white rounded-xl font-semibold hover:bg-[#0d3fa8] transition-all shadow-lg shadow-[#1152d4]/20 hover:shadow-xl hover:shadow-[#1152d4]/30 hover:-translate-y-0.5"
+                            >
+                                <span className="material-symbols-outlined text-lg">add</span>
+                                Create New
+                            </button>
+                        </div>
 
-                {/* Filters */}
-                <div className="px-6 md:px-8 py-4 bg-white dark:bg-[#1a2233] border-b border-gray-200 dark:border-gray-800">
-                    <div className="flex flex-wrap gap-4">
-                        <select
-                            value={filter.status}
-                            onChange={(e) => setFilter(prev => ({ ...prev, status: e.target.value }))}
-                            className="px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#2d3748] text-[#0d121b] dark:text-white text-sm"
-                        >
-                            <option value="all">All Status</option>
-                            <option value="active">Active</option>
-                            <option value="inactive">Inactive</option>
-                        </select>
-                        <select
-                            value={filter.type}
-                            onChange={(e) => setFilter(prev => ({ ...prev, type: e.target.value }))}
-                            className="px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#2d3748] text-[#0d121b] dark:text-white text-sm"
-                        >
-                            <option value="all">All Types</option>
-                            {contestTypes.map(t => (
-                                <option key={t.value} value={t.value}>{t.label}</option>
-                            ))}
-                        </select>
+                        {/* Search + Filters */}
+                        <div className="flex flex-wrap items-center gap-3">
+                            <div className="relative flex-1 min-w-[200px] max-w-sm">
+                                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#4c669a] text-lg">search</span>
+                                <input
+                                    type="text"
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    placeholder="Search events..."
+                                    className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#2d3748] text-[#0d121b] dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#1152d4]/50"
+                                />
+                            </div>
+                            <select
+                                value={filter.status}
+                                onChange={(e) => setFilter(prev => ({ ...prev, status: e.target.value }))}
+                                className="px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#2d3748] text-[#0d121b] dark:text-white text-sm"
+                            >
+                                <option value="all">All Status</option>
+                                <option value="active">Active</option>
+                                <option value="inactive">Inactive</option>
+                            </select>
+                            <select
+                                value={filter.type}
+                                onChange={(e) => setFilter(prev => ({ ...prev, type: e.target.value }))}
+                                className="px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#2d3748] text-[#0d121b] dark:text-white text-sm"
+                            >
+                                <option value="all">All Types</option>
+                                {contestTypes.map(t => (
+                                    <option key={t.value} value={t.value}>{t.label}</option>
+                                ))}
+                            </select>
+                            <span className="text-xs text-[#4c669a] ml-auto">
+                                {filteredContests.length} event{filteredContests.length !== 1 ? 's' : ''}
+                            </span>
+                        </div>
                     </div>
-                </div>
+                </header>
 
                 {/* Contest List */}
                 <div className="flex-1 overflow-y-auto p-6 md:p-8">
-                    {contests.length === 0 ? (
+                    {filteredContests.length === 0 ? (
                         <div className="flex flex-col items-center justify-center py-16 text-center">
                             <span className="material-symbols-outlined text-6xl text-[#4c669a]/50 mb-4">event</span>
                             <h3 className="text-xl font-semibold text-[#0d121b] dark:text-white mb-2">No Events Found</h3>
                             <p className="text-[#4c669a] mb-6">Create your first event to get started</p>
                             <button
                                 onClick={openCreateModal}
-                                className="flex items-center gap-2 px-6 py-3 bg-[#1152d4] text-white rounded-lg font-semibold hover:bg-[#0d3fa8] transition-colors"
+                                className="flex items-center gap-2 px-6 py-3 bg-[#1152d4] text-white rounded-xl font-semibold hover:bg-[#0d3fa8] transition-colors shadow-lg shadow-[#1152d4]/20"
                             >
                                 <span className="material-symbols-outlined">add</span>
                                 Create Event
@@ -332,19 +364,30 @@ export default function AdminContestsPage() {
                         </div>
                     ) : (
                         <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-                            {contests.map(contest => {
+                            {filteredContests.map(contest => {
                                 const typeConfig = getTypeConfig(contest.type);
+                                const status = getStatusLabel(contest);
+                                const isPast = status.label === 'Past';
                                 return (
-                                    <div key={contest._id} className="bg-white dark:bg-[#1a2233] rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm overflow-hidden hover:shadow-md transition-shadow">
-                                        {/* Type Header */}
-                                        <div className={`${typeConfig.color} px-4 py-2.5 flex items-center justify-between text-white`}>
-                                            <div className="flex items-center gap-2">
-                                                <span className="material-symbols-outlined text-lg">{typeConfig.icon}</span>
-                                                <span className="font-medium text-sm">{typeConfig.label}</span>
+                                    <div
+                                        key={contest._id}
+                                        className={`bg-white dark:bg-[#1a2233] rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm overflow-hidden hover:shadow-lg transition-all group ${isPast ? 'opacity-75 hover:opacity-100' : ''}`}
+                                    >
+                                        {/* Gradient Header */}
+                                        <div className={`relative h-32 bg-gradient-to-br ${typeConfig.gradient} p-4 flex flex-col justify-between`}>
+                                            {/* Status Badge */}
+                                            <div className="flex justify-end">
+                                                <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${status.color}`}>
+                                                    {status.label}
+                                                </span>
                                             </div>
-                                            <span className={`px-2 py-0.5 rounded text-xs font-medium ${contest.isActive ? 'bg-white/20' : 'bg-black/20'}`}>
-                                                {contest.isActive ? 'Active' : 'Inactive'}
-                                            </span>
+                                            {/* Type Badge */}
+                                            <div className="flex items-center gap-2">
+                                                <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${typeConfig.color} text-white`}>
+                                                    <span className="material-symbols-outlined text-sm">{typeConfig.icon}</span>
+                                                    {typeConfig.label}
+                                                </span>
+                                            </div>
                                         </div>
 
                                         {/* Content */}
@@ -366,20 +409,50 @@ export default function AdminContestsPage() {
                                                 </div>
                                             </div>
 
-                                            {/* Attendance Count */}
+                                            {/* Attendance + Toggle Row */}
                                             <div className="flex items-center justify-between py-3 px-3 bg-[#f8f9fc] dark:bg-[#2d3748] rounded-lg mb-4">
-                                                <span className="text-sm text-[#4c669a] dark:text-[#a0aec0]">Attendance</span>
-                                                <span className="text-lg font-bold text-[#1152d4]">{contest.attendanceCount}</span>
+                                                <div className="flex items-center gap-2">
+                                                    {/* Avatar Stack */}
+                                                    <div className="flex -space-x-2">
+                                                        {[...Array(Math.min(3, contest.attendanceCount))].map((_, i) => (
+                                                            <div key={i} className={`w-7 h-7 rounded-full border-2 border-white dark:border-[#2d3748] flex items-center justify-center text-xs font-bold text-white ${['bg-blue-500', 'bg-purple-500', 'bg-green-500'][i]}`}>
+                                                                <span className="material-symbols-outlined text-xs">person</span>
+                                                            </div>
+                                                        ))}
+                                                        {contest.attendanceCount > 3 && (
+                                                            <div className="w-7 h-7 rounded-full border-2 border-white dark:border-[#2d3748] bg-[#1152d4] flex items-center justify-center text-xs font-bold text-white">
+                                                                +{contest.attendanceCount - 3}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    <span className="text-sm font-semibold text-[#0d121b] dark:text-white">{contest.attendanceCount}</span>
+                                                    <span className="text-xs text-[#4c669a]">attendees</span>
+                                                </div>
+                                                {/* Toggle Switch */}
+                                                <button
+                                                    onClick={() => handleToggleStatus(contest)}
+                                                    className={`w-11 h-6 rounded-full transition-colors flex items-center ${contest.isActive ? 'bg-[#1152d4]' : 'bg-gray-300 dark:bg-gray-600'}`}
+                                                    title={contest.isActive ? 'Click to deactivate' : 'Click to activate'}
+                                                >
+                                                    <div className={`w-5 h-5 rounded-full bg-white shadow-sm transform transition-transform ${contest.isActive ? 'translate-x-[22px]' : 'translate-x-0.5'}`} />
+                                                </button>
                                             </div>
 
                                             {/* Actions */}
                                             <div className="flex items-center gap-2">
                                                 <button
+                                                    onClick={() => openEditModal(contest)}
+                                                    className="flex items-center justify-center gap-1.5 py-2 px-3 bg-gray-100 dark:bg-gray-800 text-[#4c669a] dark:text-[#a0aec0] rounded-lg font-medium text-sm hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                                                >
+                                                    <span className="material-symbols-outlined text-base">edit</span>
+                                                    Edit
+                                                </button>
+                                                <button
                                                     onClick={() => showQR(contest)}
                                                     className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-[#1152d4]/10 text-[#1152d4] rounded-lg font-medium text-sm hover:bg-[#1152d4]/20 transition-colors"
                                                 >
                                                     <span className="material-symbols-outlined text-base">qr_code</span>
-                                                    QR Code
+                                                    Show QR
                                                 </button>
                                                 <button
                                                     onClick={() => router.push(`/admin/contests/${contest._id}`)}
@@ -388,34 +461,13 @@ export default function AdminContestsPage() {
                                                     <span className="material-symbols-outlined text-base">visibility</span>
                                                     View
                                                 </button>
-                                                <div className="relative group">
-                                                    <button className="p-2 text-[#4c669a] hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors">
-                                                        <span className="material-symbols-outlined text-lg">more_vert</span>
-                                                    </button>
-                                                    <div className="absolute right-0 top-full mt-1 w-40 bg-white dark:bg-[#2d3748] rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10">
-                                                        <button
-                                                            onClick={() => openEditModal(contest)}
-                                                            className="w-full flex items-center gap-2 px-3 py-2 text-sm text-[#0d121b] dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700"
-                                                        >
-                                                            <span className="material-symbols-outlined text-base">edit</span>
-                                                            Edit
-                                                        </button>
-                                                        <button
-                                                            onClick={() => handleToggleStatus(contest)}
-                                                            className="w-full flex items-center gap-2 px-3 py-2 text-sm text-[#0d121b] dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700"
-                                                        >
-                                                            <span className="material-symbols-outlined text-base">{contest.isActive ? 'toggle_off' : 'toggle_on'}</span>
-                                                            {contest.isActive ? 'Deactivate' : 'Activate'}
-                                                        </button>
-                                                        <button
-                                                            onClick={() => handleDelete(contest)}
-                                                            className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
-                                                        >
-                                                            <span className="material-symbols-outlined text-base">delete</span>
-                                                            Delete
-                                                        </button>
-                                                    </div>
-                                                </div>
+                                                <button
+                                                    onClick={() => handleDelete(contest)}
+                                                    className="p-2 text-[#4c669a] hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                                                    title="Delete event"
+                                                >
+                                                    <span className="material-symbols-outlined text-lg">delete</span>
+                                                </button>
                                             </div>
                                         </div>
                                     </div>
@@ -567,7 +619,7 @@ export default function AdminContestsPage() {
                                 </button>
                             </div>
 
-                            {/* GPS Settings (if enabled) */}
+                            {/* GPS Settings */}
                             {formData.requiresGPS && (
                                 <div className="space-y-3 p-4 border border-[#1152d4]/30 rounded-lg bg-[#1152d4]/5">
                                     <div className="grid grid-cols-2 gap-3">

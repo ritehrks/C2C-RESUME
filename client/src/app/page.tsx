@@ -1,33 +1,79 @@
+"use client";
+
 import Link from 'next/link';
 import Image from 'next/image';
+import { useState } from 'react';
 
 export default function Home() {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
   return (
     <div className="flex flex-col min-h-screen bg-tech-pattern text-text-main dark:text-white transition-colors duration-200 selection:bg-royal-600 selection:text-white">
       {/* Header */}
       <header className="w-full border-b border-border-light dark:border-white/10 bg-white/90 dark:bg-background-dark/90 backdrop-blur-md sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between relative">
           <div className="flex items-center gap-3">
             <img src="/logo-v2.png" alt="C2C Logo" className="h-14 w-auto" />
           </div>
-          <div className="flex items-center gap-4">
-            <Link href="/dashboard" className="hidden sm:flex items-center gap-2 px-4 h-10 rounded-lg text-navy-900 hover:text-royal-600 font-semibold transition-colors">
+
+          {/* Desktop Navigation */}
+          <div className="hidden sm:flex items-center gap-4">
+            <Link href="/dashboard" className="flex items-center gap-2 px-4 h-10 rounded-lg text-navy-900 hover:text-royal-600 font-semibold transition-colors">
               Dashboard
             </Link>
-            <Link href="/analyzer" className="hidden sm:flex items-center gap-2 px-4 h-10 rounded-lg text-navy-900 hover:text-royal-600 font-semibold transition-colors">
+            <Link href="/analyzer" className="flex items-center gap-2 px-4 h-10 rounded-lg text-navy-900 hover:text-royal-600 font-semibold transition-colors">
               ATS Analyzer
             </Link>
-            <Link href="/profile" className="hidden sm:flex items-center justify-center size-10 rounded-lg text-navy-900 hover:text-royal-600 hover:bg-slate-100 transition-colors" title="Profile">
+            <Link href="/courses" className="flex items-center gap-2 px-4 h-10 rounded-lg text-navy-900 hover:text-royal-600 font-semibold transition-colors">
+              Courses
+            </Link>
+            <Link href="/profile" className="flex items-center justify-center size-10 rounded-lg text-navy-900 hover:text-royal-600 hover:bg-slate-100 transition-colors" title="Profile">
               <span className="material-symbols-outlined">account_circle</span>
             </Link>
-            <Link href="/builder" className="hidden sm:flex items-center gap-2 px-6 h-10 rounded-lg bg-royal-600 hover:bg-royal-500 text-white shadow-md shadow-royal-600/20 text-sm font-semibold transition-all duration-200 transform hover:-translate-y-0.5">
+            <Link href="/builder" className="flex items-center gap-2 px-6 h-10 rounded-lg bg-royal-600 hover:bg-royal-500 text-white shadow-md shadow-royal-600/20 text-sm font-semibold transition-all duration-200 transform hover:-translate-y-0.5">
               <span className="material-symbols-outlined text-lg">school</span>
               <span>Enter Workspace</span>
             </Link>
           </div>
-          <button className="sm:hidden p-2 text-navy-900 dark:text-white">
-            <span className="material-symbols-outlined">menu</span>
+
+          {/* Mobile Menu Button */}
+          <button
+            className="sm:hidden p-2 text-navy-900 dark:text-white rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          >
+            <span className="material-symbols-outlined">{isMobileMenuOpen ? 'close' : 'menu'}</span>
           </button>
+
+          {/* Mobile Dropdown Menu */}
+          {isMobileMenuOpen && (
+            <div className="absolute top-full left-0 right-0 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 shadow-xl p-4 flex flex-col gap-2 sm:hidden animate-in slide-in-from-top-2 duration-200">
+              <Link href="/dashboard" className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 text-navy-900 dark:text-white font-medium transition-colors" onClick={() => setIsMobileMenuOpen(false)}>
+                <span className="material-symbols-outlined text-royal-600">dashboard</span>
+                Dashboard
+              </Link>
+              <Link href="/analyzer" className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 text-navy-900 dark:text-white font-medium transition-colors" onClick={() => setIsMobileMenuOpen(false)}>
+                <span className="material-symbols-outlined text-royal-600">analytics</span>
+                ATS Analyzer
+              </Link>
+              <Link href="/profile" className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 text-navy-900 dark:text-white font-medium transition-colors" onClick={() => setIsMobileMenuOpen(false)}>
+                <span className="material-symbols-outlined text-royal-600">person</span>
+                Profile
+              </Link>
+              <Link href="/courses" className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 text-navy-900 dark:text-white font-medium transition-colors" onClick={() => setIsMobileMenuOpen(false)}>
+                <span className="material-symbols-outlined text-royal-600">school</span>
+                Courses
+              </Link>
+              <Link href="/attendance" className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 text-navy-900 dark:text-white font-medium transition-colors" onClick={() => setIsMobileMenuOpen(false)}>
+                <span className="material-symbols-outlined text-royal-600">event_available</span>
+                My Attendance
+              </Link>
+              <div className="h-px bg-slate-100 dark:bg-slate-800 my-1"></div>
+              <Link href="/builder" className="flex items-center justify-center gap-2 w-full px-4 py-3 rounded-lg bg-royal-600 text-white font-bold shadow-md shadow-royal-600/20 active:scale-95 transition-transform" onClick={() => setIsMobileMenuOpen(false)}>
+                <span className="material-symbols-outlined">school</span>
+                Enter Workspace
+              </Link>
+            </div>
+          )}
         </div>
       </header>
 
@@ -64,6 +110,16 @@ export default function Home() {
                   <span className="material-symbols-outlined text-slate-400 group-hover:text-royal-600 transition-colors">upload_file</span>
                   <span>Analyze Existing Resume</span>
                 </Link>
+                <div className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start">
+                  <Link href="/attendance" className="group flex items-center justify-center gap-2 h-12 px-6 rounded-lg bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:border-green-500 text-navy-900 dark:text-white text-sm font-bold transition-all duration-200 transform hover:-translate-y-0.5 hover:shadow-md">
+                    <span className="material-symbols-outlined text-green-500 group-hover:text-green-600 transition-colors">event_available</span>
+                    <span>My Attendance</span>
+                  </Link>
+                  <Link href="/courses" className="group flex items-center justify-center gap-2 h-12 px-6 rounded-lg bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:border-purple-500 text-navy-900 dark:text-white text-sm font-bold transition-all duration-200 transform hover:-translate-y-0.5 hover:shadow-md">
+                    <span className="material-symbols-outlined text-purple-500 group-hover:text-purple-600 transition-colors">school</span>
+                    <span>Explore Courses</span>
+                  </Link>
+                </div>
               </div>
               <div className="flex items-center justify-center lg:justify-start gap-2 pt-2">
                 <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Powered by</span>

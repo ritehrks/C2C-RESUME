@@ -16,6 +16,10 @@ router.post('/public/:token/mark', contestController.markAttendance);
 // Check if already marked attendance
 router.get('/public/:token/check', contestController.checkAttendance);
 
+// ==================== STUDENT ROUTES (Requires auth only) ====================
+
+// Get my attendance history
+router.get('/my-attendance', userAuth, contestController.getMyAttendance);
 
 // ==================== ADMIN ROUTES (Requires auth + admin role) ====================
 
