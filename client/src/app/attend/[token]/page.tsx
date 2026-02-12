@@ -88,6 +88,44 @@ function AttendancePageContent() {
 
             if (data.success) {
                 setContest(data.event);
+
+                // Check if we have saved user details from a previous session
+                const savedUser = localStorage.getItem('attendanceUser');
+                if (savedUser) {
+                    try {
+                        const parsed = JSON.parse(savedUser);
+                        if (parsed.email && parsed.name) {
+                            // Check if already marked attendance
+                            const checkResult = await eventApi.checkAttendance(token, parsed.email);
+                            if (checkResult.alreadyMarked) {
+                                setSuccess(`You have already marked attendance at ${new Date(checkResult.attendance.markedAt).toLocaleString()}`);
+                                setStep('success');
+                                setLoading(false);
+                                return;
+                            }
+
+                            // Auto-fill and skip to form
+                            setUserEmail(parsed.email);
+                            setUserName(parsed.name);
+                            setFormData(prev => ({
+                                ...prev,
+                                name: parsed.name,
+                                studentId: parsed.studentId || prev.studentId,
+                                branch: parsed.branch || prev.branch,
+                                phone: parsed.phone || prev.phone,
+                            }));
+                            setStep('form');
+
+                            // Get location if required
+                            if (data.event.requiresGPS) {
+                                getLocation();
+                            }
+                            setLoading(false);
+                            return;
+                        }
+                    } catch { /* invalid JSON, fall through to login */ }
+                }
+
                 setStep('login');
             } else {
                 setError(data.error || 'Contest not found');
@@ -150,6 +188,14 @@ function AttendancePageContent() {
             }
 
             setStep('form');
+
+            // Save user details to localStorage for future QR scans
+            localStorage.setItem('attendanceUser', JSON.stringify({
+                email,
+                name,
+                studentId: formData.studentId,
+                branch: formData.branch,
+            }));
 
             // Get location if required
             if (contest?.requiresGPS) {
@@ -224,6 +270,15 @@ function AttendancePageContent() {
             if (result.success) {
                 setSuccess(result.message);
                 setStep('success');
+
+                // Update localStorage with latest form data
+                localStorage.setItem('attendanceUser', JSON.stringify({
+                    email: userEmail,
+                    name: formData.name,
+                    studentId: formData.studentId,
+                    branch: formData.branch,
+                    phone: formData.phone,
+                }));
             } else {
                 setError(result.error || 'Failed to mark attendance');
             }
@@ -559,7 +614,7 @@ function AttendancePageContent() {
                                         </div>
                                     </div>
                                     <button
-                                        onClick={() => { setStep('login'); setError(''); }}
+                                        onClick={() => { localStorage.removeItem('attendanceUser'); setStep('login'); setError(''); }}
                                         className="text-sm text-[#1152d4] hover:text-blue-700 font-medium hover:underline transition-colors whitespace-nowrap"
                                     >
                                         Switch Account
