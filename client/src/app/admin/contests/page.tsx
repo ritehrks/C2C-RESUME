@@ -717,8 +717,8 @@ export default function AdminContestsPage() {
             {/* QR Code Modal */}
             {showQRModal && selectedContest && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white dark:bg-[#1a2233] rounded-2xl shadow-xl w-full max-w-md">
-                        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between">
+                    <div className="bg-white dark:bg-[#1a2233] rounded-2xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+                        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between sticky top-0 bg-white dark:bg-[#1a2233] z-10">
                             <h3 className="text-lg font-bold text-[#0d121b] dark:text-white">QR Code</h3>
                             <button
                                 onClick={() => setShowQRModal(false)}
@@ -728,42 +728,201 @@ export default function AdminContestsPage() {
                             </button>
                         </div>
 
-                        <div className="p-6 text-center">
-                            <h4 className="text-lg font-semibold text-[#0d121b] dark:text-white mb-2">{selectedContest.title}</h4>
-                            <p className="text-sm text-[#4c669a] mb-6">{formatDate(selectedContest.date)} • {selectedContest.venue}</p>
+                        <div className="p-6 space-y-6">
+                            {/* Event Info + QR */}
+                            <div className="text-center">
+                                <h4 className="text-lg font-semibold text-[#0d121b] dark:text-white mb-2">{selectedContest.title}</h4>
+                                <p className="text-sm text-[#4c669a] mb-6">{formatDate(selectedContest.date)} • {selectedContest.venue}</p>
 
-                            <div className="bg-white p-4 rounded-xl inline-block mb-6 shadow-inner">
-                                <QRCodeSVG
-                                    id="qr-code-svg"
-                                    value={`${BASE_URL}/attend/${selectedContest.qrToken}`}
-                                    size={200}
-                                    level="H"
-                                    includeMargin={true}
-                                />
+                                <div className="bg-white p-4 rounded-xl inline-block mb-4 shadow-inner">
+                                    <QRCodeSVG
+                                        id="qr-code-svg"
+                                        value={`${BASE_URL}/attend/${selectedContest.qrToken}`}
+                                        size={200}
+                                        level="H"
+                                        includeMargin={true}
+                                    />
+                                </div>
+
+                                <p className="text-xs text-[#4c669a] mb-4 break-all">
+                                    {BASE_URL}/attend/{selectedContest.qrToken}
+                                </p>
+
+                                <div className="flex gap-3 mb-6">
+                                    <button
+                                        onClick={downloadQR}
+                                        className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-[#1152d4] text-white rounded-lg font-medium hover:bg-[#0d3fa8] transition-colors"
+                                    >
+                                        <span className="material-symbols-outlined text-lg">download</span>
+                                        Download
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            navigator.clipboard.writeText(`${BASE_URL}/attend/${selectedContest.qrToken}`);
+                                            alert('Link copied!');
+                                        }}
+                                        className="flex-1 flex items-center justify-center gap-2 py-2.5 border border-gray-200 dark:border-gray-700 text-[#4c669a] rounded-lg font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                                    >
+                                        <span className="material-symbols-outlined text-lg">content_copy</span>
+                                        Copy Link
+                                    </button>
+                                </div>
                             </div>
 
-                            <p className="text-xs text-[#4c669a] mb-4 break-all">
-                                {BASE_URL}/attend/{selectedContest.qrToken}
-                            </p>
+                            {/* GPS Settings Section */}
+                            <div className="border-t border-gray-200 dark:border-gray-800 pt-5 space-y-4">
+                                <h4 className="text-sm font-semibold text-[#0d121b] dark:text-white uppercase tracking-wider flex items-center gap-2">
+                                    <span className="material-symbols-outlined text-base">my_location</span>
+                                    GPS Settings
+                                </h4>
 
-                            <div className="flex gap-3">
-                                <button
-                                    onClick={downloadQR}
-                                    className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-[#1152d4] text-white rounded-lg font-medium hover:bg-[#0d3fa8] transition-colors"
-                                >
-                                    <span className="material-symbols-outlined text-lg">download</span>
-                                    Download
-                                </button>
-                                <button
-                                    onClick={() => {
-                                        navigator.clipboard.writeText(`${BASE_URL}/attend/${selectedContest.qrToken}`);
-                                        alert('Link copied!');
-                                    }}
-                                    className="flex-1 flex items-center justify-center gap-2 py-2.5 border border-gray-200 dark:border-gray-700 text-[#4c669a] rounded-lg font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-                                >
-                                    <span className="material-symbols-outlined text-lg">content_copy</span>
-                                    Copy Link
-                                </button>
+                                {/* GPS Toggle */}
+                                <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+                                    <div>
+                                        <p className="text-sm font-medium text-[#0d121b] dark:text-white">Require GPS</p>
+                                        <p className="text-xs text-[#4c669a]">Students must be near venue</p>
+                                    </div>
+                                    <button
+                                        onClick={async () => {
+                                            const newVal = !selectedContest.requiresGPS;
+                                            try {
+                                                await eventApi.updateContest(token, selectedContest._id, { requiresGPS: newVal });
+                                                setSelectedContest({ ...selectedContest, requiresGPS: newVal });
+                                                setContests(prev => prev.map(c => c._id === selectedContest._id ? { ...c, requiresGPS: newVal } : c));
+                                            } catch (err) { console.error(err); }
+                                        }}
+                                        className={`relative w-12 h-6 rounded-full transition-colors ${selectedContest.requiresGPS ? 'bg-[#1152d4]' : 'bg-gray-300 dark:bg-gray-600'}`}
+                                    >
+                                        <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${selectedContest.requiresGPS ? 'translate-x-6' : ''}`} />
+                                    </button>
+                                </div>
+
+                                {selectedContest.requiresGPS && (
+                                    <>
+                                        {/* Venue Location */}
+                                        <div className="space-y-2">
+                                            <p className="text-sm font-medium text-[#0d121b] dark:text-white">Venue Location</p>
+                                            {selectedContest.venueLatitude && selectedContest.venueLongitude ? (
+                                                <div className="flex items-center gap-2 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+                                                    <span className="material-symbols-outlined text-green-600 text-lg">check_circle</span>
+                                                    <div className="flex-1 min-w-0">
+                                                        <p className="text-xs font-medium text-green-700 dark:text-green-300">Location Set</p>
+                                                        <p className="text-[10px] text-green-600 dark:text-green-400 truncate">
+                                                            {selectedContest.venueLatitude.toFixed(6)}, {selectedContest.venueLongitude.toFixed(6)}
+                                                        </p>
+                                                    </div>
+                                                    <button
+                                                        onClick={async () => {
+                                                            try {
+                                                                await eventApi.updateContest(token, selectedContest._id, { venueLatitude: null, venueLongitude: null });
+                                                                setSelectedContest({ ...selectedContest, venueLatitude: undefined, venueLongitude: undefined });
+                                                                setContests(prev => prev.map(c => c._id === selectedContest._id ? { ...c, venueLatitude: undefined, venueLongitude: undefined } : c));
+                                                            } catch (err) { console.error(err); }
+                                                        }}
+                                                        className="text-xs text-red-500 hover:text-red-700 font-medium whitespace-nowrap"
+                                                    >
+                                                        Reset
+                                                    </button>
+                                                </div>
+                                            ) : (
+                                                <div className="p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+                                                    <p className="text-xs text-amber-700 dark:text-amber-300 mb-2">No location set. Set it to your current position.</p>
+                                                </div>
+                                            )}
+                                            <div className="flex gap-2">
+                                                <button
+                                                    onClick={async () => {
+                                                        if (!navigator.geolocation) {
+                                                            alert('Geolocation not supported');
+                                                            return;
+                                                        }
+                                                        navigator.geolocation.getCurrentPosition(
+                                                            async (pos) => {
+                                                                const lat = pos.coords.latitude;
+                                                                const lng = pos.coords.longitude;
+                                                                try {
+                                                                    await eventApi.updateContest(token, selectedContest._id, { venueLatitude: lat, venueLongitude: lng });
+                                                                    setSelectedContest({ ...selectedContest, venueLatitude: lat, venueLongitude: lng });
+                                                                    setContests(prev => prev.map(c => c._id === selectedContest._id ? { ...c, venueLatitude: lat, venueLongitude: lng } : c));
+                                                                } catch (err) { console.error(err); }
+                                                            },
+                                                            (err) => { alert('Failed to get location: ' + err.message); },
+                                                            { enableHighAccuracy: true, timeout: 10000 }
+                                                        );
+                                                    }}
+                                                    className="flex-1 flex items-center justify-center gap-2 py-2 bg-[#1152d4]/10 text-[#1152d4] rounded-lg text-sm font-medium hover:bg-[#1152d4]/20 transition-colors"
+                                                >
+                                                    <span className="material-symbols-outlined text-base">my_location</span>
+                                                    {selectedContest.venueLatitude ? 'Update Location' : 'Set My Location'}
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        {/* GPS Radius */}
+                                        <div className="space-y-3">
+                                            <div className="flex items-center justify-between">
+                                                <p className="text-sm font-medium text-[#0d121b] dark:text-white">GPS Radius</p>
+                                                <span className="text-sm font-bold text-[#1152d4]">{selectedContest.gpsRadius || 100}m</span>
+                                            </div>
+
+                                            {/* Preset buttons */}
+                                            <div className="flex gap-2 flex-wrap">
+                                                {[50, 100, 200, 500, 1000].map(r => (
+                                                    <button
+                                                        key={r}
+                                                        onClick={async () => {
+                                                            try {
+                                                                await eventApi.updateContest(token, selectedContest._id, { gpsRadius: r });
+                                                                setSelectedContest({ ...selectedContest, gpsRadius: r });
+                                                                setContests(prev => prev.map(c => c._id === selectedContest._id ? { ...c, gpsRadius: r } : c));
+                                                            } catch (err) { console.error(err); }
+                                                        }}
+                                                        className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${(selectedContest.gpsRadius || 100) === r
+                                                                ? 'bg-[#1152d4] text-white'
+                                                                : 'bg-gray-100 dark:bg-gray-800 text-[#4c669a] hover:bg-[#1152d4]/10 hover:text-[#1152d4]'
+                                                            }`}
+                                                    >
+                                                        {r}m
+                                                    </button>
+                                                ))}
+                                            </div>
+
+                                            {/* Range slider */}
+                                            <input
+                                                type="range"
+                                                min="10"
+                                                max="2000"
+                                                step="10"
+                                                value={selectedContest.gpsRadius || 100}
+                                                onChange={(e) => {
+                                                    const val = parseInt(e.target.value);
+                                                    setSelectedContest({ ...selectedContest, gpsRadius: val });
+                                                }}
+                                                onMouseUp={async (e) => {
+                                                    const val = parseInt((e.target as HTMLInputElement).value);
+                                                    try {
+                                                        await eventApi.updateContest(token, selectedContest._id, { gpsRadius: val });
+                                                        setContests(prev => prev.map(c => c._id === selectedContest._id ? { ...c, gpsRadius: val } : c));
+                                                    } catch (err) { console.error(err); }
+                                                }}
+                                                onTouchEnd={async (e) => {
+                                                    const val = parseInt((e.target as HTMLInputElement).value);
+                                                    try {
+                                                        await eventApi.updateContest(token, selectedContest._id, { gpsRadius: val });
+                                                        setContests(prev => prev.map(c => c._id === selectedContest._id ? { ...c, gpsRadius: val } : c));
+                                                    } catch (err) { console.error(err); }
+                                                }}
+                                                className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-[#1152d4]"
+                                            />
+                                            <div className="flex justify-between text-[10px] text-[#4c669a]">
+                                                <span>10m</span>
+                                                <span>500m</span>
+                                                <span>1km</span>
+                                                <span>2km</span>
+                                            </div>
+                                        </div>
+                                    </>
+                                )}
                             </div>
                         </div>
                     </div>
