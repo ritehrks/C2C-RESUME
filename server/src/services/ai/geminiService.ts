@@ -92,7 +92,8 @@ export async function runDeepAnalysisWithGemini(
 - **NEVER give feedback on:**
   - Visual formatting, layout, or design (you cannot see it)
   - Missing or broken hyperlinks (links ARE present in the actual PDF — extraction just strips them)
-  - Formatting artifacts or garbled text (e.g., '#', merged words) — these are extraction errors, NOT real resume issues
+  - Formatting artifacts or garbled text (e.g., '#', merged words, 'B.Tech#') — these are extraction errors, NOT real resume issues
+  - Contact info noise (e.g., extra characters in phone/email like 'ƒ', merged roll number/email) — these are extraction artifacts
   - Font choices, spacing, column layout, or visual presentation
   - ATS formatting concerns (the template is already ATS-optimized)
 - **ONLY give feedback on:** CONTENT (projects, skills, experience, achievements, keywords) — things the student can actually change
@@ -106,17 +107,17 @@ ${resumeText}
 Provide a comprehensive analysis tailored for a BTECH STUDENT in JSON format:
 
 {
-    "resumeScore": 75,
+    "resumeScore": <YOUR_SCORE_0_TO_100>,
     "scoreBreakdown": {
-        "projectsAndExperience": 80,
-        "technicalSkills": 70,
-        "achievements": 65,
-        "presentation": 75
+        "projectsAndExperience": <SCORE_0_TO_100>,
+        "technicalSkills": <SCORE_0_TO_100>,
+        "achievements": <SCORE_0_TO_100>,
+        "presentation": <SCORE_0_TO_100>
     },
-    "scoreJustification": "Brief explanation of why you gave this score. Be fair - most good student resumes should score 60-85.",
+    "scoreJustification": "Explain specifically what drove this score up or down based on THIS student's actual content.",
     "overallAssessment": "2-3 sentences on how well this STUDENT resume matches the internship/role. Consider their projects, skills, and learning potential.",
-    "strengthsAnalysis": ["List 3-5 strengths. Focus on: strong projects, CP ratings, hackathons, relevant skills, good CGPA, open source, etc."],
-    "improvementAreas": ["List 3-5 areas for improvement. DO NOT suggest adding 'years of experience'. Instead suggest: more projects, adding CP profiles, quantifying project impact, etc."],
+    "strengthsAnalysis": ["List 3-5 strengths with SPECIFIC evidence from the resume. Focus on: strong projects, CP ratings, hackathons, relevant skills, good CGPA, open source, etc."],
+    "improvementAreas": ["List 3-5 content-only improvements. DO NOT suggest adding 'years of experience', fixing formatting, or adding links. Instead suggest: more projects, adding CP profiles, quantifying project impact, etc."],
     "keywordOptimization": {
         "strongMatches": ["Skills/keywords from the role that student has demonstrated"],
         "suggestedAdditions": ["Important technical skills they should add or learn"],
@@ -128,15 +129,16 @@ Provide a comprehensive analysis tailored for a BTECH STUDENT in JSON format:
         "skills": "How to organize technical skills for ATS",
         "achievements": "How to highlight hackathons, CP achievements, academic awards"
     },
-    "atsOptimization": ["5 tips to improve ATS ranking - focus on keywords, project descriptions, skills section. Remember this is for a student."],
+    "atsOptimization": ["5 keyword/content tips to improve ATS ranking. NO formatting advice - only content. Remember this is for a student."],
     "competitiveEdge": "What makes this student stand out? (projects, CP rating, open source, unique skills)",
-    "actionPlan": ["5 immediate actions. Examples: 'Add LeetCode profile link', 'Quantify project impact', 'Add hackathon achievements', 'Include CGPA if above 8', etc."]
+    "actionPlan": ["5 immediate CONTENT actions. Examples: 'Add LeetCode profile link', 'Quantify project impact', 'Add hackathon achievements', 'Include CGPA if above 8', etc."]
 }
 
 IMPORTANT SCORING GUIDELINES:
-- resumeScore should be 0-100, representing how strong this student's resume is for the target role
-- Be realistic: Average good student resume = 65-75, Exceptional = 80-90, Poor = below 50
-- Score breakdown should reflect: projects quality, skills relevance, achievements, and formatting
+- resumeScore must be an ACTUAL NUMBER (0-100) based on a genuine evaluation of THIS specific resume
+- Scoring range: Poor fit = 30-50 | Average = 51-65 | Good = 66-79 | Excellent = 80-95
+- Do NOT default to mid-range scores. Analyze the actual content and give a score that truly reflects the quality
+- Score breakdown fields must also be actual numbers reflecting each sub-category quality
 
 Return ONLY valid JSON, no additional text or markdown formatting.`;
 
