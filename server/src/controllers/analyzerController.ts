@@ -667,6 +667,9 @@ export const analyzerController = {
 
             console.log('✅ AI Deep analysis complete');
 
+            // Use AI-provided score if available, fallback to keyword matching
+            const aiScore = aiAnalysis?.resumeScore || matchPercentage;
+
             // Save to database for admin dashboard tracking
             try {
                 const userId = await getUserIdFromToken(req);
@@ -676,9 +679,9 @@ export const analyzerController = {
                         role: req.body.selectedRole || 'general',
                         analysisType: 'deep',
                         results: {
-                            overallScore: matchPercentage,
+                            overallScore: aiScore, // Use AI score instead of just keyword match
                             similarityScore: 0,
-                            keywordScore: matchPercentage,
+                            keywordScore: matchPercentage, // Keep keyword match for reference
                             matchedKeywords,
                             missingKeywords,
                             sections: {
@@ -692,7 +695,7 @@ export const analyzerController = {
                             aiSuggestions: aiAnalysis?.actionPlan || [],
                         },
                     });
-                    console.log('   📊 Deep analysis saved to database');
+                    console.log(`   📊 Deep analysis saved to database (score: ${aiScore}%)`);
 
                     // Increment user's deep analysis count
                     await User.findByIdAndUpdate(userId, {
@@ -702,9 +705,6 @@ export const analyzerController = {
             } catch (saveError) {
                 console.log('   ⚠️ Could not save analysis to database:', saveError);
             }
-
-            // Use AI-provided score if available, fallback to keyword matching
-            const aiScore = aiAnalysis?.resumeScore || matchPercentage;
 
             res.json({
                 success: true,
