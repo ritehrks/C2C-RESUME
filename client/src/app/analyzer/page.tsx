@@ -932,44 +932,48 @@ export default function AnalyzerPage() {
                                                     {/* Skills Matched */}
                                                     <div className="bg-[#f0fdf4] dark:bg-green-900/10 rounded-lg p-3 border border-green-200 dark:border-green-800">
                                                         <p className="text-xs font-semibold text-green-700 dark:text-green-400 mb-2">
-                                                            ✅ Skills Matched ({
-                                                                deepResult?.ai?.keywordOptimization?.strongMatches?.length ??
-                                                                simpleResult?.keywords?.matched?.length ??
-                                                                currentResult.matchedKeywords?.length ?? 0
-                                                            }/{
+                                                            ✅ Skills Matched ({(
+                                                                deepResult?.ai?.keywordOptimization?.strongMatches ??
+                                                                currentResult.matchedKeywords ??
+                                                                simpleResult?.keywords?.matched ?? []
+                                                            ).length}/{(
                                                                 (deepResult?.ai?.keywordOptimization?.strongMatches?.length ?? 0) +
                                                                 (deepResult?.ai?.keywordOptimization?.suggestedAdditions?.length ?? 0) ||
-                                                                simpleResult?.stats?.jobKeywordsFound ||
-                                                                ((simpleResult?.keywords?.matched?.length ?? 0) + (simpleResult?.keywords?.missing?.length ?? 0)) || 1
-                                                            })
+                                                                (currentResult.matchedKeywords?.length ?? 0) + (currentResult.missingKeywords?.length ?? 0) ||
+                                                                simpleResult?.stats?.jobKeywordsFound || 1
+                                                            )})
                                                         </p>
                                                         <div className="flex flex-wrap gap-1.5">
-                                                            {(deepResult?.ai?.keywordOptimization?.strongMatches ??
-                                                                simpleResult?.keywords?.matched ??
-                                                                currentResult.matchedKeywords ?? []).map((kw: string, i: number) => (
-                                                                    <span key={i} className="px-2 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full text-xs font-medium">
-                                                                        {kw}
-                                                                    </span>
-                                                                ))}
+                                                            {(
+                                                                deepResult?.ai?.keywordOptimization?.strongMatches ??
+                                                                currentResult.matchedKeywords ??
+                                                                simpleResult?.keywords?.matched ?? []
+                                                            ).filter(Boolean).map((kw: string, i: number) => (
+                                                                <span key={i} className="px-2 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full text-xs font-medium">
+                                                                    {kw}
+                                                                </span>
+                                                            ))}
                                                         </div>
                                                     </div>
                                                     {/* Missing Keywords */}
                                                     <div className="bg-[#fff5f5] dark:bg-red-900/10 rounded-lg p-3 border border-red-200 dark:border-red-800">
                                                         <p className="text-xs font-semibold text-red-600 dark:text-red-400 mb-2">
-                                                            ❌ Missing ({
-                                                                deepResult?.ai?.keywordOptimization?.suggestedAdditions?.length ??
-                                                                simpleResult?.keywords?.missing?.length ??
-                                                                currentResult.missingKeywords?.length ?? 0
-                                                            })
+                                                            ❌ Missing ({(
+                                                                deepResult?.ai?.keywordOptimization?.suggestedAdditions ??
+                                                                currentResult.missingKeywords ??
+                                                                simpleResult?.keywords?.missing ?? []
+                                                            ).length})
                                                         </p>
                                                         <div className="flex flex-wrap gap-1.5">
-                                                            {(deepResult?.ai?.keywordOptimization?.suggestedAdditions ??
-                                                                simpleResult?.keywords?.missing ??
-                                                                currentResult.missingKeywords ?? []).map((kw: string, i: number) => (
-                                                                    <span key={i} className="px-2 py-0.5 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-full text-xs font-medium">
-                                                                        {kw}
-                                                                    </span>
-                                                                ))}
+                                                            {(
+                                                                deepResult?.ai?.keywordOptimization?.suggestedAdditions ??
+                                                                currentResult.missingKeywords ??
+                                                                simpleResult?.keywords?.missing ?? []
+                                                            ).filter(Boolean).map((kw: string, i: number) => (
+                                                                <span key={i} className="px-2 py-0.5 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-full text-xs font-medium">
+                                                                    {kw}
+                                                                </span>
+                                                            ))}
                                                         </div>
                                                     </div>
                                                 </div>
