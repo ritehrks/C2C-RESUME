@@ -1055,24 +1055,30 @@ export default function AnalyzerPage() {
                                                 )}
                                             </div>
 
-                                            {/* ATS Optimization Tips */}
-                                            <div className="bg-gradient-to-r from-[#1152d4] to-[#0a3690] rounded-xl shadow-lg p-6 text-white relative overflow-hidden">
-                                                <div className="absolute right-0 top-0 h-full w-1/3 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
-                                                <div className="relative z-10">
-                                                    <div className="flex items-center gap-2 mb-4">
-                                                        <span className="material-symbols-outlined">rocket_launch</span>
-                                                        <h3 className="font-bold text-lg">Action Plan</h3>
+                                            {/* Action Plan */}
+                                            {((deepResult.ai.actionPlan?.length ?? 0) > 0 || (deepResult.ai.atsOptimization?.length ?? 0) > 0) && (
+                                                <div className="bg-gradient-to-r from-[#1152d4] to-[#0a3690] rounded-xl shadow-lg p-6 text-white relative overflow-hidden">
+                                                    <div className="absolute right-0 top-0 h-full w-1/3 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
+                                                    <div className="relative z-10">
+                                                        <div className="flex items-center gap-2 mb-4">
+                                                            <span className="material-symbols-outlined">rocket_launch</span>
+                                                            <h3 className="font-bold text-lg">Action Plan</h3>
+                                                        </div>
+                                                        <ol className="space-y-2 text-sm text-blue-100">
+                                                            {(deepResult.ai.actionPlan?.length
+                                                                ? deepResult.ai.actionPlan
+                                                                : deepResult.ai.atsOptimization ?? []
+                                                            ).map((action: string, i: number) => (
+                                                                <li key={i} className="flex items-start gap-3">
+                                                                    <span className="flex-shrink-0 w-6 h-6 rounded-full bg-white/20 flex items-center justify-center text-xs font-bold">{i + 1}</span>
+                                                                    <span>{action}</span>
+                                                                </li>
+                                                            ))}
+                                                        </ol>
                                                     </div>
-                                                    <ol className="space-y-2 text-sm text-blue-100">
-                                                        {deepResult.ai.actionPlan?.map((action, i) => (
-                                                            <li key={i} className="flex items-start gap-3">
-                                                                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-white/20 flex items-center justify-center text-xs font-bold">{i + 1}</span>
-                                                                <span>{action}</span>
-                                                            </li>
-                                                        ))}
-                                                    </ol>
                                                 </div>
-                                            </div>
+                                            )}
+
 
                                             {/* Competitive Edge */}
                                             {deepResult.ai.competitiveEdge && (
