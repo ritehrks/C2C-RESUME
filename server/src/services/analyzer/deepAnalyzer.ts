@@ -63,6 +63,12 @@ export async function runDeepAnalysis(
 RESUME TEXT:
 ${resumeText}
 
+⚠️ CRITICAL - PDF EXTRACTION LIMITATIONS:
+- This text was auto-extracted from a PDF and contains artifacts like garbled characters, merged words, or symbols (e.g., 'B.Tech#'). These are extraction errors - NOT actual resume issues.
+- The student uses a professional template that handles ALL visual formatting, hyperlinks, and layout automatically.
+- NEVER give feedback on: formatting, visual layout, missing links/hyperlinks, font/spacing, ATS formatting. You cannot see any of these - they are handled by the template.
+- ONLY give content-based feedback: projects, skills, keywords, quantification, achievements, missing technical content.
+
 ANALYSIS CONTEXT:
 - Target Role: ${selectedRole}
 - Keywords Matched: ${simpleResults.matchedKeywords.length}/${simpleResults.matchedKeywords.length + simpleResults.missingKeywords.length}
@@ -104,7 +110,7 @@ Provide a comprehensive analysis in the following JSON format ONLY (no markdown,
   ],
   
   "atsIssues": [
-    "Any ATS-specific formatting or keyword issues"
+    "ATS keyword gaps only — do NOT mention formatting, links, or visual issues. Example: 'Add the keyword Docker to your skills section'"
   ],
   
   "competitiveEdge": "What makes this candidate unique or stand out for ${selectedRole} roles specifically"

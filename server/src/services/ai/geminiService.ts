@@ -86,12 +86,16 @@ export async function runDeepAnalysisWithGemini(
 - Current year is: ${currentYear}
 - Do NOT flag recent dates as "future-dated"
 
-**PDF EXTRACTION NOTE:**
-- Resume text was auto-extracted from PDF and re-structured to show the visual layout
-- Section markers like ═══ SECTION NAME ═══ represent gray-background section headers with horizontal rules
-- The box at the top (┌──┐) represents the header area with college logo and contact info displayed side by side
-- Bullet points (•) represent actual bullet items in the resume
-- Focus on CONTENT, KEYWORDS, and SKILLS - assume professional ATS-friendly formatting
+**⚠️ CRITICAL - PDF EXTRACTION LIMITATIONS (READ THIS FIRST):**
+- The resume text below was AUTO-EXTRACTED from a PDF. It contains text artifacts, scrambled characters, and extraction noise (e.g., 'B.Tech#', missing special characters, merged words)
+- The student uses a PROFESSIONAL TEMPLATE that handles ALL formatting — fonts, colors, spacing, section layout, hyperlinks, columns. You cannot see this.
+- **NEVER give feedback on:**
+  - Visual formatting, layout, or design (you cannot see it)
+  - Missing or broken hyperlinks (links ARE present in the actual PDF — extraction just strips them)
+  - Formatting artifacts or garbled text (e.g., '#', merged words) — these are extraction errors, NOT real resume issues
+  - Font choices, spacing, column layout, or visual presentation
+  - ATS formatting concerns (the template is already ATS-optimized)
+- **ONLY give feedback on:** CONTENT (projects, skills, experience, achievements, keywords) — things the student can actually change
 
 **Role/Internship Description:**
 ${jobDescription}
