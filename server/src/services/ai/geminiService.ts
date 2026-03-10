@@ -203,14 +203,19 @@ Return ONLY valid JSON, no additional text or markdown formatting.`;
                 throw new Error('Failed to parse AI response. Please try again.');
             }
 
-            // Retry on rate limit errors OR transient network errors
+            // Retry on rate limit, server overload, OR transient network errors
             const isRetryable = error.status === 429 ||
+                error.status === 503 ||  // Service Unavailable (temporary overload)
+                error.status === 500 ||  // Internal Server Error (transient)
                 error.message?.includes('429') ||
+                error.message?.includes('503') ||
                 error.message?.includes('RESOURCE_EXHAUSTED') ||
                 error.message?.includes('quota') ||
                 error.message?.includes('fetch failed') ||
                 error.message?.includes('ECONNRESET') ||
                 error.message?.includes('ETIMEDOUT') ||
+                error.message?.includes('Service Unavailable') ||
+                error.message?.includes('high demand') ||
                 error.name === 'TypeError'; // network fetch errors
 
             if (!isRetryable) {
