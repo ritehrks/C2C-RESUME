@@ -9,7 +9,7 @@ build/
 .next/
 out/
 
-# Environment files
+# Catch-all environment covers
 .env
 .env.local
 .env.development.local
@@ -46,3 +46,27 @@ IMPLEMENTATION_DOCS.md
 PROJECT_PROGRESS.md
 SIMPLE_ANALYSIS_DOCS.md
 C2C_RESUME_PLATFORM_BLUEPRINT.md
+
+# Text and Data files
+*.txt
+*.csv
+*.json.bak
+
+# Markdown files
+*.md
+!README.md
+
+# Catch-all environment covers
+.env*
+*.env*
+
+# Local cache & build files
+*.tsbuildinfo
+.next/cache/
+
+# Random local files
+*.pdf
+test_resume.pdf
+
+# Windows OS files
+Desktop.ini
