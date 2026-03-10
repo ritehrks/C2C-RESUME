@@ -143,11 +143,14 @@ IMPORTANT SCORING GUIDELINES:
 Return ONLY valid JSON, no additional text or markdown formatting.`;
 
 
-    // Try gemini-2.5-flash across all 3 API keys
+    // Try gemini-2.5-flash first, then gemini-3-flash-preview as fallback (all 3 keys each)
+    const models = ['gemini-2.5-flash', 'gemini-3-flash-preview'];
     const attempts: { client: GoogleGenerativeAI; model: string; label: string }[] = [];
-    clients.forEach((client, idx) => {
-        attempts.push({ client, model: 'gemini-2.5-flash', label: `Key${idx + 1} + gemini-2.5-flash` });
-    });
+    for (const modelName of models) {
+        clients.forEach((client, idx) => {
+            attempts.push({ client, model: modelName, label: `Key${idx + 1} + ${modelName}` });
+        });
+    }
 
 
 
@@ -244,11 +247,14 @@ export async function getQuickFeedback(
         achievements: `Rewrite this achievement to be more impactful for a ${targetRole} position. Quantify results where possible:\n\n${content}\n\nProvide the improved version only.`,
     };
 
-    // Try gemini-2.5-flash across all 3 API keys
+    // Try gemini-2.5-flash first, then gemini-3-flash-preview as fallback (all 3 keys each)
+    const models = ['gemini-2.5-flash', 'gemini-3-flash-preview'];
     const attempts: { client: GoogleGenerativeAI; model: string; label: string }[] = [];
-    clients.forEach((client, idx) => {
-        attempts.push({ client, model: 'gemini-2.5-flash', label: `Key${idx + 1} + gemini-2.5-flash` });
-    });
+    for (const modelName of models) {
+        clients.forEach((client, idx) => {
+            attempts.push({ client, model: modelName, label: `Key${idx + 1} + ${modelName}` });
+        });
+    }
 
     let lastError: any = null;
 

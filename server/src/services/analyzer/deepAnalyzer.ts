@@ -120,13 +120,16 @@ Provide a comprehensive analysis in the following JSON format ONLY (no markdown,
 
 Be specific, actionable, and reference actual content from the resume. Focus on ${selectedRole}-specific feedback.`;
 
-  // Try gemini-2.5-flash across all available API keys
+  // Try gemini-2.5-flash first, then gemini-3-flash-preview as fallback (all 3 keys each)
   const clients = getGenAIClients();
-  const attempts = clients.map((client, idx) => ({
-    client,
-    model: 'gemini-2.5-flash',
-    label: `Key${idx + 1} + gemini-2.5-flash`,
-  }));
+  const models = ['gemini-2.5-flash', 'gemini-3-flash-preview'];
+  const attempts = models.flatMap((modelName) =>
+    clients.map((client, idx) => ({
+      client,
+      model: modelName,
+      label: `Key${idx + 1} + ${modelName}`,
+    }))
+  );
 
 
   let aiResponse: any = {};

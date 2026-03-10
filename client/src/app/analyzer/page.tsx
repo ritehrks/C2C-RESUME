@@ -691,8 +691,8 @@ export default function AnalyzerPage() {
                                             type="button"
                                             onClick={() => { setTemplateType('mnit'); setTemplateAutoDetected(false); }}
                                             className={`flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-md text-sm font-medium transition-all ${templateType === 'mnit'
-                                                    ? 'bg-white dark:bg-[#1e2636] text-app-primary shadow-sm border border-blue-200 dark:border-blue-800'
-                                                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
+                                                ? 'bg-white dark:bg-[#1e2636] text-app-primary shadow-sm border border-blue-200 dark:border-blue-800'
+                                                : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
                                                 }`}
                                         >
                                             <span className="text-base">🏛️</span>
@@ -702,8 +702,8 @@ export default function AnalyzerPage() {
                                             type="button"
                                             onClick={() => { setTemplateType('other'); setTemplateAutoDetected(false); }}
                                             className={`flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-md text-sm font-medium transition-all ${templateType === 'other'
-                                                    ? 'bg-white dark:bg-[#1e2636] text-app-primary shadow-sm border border-blue-200 dark:border-blue-800'
-                                                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
+                                                ? 'bg-white dark:bg-[#1e2636] text-app-primary shadow-sm border border-blue-200 dark:border-blue-800'
+                                                : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
                                                 }`}
                                         >
                                             <span className="text-base">📄</span>
@@ -928,30 +928,52 @@ export default function AnalyzerPage() {
                                                     </p>
                                                 )}
 
-                                                <div className="grid grid-cols-2 gap-3">
-                                                    <div className="bg-[#f8f9fc] dark:bg-[#101622] rounded-lg p-3 border border-[#e7ebf3] dark:border-gray-800">
-                                                        <p className="text-xs text-[#4c669a] dark:text-gray-400 mb-1">Skills Matched</p>
-                                                        <p className="text-lg font-bold text-[#0d121b] dark:text-white">
-                                                            {/* For deep analysis, use AI strongMatches; for simple use keywords.matched */}
-                                                            {deepResult?.ai?.keywordOptimization?.strongMatches?.length ??
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                                    {/* Skills Matched */}
+                                                    <div className="bg-[#f0fdf4] dark:bg-green-900/10 rounded-lg p-3 border border-green-200 dark:border-green-800">
+                                                        <p className="text-xs font-semibold text-green-700 dark:text-green-400 mb-2">
+                                                            ✅ Skills Matched ({
+                                                                deepResult?.ai?.keywordOptimization?.strongMatches?.length ??
                                                                 simpleResult?.keywords?.matched?.length ??
-                                                                currentResult.matchedKeywords?.length ?? 0}/
-                                                            {(deepResult?.ai?.keywordOptimization?.strongMatches?.length ?? 0) +
+                                                                currentResult.matchedKeywords?.length ?? 0
+                                                            }/{
+                                                                (deepResult?.ai?.keywordOptimization?.strongMatches?.length ?? 0) +
                                                                 (deepResult?.ai?.keywordOptimization?.suggestedAdditions?.length ?? 0) ||
                                                                 simpleResult?.stats?.jobKeywordsFound ||
-                                                                ((simpleResult?.keywords?.matched?.length ?? 0) + (simpleResult?.keywords?.missing?.length ?? 0)) || 1}
+                                                                ((simpleResult?.keywords?.matched?.length ?? 0) + (simpleResult?.keywords?.missing?.length ?? 0)) || 1
+                                                            })
                                                         </p>
+                                                        <div className="flex flex-wrap gap-1.5">
+                                                            {(deepResult?.ai?.keywordOptimization?.strongMatches ??
+                                                                simpleResult?.keywords?.matched ??
+                                                                currentResult.matchedKeywords ?? []).map((kw: string, i: number) => (
+                                                                    <span key={i} className="px-2 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full text-xs font-medium">
+                                                                        {kw}
+                                                                    </span>
+                                                                ))}
+                                                        </div>
                                                     </div>
-                                                    <div className="bg-[#f8f9fc] dark:bg-[#101622] rounded-lg p-3 border border-[#e7ebf3] dark:border-gray-800">
-                                                        <p className="text-xs text-[#4c669a] dark:text-gray-400 mb-1">Missing</p>
-                                                        <p className="text-lg font-bold text-red-500">
-                                                            {/* For deep analysis, use AI suggestedAdditions */}
-                                                            {deepResult?.ai?.keywordOptimization?.suggestedAdditions?.length ??
+                                                    {/* Missing Keywords */}
+                                                    <div className="bg-[#fff5f5] dark:bg-red-900/10 rounded-lg p-3 border border-red-200 dark:border-red-800">
+                                                        <p className="text-xs font-semibold text-red-600 dark:text-red-400 mb-2">
+                                                            ❌ Missing ({
+                                                                deepResult?.ai?.keywordOptimization?.suggestedAdditions?.length ??
                                                                 simpleResult?.keywords?.missing?.length ??
-                                                                currentResult.missingKeywords?.length ?? 0}
+                                                                currentResult.missingKeywords?.length ?? 0
+                                                            })
                                                         </p>
+                                                        <div className="flex flex-wrap gap-1.5">
+                                                            {(deepResult?.ai?.keywordOptimization?.suggestedAdditions ??
+                                                                simpleResult?.keywords?.missing ??
+                                                                currentResult.missingKeywords ?? []).map((kw: string, i: number) => (
+                                                                    <span key={i} className="px-2 py-0.5 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-full text-xs font-medium">
+                                                                        {kw}
+                                                                    </span>
+                                                                ))}
+                                                        </div>
                                                     </div>
                                                 </div>
+
                                             </div>
                                         </div>
                                     </div>
