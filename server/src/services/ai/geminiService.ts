@@ -201,13 +201,17 @@ Return ONLY valid JSON, no additional text or markdown formatting.`;
                 throw new Error('Failed to parse AI response. Please try again.');
             }
 
-            // Only retry on rate limit (429) or resource exhausted errors
-            const isRateLimitError = error.status === 429 ||
+            // Retry on rate limit errors OR transient network errors
+            const isRetryable = error.status === 429 ||
                 error.message?.includes('429') ||
                 error.message?.includes('RESOURCE_EXHAUSTED') ||
-                error.message?.includes('quota');
+                error.message?.includes('quota') ||
+                error.message?.includes('fetch failed') ||
+                error.message?.includes('ECONNRESET') ||
+                error.message?.includes('ETIMEDOUT') ||
+                error.name === 'TypeError'; // network fetch errors
 
-            if (!isRateLimitError) {
+            if (!isRetryable) {
                 console.error('❌ Non-recoverable error, stopping retry');
                 break;
             }

@@ -151,14 +151,18 @@ Be specific, actionable, and reference actual content from the resume. Focus on 
       lastError = error;
       console.warn(`⚠️ ${attempt.label} failed:`, error.message);
 
-      // Only retry on rate limit (429) or resource exhausted errors
-      const isRateLimitError = error.status === 429 ||
+      // Retry on rate limit errors OR transient network errors
+      const isRetryable = error.status === 429 ||
         error.message?.includes('429') ||
         error.message?.includes('RESOURCE_EXHAUSTED') ||
-        error.message?.includes('quota');
+        error.message?.includes('quota') ||
+        error.message?.includes('fetch failed') ||
+        error.message?.includes('ECONNRESET') ||
+        error.message?.includes('ETIMEDOUT') ||
+        error.name === 'TypeError'; // network fetch errors
 
-      if (!isRateLimitError) {
-        // Not a rate limit error, don't try fallback
+      if (!isRetryable) {
+        // Not a retryable error, don't try fallback
         console.error('❌ Non-recoverable error, stopping retry');
         break;
       }
