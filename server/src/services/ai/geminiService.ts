@@ -244,14 +244,11 @@ export async function getQuickFeedback(
         achievements: `Rewrite this achievement to be more impactful for a ${targetRole} position. Quantify results where possible:\n\n${content}\n\nProvide the improved version only.`,
     };
 
-    // Fallback chain: gemini-2.5-pro (all keys) → gemini-3-flash-preview (all keys) → gemini-2.5-flash (all keys)
-    const models = ['gemini-2.5-pro', 'gemini-3-flash-preview', 'gemini-2.5-flash'];
+    // Try gemini-2.5-flash across all 3 API keys
     const attempts: { client: GoogleGenerativeAI; model: string; label: string }[] = [];
-    for (const modelName of models) {
-        clients.forEach((client, idx) => {
-            attempts.push({ client, model: modelName, label: `Key${idx + 1} + ${modelName}` });
-        });
-    }
+    clients.forEach((client, idx) => {
+        attempts.push({ client, model: 'gemini-2.5-flash', label: `Key${idx + 1} + gemini-2.5-flash` });
+    });
 
     let lastError: any = null;
 
@@ -267,12 +264,22 @@ export async function getQuickFeedback(
             lastError = error;
             console.warn(`⚠️ Quick Feedback ${attempt.label} failed:`, error.message);
 
-            const isRateLimitError = error.status === 429 ||
+            // Retry on rate limit, server overload, OR transient network errors
+            const isRetryable = error.status === 429 ||
+                error.status === 503 ||
+                error.status === 500 ||
                 error.message?.includes('429') ||
+                error.message?.includes('503') ||
                 error.message?.includes('RESOURCE_EXHAUSTED') ||
-                error.message?.includes('quota');
+                error.message?.includes('quota') ||
+                error.message?.includes('fetch failed') ||
+                error.message?.includes('ECONNRESET') ||
+                error.message?.includes('ETIMEDOUT') ||
+                error.message?.includes('Service Unavailable') ||
+                error.message?.includes('high demand') ||
+                error.name === 'TypeError';
 
-            if (!isRateLimitError) {
+            if (!isRetryable) {
                 break;
             }
         }

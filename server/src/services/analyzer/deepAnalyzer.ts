@@ -5,14 +5,16 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import { runSimpleAnalysis, type SimpleAnalysisResult } from './simpleAnalyzer.js';
 import { redis } from '../../config/redis.js';
 
-// Three API keys for robust fallback
-const API_KEY_1 = process.env.GOOGLE_API_KEY || '';
-const API_KEY_2 = process.env.GOOGLE_API_KEY2 || '';
-const API_KEY_3 = process.env.GOOGLE_API_KEY3 || '';
-
-const genAI_1 = new GoogleGenerativeAI(API_KEY_1);
-const genAI_2 = new GoogleGenerativeAI(API_KEY_2);
-const genAI_3 = new GoogleGenerativeAI(API_KEY_3);
+// Build clients lazily at call time (avoids empty-string GoogleGenerativeAI if key isn't set)
+const getGenAIClients = () => {
+  const keys = [
+    process.env.GOOGLE_API_KEY,
+    process.env.GOOGLE_API_KEY2,
+    process.env.GOOGLE_API_KEY3,
+  ].filter(Boolean) as string[];
+  if (keys.length === 0) throw new Error('No GOOGLE_API_KEY set in environment variables');
+  return keys.map(k => new GoogleGenerativeAI(k));
+};
 
 /**
  * Check if user has remaining deep analyses for today
@@ -118,12 +120,13 @@ Provide a comprehensive analysis in the following JSON format ONLY (no markdown,
 
 Be specific, actionable, and reference actual content from the resume. Focus on ${selectedRole}-specific feedback.`;
 
-  // Try gemini-2.5-flash across all 3 API keys
-  const attempts = [
-    { client: genAI_1, model: 'gemini-2.5-flash', label: 'Key1 + gemini-2.5-flash' },
-    { client: genAI_2, model: 'gemini-2.5-flash', label: 'Key2 + gemini-2.5-flash' },
-    { client: genAI_3, model: 'gemini-2.5-flash', label: 'Key3 + gemini-2.5-flash' },
-  ];
+  // Try gemini-2.5-flash across all available API keys
+  const clients = getGenAIClients();
+  const attempts = clients.map((client, idx) => ({
+    client,
+    model: 'gemini-2.5-flash',
+    label: `Key${idx + 1} + gemini-2.5-flash`,
+  }));
 
 
   let aiResponse: any = {};
