@@ -5,36 +5,38 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import { runSimpleAnalysis, type SimpleAnalysisResult } from './simpleAnalyzer.js';
 import { redis } from '../../config/redis.js';
 
-// Primary and secondary API keys for fallback
-const PRIMARY_API_KEY = process.env.GEMINI_API_KEY || '';
-const SECONDARY_API_KEY = 'AIzaSyA-PPa7ToeVtN4P0mflKT5vUdKY4B795ow';
+// Three API keys for robust fallback
+const API_KEY_1 = process.env.GOOGLE_API_KEY || '';
+const API_KEY_2 = process.env.GOOGLE_API_KEY2 || '';
+const API_KEY_3 = process.env.GOOGLE_API_KEY3 || '';
 
-const genAI_Primary = new GoogleGenerativeAI(PRIMARY_API_KEY);
-const genAI_Secondary = new GoogleGenerativeAI(SECONDARY_API_KEY);
+const genAI_1 = new GoogleGenerativeAI(API_KEY_1);
+const genAI_2 = new GoogleGenerativeAI(API_KEY_2);
+const genAI_3 = new GoogleGenerativeAI(API_KEY_3);
 
 /**
  * Check if user has remaining deep analyses for today
  */
 export async function checkDeepAnalysisLimit(userId: string): Promise<{ allowed: boolean; remaining: number }> {
-    const today = new Date().toISOString().split('T')[0];
-    const key = `deep_analysis:${userId}:${today}`;
-    const usage = await redis.get(key);
-    const usageCount = parseInt(usage || '0', 10);
+  const today = new Date().toISOString().split('T')[0];
+  const key = `deep_analysis:${userId}:${today}`;
+  const usage = await redis.get(key);
+  const usageCount = parseInt(usage || '0', 10);
 
-    return {
-        allowed: usageCount < 3,
-        remaining: Math.max(0, 3 - usageCount),
-    };
+  return {
+    allowed: usageCount < 3,
+    remaining: Math.max(0, 3 - usageCount),
+  };
 }
 
 /**
  * Increment deep analysis usage counter
  */
 async function incrementUsage(userId: string): Promise<void> {
-    const today = new Date().toISOString().split('T')[0];
-    const key = `deep_analysis:${userId}:${today}`;
-    await redis.incr(key);
-    await redis.expire(key, 86400); // Expire after 24 hours
+  const today = new Date().toISOString().split('T')[0];
+  const key = `deep_analysis:${userId}:${today}`;
+  await redis.incr(key);
+  await redis.expire(key, 86400); // Expire after 24 hours
 }
 
 /**
@@ -42,21 +44,21 @@ async function incrementUsage(userId: string): Promise<void> {
  * Includes all simple analysis features + AI-powered insights
  */
 export async function runDeepAnalysis(
-    resumeText: string,
-    selectedRole: string,
-    userId: string
+  resumeText: string,
+  selectedRole: string,
+  userId: string
 ): Promise<DeepAnalysisResult | { error: string }> {
-    // 1. Check rate limit
-    const limit = await checkDeepAnalysisLimit(userId);
-    if (!limit.allowed) {
-        return { error: 'Daily limit reached. Try again tomorrow!' };
-    }
+  // 1. Check rate limit
+  const limit = await checkDeepAnalysisLimit(userId);
+  if (!limit.allowed) {
+    return { error: 'Daily limit reached. Try again tomorrow!' };
+  }
 
-    // 2. Run simple analysis first
-    const simpleResults = await runSimpleAnalysis(resumeText, selectedRole);
+  // 2. Run simple analysis first
+  const simpleResults = await runSimpleAnalysis(resumeText, selectedRole);
 
-    // 3. Call Gemini for AI insights (with API key & model fallback)
-    const prompt = `You are an expert ATS (Applicant Tracking System) resume analyzer and career coach. Analyze this resume for a ${selectedRole} position.
+  // 3. Call Gemini for AI insights (with API key & model fallback)
+  const prompt = `You are an expert ATS (Applicant Tracking System) resume analyzer and career coach. Analyze this resume for a ${selectedRole} position.
 
 RESUME TEXT:
 ${resumeText}
@@ -110,88 +112,95 @@ Provide a comprehensive analysis in the following JSON format ONLY (no markdown,
 
 Be specific, actionable, and reference actual content from the resume. Focus on ${selectedRole}-specific feedback.`;
 
-    // Fallback chain: Primary API (best model) → Secondary API (best model) → Secondary API (2.5-flash)
-    const attempts = [
-        { client: genAI_Primary, model: 'gemini-3-flash-preview', label: 'Primary API + gemini-3-flash' },
-        { client: genAI_Secondary, model: 'gemini-3-flash-preview', label: 'Secondary API + gemini-3-flash' },
-        { client: genAI_Secondary, model: 'gemini-2.5-flash', label: 'Secondary API + gemini-2.5-flash' },
-    ];
+  // Fallback chain: Try best model first with all keys, then next model, etc.
+  // Priority: gemini-2.5-pro (all 3 keys) → gemini-3-flash-preview (all 3 keys) → gemini-2.5-flash (all 3 keys)
+  const attempts = [
+    { client: genAI_1, model: 'gemini-2.5-pro', label: 'Key1 + gemini-2.5-pro' },
+    { client: genAI_2, model: 'gemini-2.5-pro', label: 'Key2 + gemini-2.5-pro' },
+    { client: genAI_3, model: 'gemini-2.5-pro', label: 'Key3 + gemini-2.5-pro' },
+    { client: genAI_1, model: 'gemini-3-flash-preview', label: 'Key1 + gemini-3-flash-preview' },
+    { client: genAI_2, model: 'gemini-3-flash-preview', label: 'Key2 + gemini-3-flash-preview' },
+    { client: genAI_3, model: 'gemini-3-flash-preview', label: 'Key3 + gemini-3-flash-preview' },
+    { client: genAI_1, model: 'gemini-2.5-flash', label: 'Key1 + gemini-2.5-flash' },
+    { client: genAI_2, model: 'gemini-2.5-flash', label: 'Key2 + gemini-2.5-flash' },
+    { client: genAI_3, model: 'gemini-2.5-flash', label: 'Key3 + gemini-2.5-flash' },
+  ];
 
-    let aiResponse: any = {};
-    let lastError: any = null;
+  let aiResponse: any = {};
+  let lastError: any = null;
 
-    for (const attempt of attempts) {
-        try {
-            console.log(`🤖 Trying: ${attempt.label}`);
-            const model = attempt.client.getGenerativeModel({ model: attempt.model });
-            const result = await model.generateContent(prompt);
-            const responseText = result.response.text();
+  for (const attempt of attempts) {
+    try {
+      console.log(`🤖 Trying: ${attempt.label}`);
+      const model = attempt.client.getGenerativeModel({ model: attempt.model });
+      const result = await model.generateContent(prompt);
+      const responseText = result.response.text();
 
-            // Parse JSON from response (handle potential markdown wrapping)
-            const jsonMatch = responseText.match(/\{[\s\S]*\}/);
-            aiResponse = JSON.parse(jsonMatch?.[0] || '{}');
-            console.log(`✅ Success with: ${attempt.label}`);
-            break; // Success, exit loop
-        } catch (error: any) {
-            lastError = error;
-            console.warn(`⚠️ ${attempt.label} failed:`, error.message);
+      // Parse JSON from response (handle potential markdown wrapping)
+      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+      aiResponse = JSON.parse(jsonMatch?.[0] || '{}');
+      console.log(`✅ Success with: ${attempt.label}`);
+      break; // Success, exit loop
+    } catch (error: any) {
+      lastError = error;
+      console.warn(`⚠️ ${attempt.label} failed:`, error.message);
 
-            // Only retry on rate limit (429) or resource exhausted errors
-            const isRateLimitError = error.status === 429 ||
-                error.message?.includes('429') ||
-                error.message?.includes('RESOURCE_EXHAUSTED') ||
-                error.message?.includes('quota');
+      // Only retry on rate limit (429) or resource exhausted errors
+      const isRateLimitError = error.status === 429 ||
+        error.message?.includes('429') ||
+        error.message?.includes('RESOURCE_EXHAUSTED') ||
+        error.message?.includes('quota');
 
-            if (!isRateLimitError) {
-                // Not a rate limit error, don't try fallback
-                console.error('❌ Non-recoverable error, stopping retry');
-                break;
-            }
-            // Continue to next model in chain
-        }
+      if (!isRateLimitError) {
+        // Not a rate limit error, don't try fallback
+        console.error('❌ Non-recoverable error, stopping retry');
+        break;
+      }
+      // Continue to next model in chain
     }
+  }
 
-    // Check if we got a valid response
-    if (!aiResponse.strengths && !aiResponse.improvements && lastError) {
-        console.error('❌ All models failed:', lastError);
-        return { error: 'Server busy. Please try again in a few minutes.' };
-    }
+  // Check if we got a valid response
+  if (!aiResponse.strengths && !aiResponse.improvements && lastError) {
+    console.error('❌ All models failed:', lastError);
+    return { error: 'Server busy. Please try again in a few minutes.' };
+  }
 
-    // 4. Increment usage
-    await incrementUsage(userId);
+  // 4. Increment usage
+  await incrementUsage(userId);
 
-    return {
-        ...simpleResults,
-        // New AI response fields
-        overallAssessment: aiResponse.overallAssessment || '',
-        strengths: aiResponse.strengths || [],
-        improvements: aiResponse.improvements || [],
-        aiRewrites: aiResponse.rewrites || [],
-        missingElements: aiResponse.missingElements || [],
-        atsIssues: aiResponse.atsIssues || [],
-        competitiveEdge: aiResponse.competitiveEdge || '',
-        // Legacy compatibility
-        aiSuggestions: aiResponse.improvements || aiResponse.suggestions || [],
-        grammarIssues: aiResponse.atsIssues || aiResponse.grammarIssues || [],
-        analysisType: 'deep' as const,
-        remainingDeepAnalyses: limit.remaining - 1,
-    };
+  return {
+    ...simpleResults,
+    // New AI response fields
+    overallAssessment: aiResponse.overallAssessment || '',
+    strengths: aiResponse.strengths || [],
+    improvements: aiResponse.improvements || [],
+    aiRewrites: aiResponse.rewrites || [],
+    missingElements: aiResponse.missingElements || [],
+    atsIssues: aiResponse.atsIssues || [],
+    competitiveEdge: aiResponse.competitiveEdge || '',
+    // Legacy compatibility
+    aiSuggestions: aiResponse.improvements || aiResponse.suggestions || [],
+    grammarIssues: aiResponse.atsIssues || aiResponse.grammarIssues || [],
+    analysisType: 'deep' as const,
+    remainingDeepAnalyses: limit.remaining - 1,
+  };
 }
 
 // Types
 export interface DeepAnalysisResult extends SimpleAnalysisResult {
-    // New comprehensive fields
-    overallAssessment?: string;
-    strengths?: string[];
-    improvements?: string[];
-    atsIssues?: string[];
-    competitiveEdge?: string;
-    // Existing fields
-    aiSuggestions: string[];
-    aiRewrites: Array<{ original: string; improved: string }>;
-    grammarIssues: string[];
-    missingElements: string[];
-    analysisType: 'deep';
-    remainingDeepAnalyses: number;
+  // New comprehensive fields
+  overallAssessment?: string;
+  strengths?: string[];
+  improvements?: string[];
+  atsIssues?: string[];
+  competitiveEdge?: string;
+  // Existing fields
+  aiSuggestions: string[];
+  aiRewrites: Array<{ original: string; improved: string }>;
+  grammarIssues: string[];
+  missingElements: string[];
+  analysisType: 'deep';
+  remainingDeepAnalyses: number;
 }
 

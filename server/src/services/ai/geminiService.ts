@@ -3,13 +3,19 @@
 
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-// Initialize Gemini with API key
-const getGeminiClient = () => {
-    const apiKey = process.env.GOOGLE_API_KEY;
-    if (!apiKey) {
-        throw new Error('GOOGLE_API_KEY is not set in environment variables');
+// Initialize Gemini with 3 API keys for robust fallback
+const getGeminiClients = () => {
+    const apiKey1 = process.env.GOOGLE_API_KEY;
+    const apiKey2 = process.env.GOOGLE_API_KEY2;
+    const apiKey3 = process.env.GOOGLE_API_KEY3;
+    if (!apiKey1 && !apiKey2 && !apiKey3) {
+        throw new Error('No GOOGLE_API_KEY is set in environment variables');
     }
-    return new GoogleGenerativeAI(apiKey);
+    return [
+        ...(apiKey1 ? [new GoogleGenerativeAI(apiKey1)] : []),
+        ...(apiKey2 ? [new GoogleGenerativeAI(apiKey2)] : []),
+        ...(apiKey3 ? [new GoogleGenerativeAI(apiKey3)] : []),
+    ];
 };
 
 export interface DeepAnalysisResult {
@@ -44,8 +50,7 @@ export async function runDeepAnalysisWithGemini(
     resumeText: string,
     jobDescription: string
 ): Promise<DeepAnalysisResult> {
-    const genAI = getGeminiClient();
-    const model = genAI.getGenerativeModel({ model: 'gemini-3-flash-preview' });
+    const clients = getGeminiClients();
 
     // Get current date for context
     const now = new Date();
@@ -132,52 +137,82 @@ IMPORTANT SCORING GUIDELINES:
 Return ONLY valid JSON, no additional text or markdown formatting.`;
 
 
-    try {
-        const result = await model.generateContent(prompt);
-        const response = await result.response;
-        const text = response.text();
-
-        // Log token usage
-        const usageMetadata = response.usageMetadata;
-        if (usageMetadata) {
-            console.log('');
-            console.log('📊 ═══════════════════════════════════════════');
-            console.log('   GEMINI API TOKEN USAGE');
-            console.log('═══════════════════════════════════════════');
-            console.log(`   📥 Input Tokens:  ${usageMetadata.promptTokenCount || 'N/A'}`);
-            console.log(`   📤 Output Tokens: ${usageMetadata.candidatesTokenCount || 'N/A'}`);
-            console.log(`   📦 Total Tokens:  ${usageMetadata.totalTokenCount || 'N/A'}`);
-            console.log('═══════════════════════════════════════════');
-            console.log('');
-        }
-
-        // Clean up the response - remove markdown code blocks if present
-        let cleanedText = text.trim();
-        if (cleanedText.startsWith('```json')) {
-            cleanedText = cleanedText.slice(7);
-        }
-        if (cleanedText.startsWith('```')) {
-            cleanedText = cleanedText.slice(3);
-        }
-        if (cleanedText.endsWith('```')) {
-            cleanedText = cleanedText.slice(0, -3);
-        }
-        cleanedText = cleanedText.trim();
-
-        // Parse the JSON response
-        const analysis: DeepAnalysisResult = JSON.parse(cleanedText);
-        return analysis;
-
-    } catch (error: any) {
-        console.error('Gemini API Error:', error);
-
-        // Return fallback structure if parsing fails
-        if (error instanceof SyntaxError) {
-            throw new Error('Failed to parse AI response. Please try again.');
-        }
-
-        throw error;
+    // Fallback chain: gemini-2.5-pro (all keys) → gemini-3-flash-preview (all keys) → gemini-2.5-flash (all keys)
+    const models = ['gemini-2.5-pro', 'gemini-3-flash-preview', 'gemini-2.5-flash'];
+    const attempts: { client: GoogleGenerativeAI; model: string; label: string }[] = [];
+    for (const modelName of models) {
+        clients.forEach((client, idx) => {
+            attempts.push({ client, model: modelName, label: `Key${idx + 1} + ${modelName}` });
+        });
     }
+
+    let lastError: any = null;
+
+    for (const attempt of attempts) {
+        try {
+            console.log(`🤖 Trying: ${attempt.label}`);
+            const model = attempt.client.getGenerativeModel({ model: attempt.model });
+            const result = await model.generateContent(prompt);
+            const response = await result.response;
+            const text = response.text();
+            console.log(`✅ Success with: ${attempt.label}`);
+
+            // Log token usage
+            const usageMetadata = response.usageMetadata;
+            if (usageMetadata) {
+                console.log('');
+                console.log('📊 ═══════════════════════════════════════════');
+                console.log('   GEMINI API TOKEN USAGE');
+                console.log('═══════════════════════════════════════════');
+                console.log(`   📥 Input Tokens:  ${usageMetadata.promptTokenCount || 'N/A'}`);
+                console.log(`   📤 Output Tokens: ${usageMetadata.candidatesTokenCount || 'N/A'}`);
+                console.log(`   📦 Total Tokens:  ${usageMetadata.totalTokenCount || 'N/A'}`);
+                console.log('═══════════════════════════════════════════');
+                console.log('');
+            }
+
+            // Clean up the response - remove markdown code blocks if present
+            let cleanedText = text.trim();
+            if (cleanedText.startsWith('```json')) {
+                cleanedText = cleanedText.slice(7);
+            }
+            if (cleanedText.startsWith('```')) {
+                cleanedText = cleanedText.slice(3);
+            }
+            if (cleanedText.endsWith('```')) {
+                cleanedText = cleanedText.slice(0, -3);
+            }
+            cleanedText = cleanedText.trim();
+
+            // Parse the JSON response
+            const analysis: DeepAnalysisResult = JSON.parse(cleanedText);
+            return analysis;
+
+        } catch (error: any) {
+            lastError = error;
+            console.warn(`⚠️ ${attempt.label} failed:`, error.message);
+
+            // If it's a JSON parse error, don't retry (response was received but malformed)
+            if (error instanceof SyntaxError) {
+                throw new Error('Failed to parse AI response. Please try again.');
+            }
+
+            // Only retry on rate limit (429) or resource exhausted errors
+            const isRateLimitError = error.status === 429 ||
+                error.message?.includes('429') ||
+                error.message?.includes('RESOURCE_EXHAUSTED') ||
+                error.message?.includes('quota');
+
+            if (!isRateLimitError) {
+                console.error('❌ Non-recoverable error, stopping retry');
+                break;
+            }
+            // Continue to next attempt in chain
+        }
+    }
+
+    console.error('❌ All models and keys failed:', lastError);
+    throw lastError || new Error('All API keys and models exhausted. Please try again later.');
 }
 
 // Quick AI feedback for specific sections
@@ -186,8 +221,7 @@ export async function getQuickFeedback(
     content: string,
     targetRole: string
 ): Promise<string> {
-    const genAI = getGeminiClient();
-    const model = genAI.getGenerativeModel({ model: 'gemini-3-flash-preview' });
+    const clients = getGeminiClients();
 
     const prompts: Record<string, string> = {
         summary: `Improve this professional summary for a ${targetRole} position. Make it compelling and ATS-friendly:\n\n${content}\n\nProvide the improved version only.`,
@@ -196,14 +230,42 @@ export async function getQuickFeedback(
         achievements: `Rewrite this achievement to be more impactful for a ${targetRole} position. Quantify results where possible:\n\n${content}\n\nProvide the improved version only.`,
     };
 
-    try {
-        const result = await model.generateContent(prompts[sectionType]);
-        const response = await result.response;
-        return response.text().trim();
-    } catch (error) {
-        console.error('Gemini Quick Feedback Error:', error);
-        throw new Error('Failed to get AI feedback');
+    // Fallback chain: gemini-2.5-pro (all keys) → gemini-3-flash-preview (all keys) → gemini-2.5-flash (all keys)
+    const models = ['gemini-2.5-pro', 'gemini-3-flash-preview', 'gemini-2.5-flash'];
+    const attempts: { client: GoogleGenerativeAI; model: string; label: string }[] = [];
+    for (const modelName of models) {
+        clients.forEach((client, idx) => {
+            attempts.push({ client, model: modelName, label: `Key${idx + 1} + ${modelName}` });
+        });
     }
+
+    let lastError: any = null;
+
+    for (const attempt of attempts) {
+        try {
+            console.log(`🤖 Quick Feedback trying: ${attempt.label}`);
+            const model = attempt.client.getGenerativeModel({ model: attempt.model });
+            const result = await model.generateContent(prompts[sectionType]);
+            const response = await result.response;
+            console.log(`✅ Quick Feedback success with: ${attempt.label}`);
+            return response.text().trim();
+        } catch (error: any) {
+            lastError = error;
+            console.warn(`⚠️ Quick Feedback ${attempt.label} failed:`, error.message);
+
+            const isRateLimitError = error.status === 429 ||
+                error.message?.includes('429') ||
+                error.message?.includes('RESOURCE_EXHAUSTED') ||
+                error.message?.includes('quota');
+
+            if (!isRateLimitError) {
+                break;
+            }
+        }
+    }
+
+    console.error('❌ All Quick Feedback attempts failed:', lastError);
+    throw new Error('Failed to get AI feedback. All API keys and models exhausted.');
 }
 
 export default {
