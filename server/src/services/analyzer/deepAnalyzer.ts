@@ -118,19 +118,13 @@ Provide a comprehensive analysis in the following JSON format ONLY (no markdown,
 
 Be specific, actionable, and reference actual content from the resume. Focus on ${selectedRole}-specific feedback.`;
 
-  // Fallback chain: Try best model first with all keys, then next model, etc.
-  // Priority: gemini-2.5-pro (all 3 keys) → gemini-3-flash-preview (all 3 keys) → gemini-2.5-flash (all 3 keys)
+  // Try gemini-2.5-flash across all 3 API keys
   const attempts = [
-    { client: genAI_1, model: 'gemini-2.5-pro', label: 'Key1 + gemini-2.5-pro' },
-    { client: genAI_2, model: 'gemini-2.5-pro', label: 'Key2 + gemini-2.5-pro' },
-    { client: genAI_3, model: 'gemini-2.5-pro', label: 'Key3 + gemini-2.5-pro' },
-    { client: genAI_1, model: 'gemini-3-flash-preview', label: 'Key1 + gemini-3-flash-preview' },
-    { client: genAI_2, model: 'gemini-3-flash-preview', label: 'Key2 + gemini-3-flash-preview' },
-    { client: genAI_3, model: 'gemini-3-flash-preview', label: 'Key3 + gemini-3-flash-preview' },
     { client: genAI_1, model: 'gemini-2.5-flash', label: 'Key1 + gemini-2.5-flash' },
     { client: genAI_2, model: 'gemini-2.5-flash', label: 'Key2 + gemini-2.5-flash' },
     { client: genAI_3, model: 'gemini-2.5-flash', label: 'Key3 + gemini-2.5-flash' },
   ];
+
 
   let aiResponse: any = {};
   let lastError: any = null;
