@@ -746,20 +746,33 @@ export const analyzerController = {
                 });
             }
 
-            const { parsePdfBuffer, cleanResumeText } = await import('../services/pdf/pdfService.js');
+            const { parsePdfBuffer, cleanResumeText, formatAsStructuredResume, detectMNITTemplate } = await import('../services/pdf/pdfService.js');
             const pdfResult = await parsePdfBuffer(req.file.buffer);
             const cleanedText = cleanResumeText(pdfResult.text);
 
-            console.log(`📄 Parsed PDF: ${pdfResult.numPages} pages, ${cleanedText.length} chars`);
+            // Determine template type: from user selection or auto-detect
+            const userTemplateType = req.body?.templateType as string | undefined; // 'mnit' | 'other'
+            const autoDetected = detectMNITTemplate(cleanedText);
+            const templateType: 'mnit' | 'other' = userTemplateType === 'mnit' || userTemplateType === 'other'
+                ? userTemplateType
+                : (autoDetected ? 'mnit' : 'other');
+
+            // Format text with template-aware structure
+            const structuredText = formatAsStructuredResume(pdfResult.text, templateType);
+
+            console.log(`📄 Parsed PDF: ${pdfResult.numPages} pages, ${structuredText.length} chars, template: ${templateType}${autoDetected ? ' (auto-detected)' : ''}`);
 
             res.json({
                 success: true,
                 data: {
-                    text: cleanedText,
+                    text: structuredText,
+                    rawText: cleanedText,  // Also send raw text for backward compat
                     numPages: pdfResult.numPages,
                     fileName: req.file.originalname,
                     fileSize: req.file.size,
                     info: pdfResult.info,
+                    templateDetected: autoDetected,
+                    templateType,
                 }
             });
 

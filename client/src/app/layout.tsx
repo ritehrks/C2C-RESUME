@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from "next";
 import { Inter, Merriweather } from "next/font/google";
 import "./globals.css";
 import ServiceWorkerRegistration from "@/components/ServiceWorkerRegistration";
+import InstallPrompt from "@/components/InstallPrompt";
+import UpdateNotification from "@/components/UpdateNotification";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: 'swap' });
 const merriweather = Merriweather({ weight: ['300', '400', '700'], subsets: ["latin"], variable: "--font-merriweather", display: 'swap' });
@@ -47,6 +49,8 @@ export default function RootLayout({
       </head>
       <body className={`${inter.variable} ${merriweather.variable} font-display antialiased overflow-x-hidden`}>
         <ServiceWorkerRegistration />
+        <InstallPrompt />
+        <UpdateNotification />
         {children}
       </body>
     </html>

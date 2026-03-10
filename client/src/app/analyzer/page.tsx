@@ -430,6 +430,8 @@ export default function AnalyzerPage() {
     const [isUploading, setIsUploading] = useState(false);
     const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
     const [isDragging, setIsDragging] = useState(false);
+    const [templateType, setTemplateType] = useState<'mnit' | 'other'>('mnit');
+    const [templateAutoDetected, setTemplateAutoDetected] = useState(false);
 
     // Handle PDF file upload
     const handleFileUpload = async (file: File) => {
@@ -451,6 +453,7 @@ export default function AnalyzerPage() {
         try {
             const formData = new FormData();
             formData.append('resume', file);
+            formData.append('templateType', templateType);
 
             const response = await fetch(`${API_URL}/api/analyze/parse-pdf`, {
                 method: 'POST',
@@ -465,6 +468,11 @@ export default function AnalyzerPage() {
 
             setResumeText(data.data.text);
             setUploadedFileName(data.data.fileName);
+            // Update template type based on auto-detection
+            if (data.data.templateDetected) {
+                setTemplateType('mnit');
+                setTemplateAutoDetected(true);
+            }
             console.log(`✅ Parsed PDF: ${data.data.numPages} pages`);
 
         } catch (err: any) {
@@ -671,6 +679,49 @@ export default function AnalyzerPage() {
                                             {uploadedFileName}
                                         </span>
                                     )}
+                                </div>
+
+                                {/* Resume Template Toggle */}
+                                <div className="mb-4">
+                                    <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-2">
+                                        Resume Template Format
+                                    </label>
+                                    <div className="flex rounded-lg bg-[#f8f9fc] dark:bg-[#101622] border border-[#cfd7e7] dark:border-gray-600 p-1 gap-1">
+                                        <button
+                                            type="button"
+                                            onClick={() => { setTemplateType('mnit'); setTemplateAutoDetected(false); }}
+                                            className={`flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-md text-sm font-medium transition-all ${templateType === 'mnit'
+                                                    ? 'bg-white dark:bg-[#1e2636] text-app-primary shadow-sm border border-blue-200 dark:border-blue-800'
+                                                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
+                                                }`}
+                                        >
+                                            <span className="text-base">🏛️</span>
+                                            MNIT Template
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => { setTemplateType('other'); setTemplateAutoDetected(false); }}
+                                            className={`flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-md text-sm font-medium transition-all ${templateType === 'other'
+                                                    ? 'bg-white dark:bg-[#1e2636] text-app-primary shadow-sm border border-blue-200 dark:border-blue-800'
+                                                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
+                                                }`}
+                                        >
+                                            <span className="text-base">📄</span>
+                                            Other Format
+                                        </button>
+                                    </div>
+                                    {templateAutoDetected && templateType === 'mnit' && (
+                                        <p className="mt-1.5 text-xs text-green-600 dark:text-green-400 flex items-center gap-1">
+                                            <span className="material-symbols-outlined text-[14px]">auto_awesome</span>
+                                            MNIT template auto-detected from your PDF
+                                        </p>
+                                    )}
+                                    <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">
+                                        {templateType === 'mnit'
+                                            ? 'Optimized extraction for MNIT Jaipur LaTeX resume template'
+                                            : 'Generic extraction for any resume format'
+                                        }
+                                    </p>
                                 </div>
 
                                 {/* PDF Upload Zone */}

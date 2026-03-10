@@ -1,6 +1,6 @@
 /// <reference lib="webworker" />
 
-const CACHE_VERSION = 'v2';
+const CACHE_VERSION = 'v3';
 const STATIC_CACHE = `c2c-static-${CACHE_VERSION}`;
 const PAGES_CACHE = `c2c-pages-${CACHE_VERSION}`;
 const IMAGES_CACHE = `c2c-images-${CACHE_VERSION}`;
@@ -8,6 +8,7 @@ const IMAGES_CACHE = `c2c-images-${CACHE_VERSION}`;
 // Critical assets to pre-cache on install
 const PRECACHE_ASSETS = [
     '/',
+    '/offline.html',
     '/courses',
     '/attendance',
     '/icons/icon-192x192.png',
@@ -36,9 +37,23 @@ self.addEventListener('activate', (event) => {
                     .filter((name) => !currentCaches.includes(name))
                     .map((name) => caches.delete(name))
             );
+        }).then(() => {
+            // Notify all clients that the SW has been updated
+            return self.clients.matchAll().then((clients) => {
+                clients.forEach((client) => {
+                    client.postMessage({ type: 'SW_UPDATED', version: CACHE_VERSION });
+                });
+            });
         })
     );
     self.clients.claim();
+});
+
+// Listen for skip waiting messages from the client
+self.addEventListener('message', (event) => {
+    if (event.data && event.data.type === 'SKIP_WAITING') {
+        self.skipWaiting();
+    }
 });
 
 // Helper: is this a Next.js static asset? (_next/static/...)
@@ -104,11 +119,14 @@ self.addEventListener('fetch', (event) => {
                         }
                         return response;
                     }).catch(() => {
-                        // If offline and no cache, return a basic offline response
-                        return cached || new Response(
-                            '<html><body><h1>Offline</h1><p>Please check your connection.</p></body></html>',
-                            { status: 503, headers: { 'Content-Type': 'text/html' } }
-                        );
+                        // If offline and no cache, return the styled offline page
+                        if (cached) return cached;
+                        return caches.match('/offline.html').then((offlinePage) => {
+                            return offlinePage || new Response(
+                                '<html><body><h1>Offline</h1><p>Please check your connection.</p></body></html>',
+                                { status: 503, headers: { 'Content-Type': 'text/html' } }
+                            );
+                        });
                     });
 
                     // Return cached immediately if available, otherwise wait for network

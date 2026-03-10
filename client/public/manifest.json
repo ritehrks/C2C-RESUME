@@ -1,7 +1,7 @@
 {
     "name": "C2C Resume Platform",
     "short_name": "C2C Resume",
-    "description": "Official LaTeX-based resume builder for MNIT Jaipur — Code to Career",
+    "description": "Official LaTeX-based resume builder for MNIT Jaipur — Code to Career. Build ATS-compliant resumes, analyze existing ones, track attendance, and manage courses.",
     "start_url": "/",
     "display": "standalone",
     "background_color": "#0f172a",
@@ -9,6 +9,8 @@
     "orientation": "portrait-primary",
     "scope": "/",
     "id": "/",
+    "lang": "en",
+    "dir": "ltr",
     "icons": [
         {
             "src": "/icons/icon-72x72.png",
@@ -57,6 +59,56 @@
             "sizes": "512x512",
             "type": "image/png",
             "purpose": "any maskable"
+        }
+    ],
+    "shortcuts": [
+        {
+            "name": "Resume Builder",
+            "short_name": "Builder",
+            "url": "/builder",
+            "description": "Create your LaTeX resume",
+            "icons": [
+                {
+                    "src": "/icons/icon-96x96.png",
+                    "sizes": "96x96"
+                }
+            ]
+        },
+        {
+            "name": "ATS Analyzer",
+            "short_name": "Analyzer",
+            "url": "/analyzer",
+            "description": "Analyze your resume's ATS score",
+            "icons": [
+                {
+                    "src": "/icons/icon-96x96.png",
+                    "sizes": "96x96"
+                }
+            ]
+        },
+        {
+            "name": "My Attendance",
+            "short_name": "Attendance",
+            "url": "/attendance",
+            "description": "Check your event attendance",
+            "icons": [
+                {
+                    "src": "/icons/icon-96x96.png",
+                    "sizes": "96x96"
+                }
+            ]
+        },
+        {
+            "name": "Courses",
+            "short_name": "Courses",
+            "url": "/courses",
+            "description": "Browse available courses",
+            "icons": [
+                {
+                    "src": "/icons/icon-96x96.png",
+                    "sizes": "96x96"
+                }
+            ]
         }
     ],
     "categories": [

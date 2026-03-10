@@ -20,7 +20,7 @@ interface ActivityItem {
     time: string;
 }
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
 export default function AdminDashboard() {
     const router = useRouter();
@@ -55,27 +55,67 @@ export default function AdminDashboard() {
     const fetchDashboardData = async (token: string) => {
         try {
             // Fetch overview stats
-            const overviewRes = await fetch(`${API_URL}/stats/overview`, {
+            console.log('[Admin] Fetching overview from:', `${API_URL}/api/stats/overview`);
+            const overviewRes = await fetch(`${API_URL}/api/stats/overview`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
+            console.log('[Admin] Overview response status:', overviewRes.status);
             if (overviewRes.ok) {
                 const data = await overviewRes.json();
+                console.log('[Admin] Overview data:', JSON.stringify(data));
+                const s = data.stats || data; // Handle both nested and flat
                 setStats({
-                    totalUsers: data.totalUsers || 0,
-                    totalResumes: data.totalResumes || 0,
-                    totalAnalyses: data.totalAnalyses || 0,
-                    todaySignups: data.todaySignups || 0,
-                    deepAnalysesToday: data.deepAnalysesToday || 0
+                    totalUsers: s.totalUsers || 0,
+                    totalResumes: s.totalResumes || 0,
+                    totalAnalyses: s.totalAnalyses || 0,
+                    todaySignups: s.usersToday || s.todaySignups || 0,
+                    deepAnalysesToday: s.deepAnalysesToday || 0
                 });
+            } else {
+                console.error('[Admin] Overview request failed:', overviewRes.status, await overviewRes.text());
             }
 
             // Fetch activity
-            const activityRes = await fetch(`${API_URL}/stats/activity`, {
+            const activityRes = await fetch(`${API_URL}/api/stats/activity`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (activityRes.ok) {
                 const data = await activityRes.json();
-                setActivities(data.activities || []);
+                const activityData = data.activity || data;
+
+                // Build activity items from recent users and analyses
+                const items: ActivityItem[] = [];
+
+                // Add recent user signups
+                if (activityData.recentUsers) {
+                    activityData.recentUsers.forEach((user: any) => {
+                        items.push({
+                            id: user._id,
+                            type: 'signup',
+                            title: `${user.name} joined`,
+                            subtitle: user.email,
+                            time: new Date(user.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
+                        });
+                    });
+                }
+
+                // Add recent analyses
+                if (activityData.recentAnalyses) {
+                    activityData.recentAnalyses.forEach((analysis: any) => {
+                        const userName = analysis.userId?.name || 'Unknown user';
+                        items.push({
+                            id: analysis._id,
+                            type: 'analysis',
+                            title: `${userName} ran ${analysis.analysisType} analysis`,
+                            subtitle: `Role: ${analysis.role || 'General'} • Score: ${analysis.results?.overallScore || 'N/A'}%`,
+                            time: new Date(analysis.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
+                        });
+                    });
+                }
+
+                // Sort by time (most recent first)
+                items.sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime());
+                setActivities(items.slice(0, 10));
             }
         } catch (error) {
             console.error('Failed to fetch dashboard data:', error);

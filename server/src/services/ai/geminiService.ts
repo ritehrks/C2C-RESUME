@@ -82,13 +82,16 @@ export async function runDeepAnalysisWithGemini(
 - Do NOT flag recent dates as "future-dated"
 
 **PDF EXTRACTION NOTE:**
-- Resume text was auto-extracted from PDF - ignore any special character artifacts
-- Focus on CONTENT, KEYWORDS, and SKILLS - not formatting
+- Resume text was auto-extracted from PDF and re-structured to show the visual layout
+- Section markers like ═══ SECTION NAME ═══ represent gray-background section headers with horizontal rules
+- The box at the top (┌──┐) represents the header area with college logo and contact info displayed side by side
+- Bullet points (•) represent actual bullet items in the resume
+- Focus on CONTENT, KEYWORDS, and SKILLS - assume professional ATS-friendly formatting
 
 **Role/Internship Description:**
 ${jobDescription}
 
-**Student's Resume:**
+**Student's Resume (with layout structure preserved):**
 ${resumeText}
 
 Provide a comprehensive analysis tailored for a BTECH STUDENT in JSON format:

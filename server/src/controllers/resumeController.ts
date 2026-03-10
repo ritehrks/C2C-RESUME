@@ -43,7 +43,7 @@ export const resumeController = {
             const query = userId ? { userId: new mongoose.Types.ObjectId(userId) } : {};
 
             const resumes = await Resume.find(query)
-                .select('_id name version templateId updatedAt createdAt userId')
+                .select('_id name version templateId updatedAt createdAt userId content.personalInfo content.skills content.education content.projects')
                 .sort({ updatedAt: -1 })
                 .lean();
 

@@ -138,7 +138,7 @@ function BuilderContent() {
     const [zoom, setZoom] = useState(85);
     const [resumeData, setResumeData] = useState<ResumeData>(defaultResumeData);
     const [resumeId, setResumeId] = useState<string | null>(editId);
-    const [resumeName, setResumeName] = useState('Untitled Resume');
+    const [resumeName, setResumeName] = useState('');
     const [isLoading, setIsLoading] = useState(!!editId);
     const [isSaving, setIsSaving] = useState(false);
     const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
@@ -280,7 +280,7 @@ function BuilderContent() {
             setSaveStatus('saving');
 
             const saveData = {
-                name: resumeName || resumeData.name || 'Untitled Resume',
+                name: resumeName || (resumeData.name && resumeData.name !== 'Your Name' ? `${resumeData.name}'s Resume` : `Resume ${new Date().toLocaleDateString()}`),
                 templateId: selectedTemplate,
                 content: {
                     personalInfo: {
@@ -808,7 +808,13 @@ function BuilderContent() {
                     </Link>
                     <img src="/logo-v2.png" alt="C2C Logo" className="h-12 w-auto" />
                     <div className="hidden sm:block">
-                        <p className="text-sm font-semibold text-gray-900 dark:text-white">{resumeData.name || "Untitled Resume"}</p>
+                        <input
+                            type="text"
+                            value={resumeName}
+                            onChange={(e) => setResumeName(e.target.value)}
+                            placeholder={resumeData.name && resumeData.name !== 'Your Name' ? `${resumeData.name}'s Resume` : 'Name your resume...'}
+                            className="text-sm font-semibold text-gray-900 dark:text-white bg-transparent border-0 border-b border-transparent hover:border-gray-300 dark:hover:border-gray-600 focus:border-app-primary focus:ring-0 px-0 py-0.5 w-48 transition-colors"
+                        />
                         <p className="text-xs text-gray-500 dark:text-gray-400">
                             {selectedTemplate === 'mnit_resume' ? 'MNIT Official Template' : 'Generic ATS Template'}
                         </p>

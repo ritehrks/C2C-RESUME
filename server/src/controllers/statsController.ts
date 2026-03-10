@@ -241,17 +241,21 @@ export const statsController = {
                 return res.status(401).json({ success: false, error: auth.error });
             }
 
-            // Get all users with their analysis counts
+            // Get all users with their analysis counts AND resume counts
             const users = await User.find({}, {
                 password: 0, // Exclude password field
             }).sort({ createdAt: -1 }).lean();
 
-            // Get analysis counts for each user
+            // Get analysis counts and resume counts for each user
             const usersWithCounts = await Promise.all(users.map(async (user) => {
-                const analysisCount = await AnalysisReport.countDocuments({ userId: user._id });
+                const [analysisCount, resumeCount] = await Promise.all([
+                    AnalysisReport.countDocuments({ userId: user._id }),
+                    Resume.countDocuments({ userId: user._id }),
+                ]);
                 return {
                     ...user,
                     analysisCount,
+                    resumeCount,
                     authProvider: user.authProvider || 'local',
                 };
             }));
@@ -264,6 +268,37 @@ export const statsController = {
         } catch (error: any) {
             console.error('❌ Get users error:', error);
             res.status(500).json({ success: false, error: 'Failed to get users' });
+        }
+    },
+
+    // GET /api/stats/users/:userId/resumes - Get resumes for a specific user
+    async getUserResumes(req: Request, res: Response) {
+        try {
+            const auth = await verifyAdmin(req);
+            if (!auth.success) {
+                return res.status(401).json({ success: false, error: auth.error });
+            }
+
+            const { userId } = req.params;
+
+            const resumes = await Resume.find({ userId })
+                .sort({ updatedAt: -1 })
+                .select('name templateId version content createdAt updatedAt')
+                .lean();
+
+            const user = await User.findById(userId)
+                .select('name email profileImage')
+                .lean();
+
+            res.json({
+                success: true,
+                user,
+                resumes,
+                total: resumes.length,
+            });
+        } catch (error: any) {
+            console.error('❌ Get user resumes error:', error);
+            res.status(500).json({ success: false, error: 'Failed to get user resumes' });
         }
     },
 };

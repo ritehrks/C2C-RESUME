@@ -10,5 +10,6 @@ router.get('/resumes', statsController.getResumeStats);
 router.get('/analysis', statsController.getAnalysisStats);
 router.get('/activity', statsController.getRecentActivity);
 router.get('/users', statsController.getUserList);
+router.get('/users/:userId/resumes', statsController.getUserResumes);
 
 export default router;
